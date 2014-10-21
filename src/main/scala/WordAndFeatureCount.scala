@@ -71,8 +71,8 @@ object WordAndFeatureCount {
     //res2.cache
     val res3 =    res2
                   .groupByKey()
-                  .mapValues(simWords => simWords.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2})
-                  .take(param_l))
+                  .mapValues(simWords => simWords.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}).take(param_l))
+                  .flatMap({case (word, simWords) => for(simWord <- simWords) yield (word, simWord)})
 //    res2.cache()
 //    val res3 = res2
 //                  .sortBy(row => row._1.hashCode + 0.000001 * row._2._2.size)
@@ -83,7 +83,7 @@ object WordAndFeatureCount {
 //    featureCounts.map(cols => cols._1 + "	" + cols._2)
 //                 .saveAsTextFile(dir + "__FeatureCount")
 //    print(res2)
-    res3.map({case (word, simWords) => word + "\t" + simWords.toList.mkString("  ")}).saveAsTextFile(dir + "__LL_sim")
+    res3.map({case (word1, (word2, sim)) => word1 + "\t" + word2 + "\t" + sim}).saveAsTextFile(dir + "__LL_sims")
     /*val l = new Array[Int](600)
     for (i <- 0 to 599) {
       l(i) = i
