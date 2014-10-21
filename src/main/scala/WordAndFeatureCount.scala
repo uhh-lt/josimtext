@@ -36,35 +36,40 @@ object WordAndFeatureCount {
     val wordFeatureCounts = file.map(line => line.split("	"))
                                 .map(cols => (cols(0), (cols(1), cols(2).toInt)))
                                 .filter({case (word, (feature, wfc)) => (wfc >= param_t)})
+    wordFeatureCounts.cache
     val n = wordFeatureCounts.aggregate(0)(_ + _._2._2, _ + _)
     val wordCounts = wordFeatureCounts.map({case (word, (feature, wfc)) => (word, wfc)})
                                       .reduceByKey((wc1, wc2) => wc1 + wc2)
-    wordCounts.cache()
-    val featureCounts = wordFeatureCounts.map({case (word, (feature, wfc)) => (feature, wfc)})
-                                         .reduceByKey((fc1, fc2) => fc1 + fc2)
-    featureCounts.cache()
+    wordCounts.cache
     var wordsPerFeature = wordFeatureCounts.map({case (word, (feature, wfc)) => (feature, word)})
                                            .groupByKey()
                                            .mapValues(v => v.toSet.size)
-
     println("BEFORE " + wordsPerFeature.count)
     wordsPerFeature = wordsPerFeature.filter({case (feature, numWords) => numWords > 0 && numWords <= param_p})
     println("AFTER " + wordsPerFeature.count)
+    val featureCounts = wordFeatureCounts.map({case (word, (feature, wfc)) => (feature, wfc)})
+                                         .reduceByKey((fc1, fc2) => fc1 + fc2)
+                                         .join(wordsPerFeature)
+    featureCounts.cache
+
     val res = wordFeatureCounts//.map(cols => (cols._2._1, (cols._1, cols._2._2)))
-             .join(wordsPerFeature)
              .join(wordCounts)
-             .map({case (word, (((feature, wfc), wpf), wc)) => (feature, (word, wfc, wc))})
+             .map({case (word, ((feature, wfc), wc)) => (feature, (word, wfc, wc))})
              .join(featureCounts)
-             .map({case (feature, ((word, wfc, wc), fc)) => (word, (feature, ll(n, wc, fc, wfc)))})
+             .map({case (feature, ((word, wfc, wc), (fc, fwc))) => (word, (feature, ll(n, wc, fc, wfc)))})
              .groupByKey()
              // (word, [(feature, score), (feature, score), ...])
-             .mapValues(featureScores => featureScores.toArray.sortWith({case ((f1, s1), (f2, s2)) => s1 > s2})
+             .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2})
                                                       .take(param_p)
                                                       .map(featureScore => featureScore._1)) // sort by value desc
-    res.cache()
+    res.cache
     val res2 = res.cartesian(res)
-                  .map(row => (row._1._1, (row._2._1, row._1._2.toSet.intersect(row._2._2.toSet))))
-                  .filter(row => row._2._2.size > 3)
+    //res2.cache
+    val res3 =    res2
+                  .map({case ((word1, features1), (word2, features2)) => (word1, (word2, features1.toSet.intersect(features2.toSet).size))})
+                  .groupByKey()
+                  .mapValues(simWords => simWords.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2})
+                  .take(param_l))
 //    res2.cache()
 //    val res3 = res2
 //                  .sortBy(row => row._1.hashCode + 0.000001 * row._2._2.size)
@@ -75,8 +80,7 @@ object WordAndFeatureCount {
 //    featureCounts.map(cols => cols._1 + "	" + cols._2)
 //                 .saveAsTextFile(dir + "__FeatureCount")
 //    print(res2)
-    res2.map(cols => cols. _1 + "  " + cols._2)
-      .saveAsTextFile(dir + "__LL_features")
+    res3.mapValues(simWords => simWords.toList).saveAsTextFile(dir + "__LL_features2")
     /*val l = new Array[Int](600)
     for (i <- 0 to 599) {
       l(i) = i
