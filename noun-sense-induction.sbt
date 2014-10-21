@@ -8,4 +8,5 @@ resolvers += Resolver.mavenLocal
 
 //libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "2.2.0"
 
-libraryDependencies += "org.apache.spark" %% "spark-core" % "1.1.0"
+libraryDependencies += "org.apache.spark" %% "spark-core" % "1.0.0"
+
