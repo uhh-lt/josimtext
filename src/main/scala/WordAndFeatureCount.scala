@@ -67,6 +67,7 @@ object WordAndFeatureCount {
     //res2.cache
     val res3 =    res2
                   .map({case ((word1, features1), (word2, features2)) => (word1, (word2, features1.toSet.intersect(features2.toSet).size))})
+                  .filter({case (word1, (word2, sim)) => sim > 0})
                   .groupByKey()
                   .mapValues(simWords => simWords.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2})
                   .take(param_l))
