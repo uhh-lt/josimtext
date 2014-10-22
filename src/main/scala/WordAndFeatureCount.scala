@@ -68,7 +68,7 @@ object WordAndFeatureCount {
         val _wordsPerFeature = wordFeatureCounts
             .map({case (word, (feature, wfc)) => (feature, word)})
             .groupByKey()
-        
+
         val wordsPerFeature = _wordsPerFeature
             .mapValues(v => v.toSet.size)
             .filter({case (feature, numWords) => numWords > 0 && numWords < param_w})
@@ -88,14 +88,14 @@ object WordAndFeatureCount {
             // (word, [(feature, score), (feature, score), ...])
             .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}).take(param_p)) // sort by value desc
 
-        featuresPerWordWithScore
-            .map({case (word, featureList) => word + "\t" + featureList.mkString("\t")})
-            .saveAsTextFile(dir + "__LL_AggrPerFeature")
-
         val wordsPerFeatureWithScore = featuresPerWordWithScore
             .flatMap({case (word, featureScores) => for(featureScore <- featureScores) yield (featureScore._1, (word, 1))})
             .groupByKey()
         wordsPerFeatureWithScore.cache()
+
+        wordsPerFeatureWithScore
+            .map({case (feature, wordList) => feature + "\t" + wordList.map(f => f._1).mkString("\t")})
+            .saveAsTextFile(dir + "__LL_AggrPerFeature")
 
         val wordSims = wordsPerFeatureWithScore
             .flatMap({case (feature, wordScores) => for((word1, score1) <- wordScores; (word2, score2) <- wordScores) yield ((word1, word2), score2)})
