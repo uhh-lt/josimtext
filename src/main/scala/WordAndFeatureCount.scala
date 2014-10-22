@@ -65,6 +65,11 @@ object WordAndFeatureCount {
             .map({case (word, (feature, wfc)) => (word, wfc)})
             .reduceByKey((wc1, wc2) => wc1 + wc2)
         wordCounts.cache()
+
+        wordCounts
+            .map({case (word, count) => word + "\t" + count})
+            .saveAsTextFile(dir + "__LL_WordCount")
+
         val _wordsPerFeature = wordFeatureCounts
             .map({case (word, (feature, wfc)) => (feature, word)})
             .groupByKey()
@@ -77,6 +82,10 @@ object WordAndFeatureCount {
             .reduceByKey((fc1, fc2) => fc1 + fc2)
             .join(wordsPerFeature)
         featureCounts.cache()
+
+        featureCounts
+            .map({case (feature, count) => feature + "\t" + count})
+            .saveAsTextFile(dir + "__LL_FeatureCount")
 
         val featuresPerWordWithScore = wordFeatureCounts
             .join(wordCounts)
