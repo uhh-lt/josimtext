@@ -31,28 +31,28 @@ object WordAndFeatureCount {
     val param_l = 200;
 
     val dir = args(0)
-    val conf = new SparkConf().setAppName("WordAndFeatureCount")
+    val conf = new SparkConf().setAppName("WordSim")
     val sc = new SparkContext(conf)
     val file = sc.textFile(dir)
     val wordFeatureCounts = file.map(line => line.split("	"))
                                 .map(cols => (cols(0), (cols(1), cols(2).toInt)))
-                                .filter({case (word, (feature, wfc)) => (wfc >= param_t)})
+                                .filter({case (word, (feature, wfc)) => wfc >= param_t})
     
-    wordFeatureCounts.cache
+    wordFeatureCounts.cache()
     val n = wordFeatureCounts.aggregate(0)(_ + _._2._2, _ + _)
     val wordCounts = wordFeatureCounts.map({case (word, (feature, wfc)) => (word, wfc)})
                                       .reduceByKey((wc1, wc2) => wc1 + wc2)
-    wordCounts.cache
-    var wordsPerFeature = wordFeatureCounts.map({case (word, (feature, wfc)) => (feature, word)})
+    wordCounts.cache()
+    val _wordsPerFeature = wordFeatureCounts.map({case (word, (feature, wfc)) => (feature, word)})
                                            .groupByKey()
-                                           .mapValues(v => v.toSet.size)
-    //println("BEFORE " + wordsPerFeature.count)
-    wordsPerFeature = wordsPerFeature.filter({case (feature, numWords) => numWords > 0 && numWords <= param_w})
-    //println("AFTER " + wordsPerFeature.count)
+    _wordsPerFeature.map({case (feature, wordList) => feature + "\t" + wordList.mkString("\t")})
+                    .saveAsTextFile(dir + "_LL_AggrPerFeature")
+    val wordsPerFeature = _wordsPerFeature.mapValues(v => v.toSet.size)
+                                     .filter({case (feature, numWords) => numWords > 0 && numWords <= param_w})
     val featureCounts = wordFeatureCounts.map({case (word, (feature, wfc)) => (feature, wfc)})
                                          .reduceByKey((fc1, fc2) => fc1 + fc2)
                                          .join(wordsPerFeature)
-    featureCounts.cache
+    featureCounts.cache()
 
     val res = wordFeatureCounts//.map(cols => (cols._2._1, (cols._1, cols._2._2)))
              .join(wordCounts)
@@ -83,7 +83,7 @@ object WordAndFeatureCount {
 //    featureCounts.map(cols => cols._1 + "	" + cols._2)
 //                 .saveAsTextFile(dir + "__FeatureCount")
 //    print(res2)
-    res3.map({case (word1, (word2, sim)) => word1 + "\t" + word2 + "\t" + sim}).saveAsTextFile(dir + "__LL_sims")
+    res3.map({case (word1, (word2, sim)) => word1 + "\t" + word2 + "\t" + sim}).saveAsTextFile(dir + "__LL_Sim")
     /*val l = new Array[Int](600)
     for (i <- 0 to 599) {
       l(i) = i
