@@ -88,6 +88,11 @@ object WordAndFeatureCount {
             // (word, [(feature, score), (feature, score), ...])
             .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}).take(param_p)) // sort by value desc
 
+        featuresPerWordWithScore
+            .flatMap({case (word, featureScores) => for(featureScore <- featureScores) yield (word, featureScore)})
+            .map({case (word, (feature, score)) => word + "\t" + feature + "\t" + score})
+            .saveAsTextFile(dir + "__LL_PruneGraph")
+
         val wordsPerFeatureWithScore = featuresPerWordWithScore
             .flatMap({case (word, featureScores) => for(featureScore <- featureScores) yield (featureScore._1, (word, 1))})
             .groupByKey()
