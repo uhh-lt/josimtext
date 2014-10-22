@@ -59,6 +59,7 @@ object WordAndFeatureCount {
              .map({case (word, ((feature, wfc), wc)) => (feature, (word, wfc, wc))})
              .join(featureCounts)
              .map({case (feature, ((word, wfc, wc), (fc, fwc))) => (word, (feature, ll(n, wc, fc, wfc)))})
+             .filter({case (word, (feature, score)) => score >= param_s})
              .groupByKey()
              // (word, [(feature, score), (feature, score), ...])
              .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2})
