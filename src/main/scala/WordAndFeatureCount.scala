@@ -111,25 +111,28 @@ object WordAndFeatureCount{
         if (param_debug) {
             wordCounts
                 .map({ case (word, count) => word + "\t" + count})
-                .saveAsTextFile(dir + "__LMI2_WordCount")
+                .saveAsTextFile(dir + "__LMI_WordCount")
             featureCounts
                 .map({ case (feature, count) => feature + "\t" + count})
-                .saveAsTextFile(dir + "__LMI2_FeatureCount")
+                .saveAsTextFile(dir + "__LMI_FeatureCount")
+            wordFeatureCounts
+                .map({ case (word, (feature, count)) => word + "\t" + feature + "\t" + count})
+                .saveAsTextFile(dir + "__LMI_WordFeatureCount")
             wordFeatureCountsFiltered
                 .join(wordCounts)
                 .map({ case (word, ((feature, wfc), wc)) => (feature, (word, wfc, wc))})
                 .join(featureCounts)
                 .map({ case (feature, ((word, wfc, wc), fc)) => word + "\t" + feature + "\t" + wc + "\t" + fc + "\t" + wfc + "\t" + n + "\t" + lmi(n, wc, fc, wfc)})
-                .saveAsTextFile(dir + "__LMI2_AllValuesPerWord")
+                .saveAsTextFile(dir + "__LMI_AllValuesPerWord")
             featuresPerWordWithScore
                 .flatMap({ case (word, featureScores) => for (featureScore <- featureScores) yield (word, featureScore)})
                 .map({ case (word, (feature, score)) => word + "\t" + feature + "\t" + score})
-                .saveAsTextFile(dir + "__LMI2_PruneGraph")
+                .saveAsTextFile(dir + "__LMI_PruneGraph")
             wordsPerFeatureWithScore
                 .map({ case (feature, wordList) => feature + "\t" + wordList.map(f => f._1).mkString("\t")})
-                .saveAsTextFile(dir + "__LMI2_AggrPerFeature")
+                .saveAsTextFile(dir + "__LMI_AggrPerFeature")
         }
 
-        wordSims.map({case (word1, (word2, sim)) => word1 + "\t" + word2 + "\t" + sim}).saveAsTextFile(dir + "__LMI2_Sim")
+        wordSims.map({case (word1, (word2, sim)) => word1 + "\t" + word2 + "\t" + sim}).saveAsTextFile(dir + "__LMI_Sim")
     }
 }
