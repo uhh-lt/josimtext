@@ -57,7 +57,6 @@ object WordAndFeatureCount {
         val wordFeatureCounts = file
             .map(line => line.split("	"))
             .map(cols => (cols(0), (cols(1), cols(2).toInt)))
-            .filter({case (word, (feature, wfc)) => wfc >= param_t})
         
         wordFeatureCounts.cache()
         val n = wordFeatureCounts.aggregate(0)(_ + _._2._2, _ + _)
@@ -88,6 +87,7 @@ object WordAndFeatureCount {
             .saveAsTextFile(dir + "__LL_FeatureCount")
 
         val featuresPerWordWithScore = wordFeatureCounts
+            .filter({case (word, (feature, wfc)) => wfc >= param_t})
             .join(wordCounts)
             .map({case (word, ((feature, wfc), wc)) => (feature, (word, wfc, wc))})
             .join(featureCounts)
