@@ -74,13 +74,12 @@ object WordAndFeatureCount{
             .map({case (word, count) => word + "\t" + count})
             .saveAsTextFile(dir + "__LMI_WordCount")
 
-        val _wordsPerFeature = wordFeatureCounts
+        val wordsPerFeature = wordFeatureCounts
             .map({case (word, (feature, wfc)) => (feature, word)})
             .groupByKey()
-
-        val wordsPerFeature = _wordsPerFeature
             .mapValues(v => v.toSet.size)
             .filter({case (feature, numWords) => numWords > 0 && numWords < param_w})
+
         val featureCounts = wordFeatureCounts
             .map({case (word, (feature, wfc)) => (feature, wfc)})
             .reduceByKey((fc1, fc2) => fc1 + fc2)
@@ -96,8 +95,13 @@ object WordAndFeatureCount{
             .filter({case (word, (feature, wfc)) => wfc >= param_t})
         wordFeatureCountsFiltered.cache()
 
+        // FIXME: n should not be based on any filtered counts! Use unfiltered word-feature-counts instead,
+        // as feature and word counts are based on the unfiltered counts as well
         val n = wordFeatureCountsFiltered
-            .aggregate(0)(_ + _._2._2, _ + _)
+            .map({case (word, (feature, wfc)) => (feature, (word, wfc))})
+            .join(wordsPerFeature) // filter by using a join
+            .map({case (feature, ((word, wfc), fwc)) => (word, (feature, wfc))})
+            .aggregate(0L)(_ + _._2._2.toLong, _ + _) // we need Long because n might exceed the max. Int value
 
 
         wordFeatureCountsFiltered
