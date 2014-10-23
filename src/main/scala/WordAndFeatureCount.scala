@@ -59,7 +59,7 @@ object WordAndFeatureCount {
             .map(cols => (cols(0), (cols(1), cols(2).toInt)))
         
         wordFeatureCounts.cache()
-        val n = wordFeatureCounts.aggregate(0)(_ + _._2._2, _ + _)
+
         val wordCounts = wordFeatureCounts
             .map({case (word, (feature, wfc)) => (word, wfc)})
             .reduceByKey((wc1, wc2) => wc1 + wc2)
@@ -79,19 +79,35 @@ object WordAndFeatureCount {
         val featureCounts = wordFeatureCounts
             .map({case (word, (feature, wfc)) => (feature, wfc)})
             .reduceByKey((fc1, fc2) => fc1 + fc2)
-            .join(wordsPerFeature)
+            .join(wordsPerFeature) // filter by using a join
+            .map({case (feature, (fc, fwc)) => (feature, fc)}) // and remove unnecessary data from join
         featureCounts.cache()
 
         featureCounts
             .map({case (feature, count) => feature + "\t" + count})
             .saveAsTextFile(dir + "__LL_FeatureCount")
 
-        val featuresPerWordWithScore = wordFeatureCounts
+        val wordFeatureCountsFiltered = wordFeatureCounts
             .filter({case (word, (feature, wfc)) => wfc >= param_t})
+        wordFeatureCountsFiltered.cache()
+
+        val n = wordFeatureCountsFiltered
+            .aggregate(0)(_ + _._2._2, _ + _)
+
+
+        wordFeatureCountsFiltered
             .join(wordCounts)
             .map({case (word, ((feature, wfc), wc)) => (feature, (word, wfc, wc))})
             .join(featureCounts)
-            .map({case (feature, ((word, wfc, wc), (fc, fwc))) => (word, (feature, ll(n, wc, fc, wfc)))})
+            .map({case (feature, ((word, wfc, wc), fc)) => (word, (feature, wc, fc, wfc, n, ll(n, wc, fc, wfc)))})
+            .map({case (word, (feature, wc, fc, wfc, n, ll)) => word + "\t" + feature + "\t" + wc + "\t" + fc  + "\t" + wfc  + "\t" + n + "\t" + ll})
+            .saveAsTextFile("__LL_AllValuesPerWord")
+
+        val featuresPerWordWithScore = wordFeatureCountsFiltered
+            .join(wordCounts)
+            .map({case (word, ((feature, wfc), wc)) => (feature, (word, wfc, wc))})
+            .join(featureCounts)
+            .map({case (feature, ((word, wfc, wc), fc)) => (word, (feature, ll(n, wc, fc, wfc)))})
             .filter({case (word, (feature, score)) => score >= param_s})
             .groupByKey()
             // (word, [(feature, score), (feature, score), ...])
