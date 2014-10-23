@@ -72,7 +72,7 @@ object WordAndFeatureCount{
 
         wordCounts
             .map({case (word, count) => word + "\t" + count})
-            .saveAsTextFile(dir + "__LMI_WordCount")
+            .saveAsTextFile(dir + "__LMI2_WordCount")
 
         val wordsPerFeature = wordFeatureCounts
             .map({case (word, (feature, wfc)) => (feature, word)})
@@ -89,7 +89,7 @@ object WordAndFeatureCount{
 
         featureCounts
             .map({case (feature, count) => feature + "\t" + count})
-            .saveAsTextFile(dir + "__LMI_FeatureCount")
+            .saveAsTextFile(dir + "__LMI2_FeatureCount")
 
         val wordFeatureCountsFiltered = wordFeatureCounts
             .filter({case (word, (feature, wfc)) => wfc >= param_t})
@@ -99,8 +99,8 @@ object WordAndFeatureCount{
         // as feature and word counts are based on the unfiltered counts as well
         val n = wordFeatureCountsFiltered
             .map({case (word, (feature, wfc)) => (feature, (word, wfc))})
-            .join(wordsPerFeature) // filter by using a join
-            .map({case (feature, ((word, wfc), fwc)) => (word, (feature, wfc))})
+            //.join(wordsPerFeature) // filter by using a join
+            //.map({case (feature, ((word, wfc), fwc)) => (word, (feature, wfc))})
             .aggregate(0L)(_ + _._2._2.toLong, _ + _) // we need Long because n might exceed the max. Int value
 
 
@@ -110,7 +110,7 @@ object WordAndFeatureCount{
             .join(featureCounts)
             .map({case (feature, ((word, wfc, wc), fc)) => (word, (feature, wc, fc, wfc, n, lmi(n, wc, fc, wfc)))})
             .map({case (word, (feature, wc, fc, wfc, n, lmi)) => word + "\t" + feature + "\t" + wc + "\t" + fc  + "\t" + wfc  + "\t" + n + "\t" + lmi})
-            .saveAsTextFile(dir + "__LMI_AllValuesPerWord")
+            .saveAsTextFile(dir + "__LMI2_AllValuesPerWord")
 
         val featuresPerWordWithScore = wordFeatureCountsFiltered
             .join(wordCounts)
@@ -125,7 +125,7 @@ object WordAndFeatureCount{
         featuresPerWordWithScore
             .flatMap({case (word, featureScores) => for(featureScore <- featureScores) yield (word, featureScore)})
             .map({case (word, (feature, score)) => word + "\t" + feature + "\t" + score})
-            .saveAsTextFile(dir + "__LMI_PruneGraph")
+            .saveAsTextFile(dir + "__LMI2_PruneGraph")
 
         val wordsPerFeatureWithScore = featuresPerWordWithScore
             .flatMap({case (word, featureScores) => for(featureScore <- featureScores) yield (featureScore._1, (word, 1))})
@@ -134,7 +134,7 @@ object WordAndFeatureCount{
 
         wordsPerFeatureWithScore
             .map({case (feature, wordList) => feature + "\t" + wordList.map(f => f._1).mkString("\t")})
-            .saveAsTextFile(dir + "__LMI_AggrPerFeature")
+            .saveAsTextFile(dir + "__LMI2_AggrPerFeature")
 
         val wordSims = wordsPerFeatureWithScore
             .flatMap({case (feature, wordScores) => for((word1, score1) <- wordScores; (word2, score2) <- wordScores) yield ((word1, word2), score2)})
@@ -144,6 +144,6 @@ object WordAndFeatureCount{
             .mapValues(simWords => simWords.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}).take(param_l))
             .flatMap({case (word, simWords) => for(simWord <- simWords) yield (word, simWord)})
 
-        wordSims.map({case (word1, (word2, sim)) => word1 + "\t" + word2 + "\t" + sim}).saveAsTextFile(dir + "__LMI_Sim")
+        wordSims.map({case (word1, (word2, sim)) => word1 + "\t" + word2 + "\t" + sim}).saveAsTextFile(dir + "__LMI2_Sim")
     }
 }
