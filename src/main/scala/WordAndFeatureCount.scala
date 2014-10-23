@@ -43,8 +43,8 @@ object WordAndFeatureCount{
         val file = sc.textFile(dir)
 
         val wordFeaturesOccurrences = file
-            .map(line => line.split("   "))
-            .map(cols => (cols(0), cols(1), cols(2), cols(3), cols(4))) // (word, feature, dataset, wordPos, featurePos)
+            .map(line => line.split("\t"))
+            .map({case Array(word, feature, dataset, wordPos, featurePos) => (word, feature, dataset, wordPos, featurePos)})
 
         val wordFeatureCounts = wordFeaturesOccurrences
             .map({case (word, feature, dataset, wordPos, featurePos) => ((word, feature, dataset, wordPos, featurePos), 1)})
