@@ -44,7 +44,8 @@ object WordAndFeatureCount{
 
         val wordFeaturesOccurrences = file
             .map(line => line.split("\t"))
-            .map({case Array(word, feature, dataset, wordPos, featurePos) => (word, feature, dataset, wordPos, featurePos)})
+            .map({case Array(word, feature, dataset, wordPos, featurePos) => (word, feature, dataset, wordPos, featurePos)
+                  case _ => ("BROKEN_LINE", "BROKEN_LINE", "BROKEN_LINE", "BROKEN_LINE", "BROKEN_LINE")})
 
         val wordFeatureCounts = wordFeaturesOccurrences
             .map({case (word, feature, dataset, wordPos, featurePos) => ((word, feature, dataset, wordPos, featurePos), 1)})
