@@ -2,7 +2,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
 
-object WordAndFeatureCount{
+object WordSim {
     def log2(n:Double): Double = {
         math.log(n) / math.log(2)
     }
