@@ -26,7 +26,7 @@ object WordSim {
     }
 
     def lmi(n:Long, wc:Long, fc:Long, bc:Long): Double = {
-        bc*math.log( (n*bc).toFloat/(wc*fc) )/math.log(2)
+        bc*(log2(n*bc) - log2(wc*fc))
     }
 
     def main(args: Array[String]) {
