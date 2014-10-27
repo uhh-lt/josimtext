@@ -36,17 +36,18 @@ object WordSim {
         val param_s = 0.0
         val param_l = 200
 
-        val param_debug = false
+        val param_debug = true
 
-        val dir = args(0)
+        val inDir = args(0)
+        val outDir = args(1)
         val conf = new SparkConf().setAppName("WordSim")
         val sc = new SparkContext(conf)
-        val file = sc.textFile(dir)
+        val file = sc.textFile(inDir)
 
         val wordFeaturesOccurrences = file
             .map(line => line.split("\t"))
             .map({case Array(word, feature, dataset, wordPos, featurePos) => (word, feature, dataset, wordPos, featurePos)
-        case _ => ("BROKEN_LINE", "BROKEN_LINE", "BROKEN_LINE", "BROKEN_LINE", "BROKEN_LINE")})
+                  case _ => ("BROKEN_LINE", "BROKEN_LINE", "BROKEN_LINE", "BROKEN_LINE", "BROKEN_LINE")})
         wordFeaturesOccurrences.cache()
 
         val wordFeatureCounts = wordFeaturesOccurrences
@@ -121,33 +122,33 @@ object WordSim {
 
         wordSimsWithFeatures
             .map({case (word1, (word2, score, featureSet)) => word1 + "\t" + word2 + "\t" + score + "\t" + featureSet.mkString("  ")})
-            .saveAsTextFile(dir + "__LMI_SimWithFeatures")
+            .saveAsTextFile(outDir + "__LMI_SimWithFeatures")
 
         if (param_debug) {
             wordCounts
                 .map({ case (word, count) => word + "\t" + count})
-                .saveAsTextFile(dir + "__LMI_WordCount")
+                .saveAsTextFile(outDir + "__LMI_WordCount")
             featureCounts
                 .map({ case (feature, count) => feature + "\t" + count})
-                .saveAsTextFile(dir + "__LMI_FeatureCount")
+                .saveAsTextFile(outDir + "__LMI_FeatureCount")
             wordFeatureCounts
                 .map({ case (word, (feature, count)) => word + "\t" + feature + "\t" + count})
-                .saveAsTextFile(dir + "__LMI_WordFeatureCount")
+                .saveAsTextFile(outDir + "__LMI_WordFeatureCount")
             wordFeatureCountsFiltered
                 .join(wordCounts)
                 .map({ case (word, ((feature, wfc), wc)) => (feature, (word, wfc, wc))})
                 .join(featureCounts)
                 .map({ case (feature, ((word, wfc, wc), fc)) => word + "\t" + feature + "\t" + wc + "\t" + fc + "\t" + wfc + "\t" + n + "\t" + lmi(n, wc, fc, wfc)})
-                .saveAsTextFile(dir + "__LMI_AllValuesPerWord")
+                .saveAsTextFile(outDir + "__LMI_AllValuesPerWord")
             featuresPerWordWithScore
                 .flatMap({ case (word, featureScores) => for (featureScore <- featureScores) yield (word, featureScore)})
                 .map({ case (word, (feature, score)) => word + "\t" + feature + "\t" + score})
-                .saveAsTextFile(dir + "__LMI_PruneGraph")
+                .saveAsTextFile(outDir + "__LMI_PruneGraph")
             wordsPerFeatureWithScore
                 .map({ case (feature, wordList) => feature + "\t" + wordList.map(f => f._1).mkString("\t")})
-                .saveAsTextFile(dir + "__LMI_AggrPerFeature")
+                .saveAsTextFile(outDir + "__LMI_AggrPerFeature")
         }
 
-        wordSims.map({case (word1, (word2, sim)) => word1 + "\t" + word2 + "\t" + sim}).saveAsTextFile(dir + "__LMI_Sim")
+        wordSims.map({case (word1, (word2, sim)) => word1 + "\t" + word2 + "\t" + sim}).saveAsTextFile(outDir + "__LMI_Sim")
     }
 }
