@@ -2,3 +2,4 @@ target
 project/target
 .idea/libraries
 .cache
+src/test/resources/*__*
