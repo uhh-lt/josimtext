@@ -30,25 +30,32 @@ object WordSim {
     }
 
     def main(args: Array[String]) {
-        val param_t = 2
-        val param_w = 1000
-        val param_p = 1000
-        val param_s = 0.0
-        val param_l = 200
+        if (args.size < 1) {
+            println("Usage: WordSim dataset [w=1000] [s=0.0] [t=2] [sig=LMI] [p=1000] [l=200]")
+            println("For example, the arguments \"wikipedia 500 0.0 3\" will override w with 500 and t with 3, leaving the rest at the default values")
+            return
+        }
+
+        val param_dataset = args(0)
+        val param_w = if (args.size > 1) args(1).toInt else 1000
+        val param_s = if (args.size > 2) args(2).toDouble else 0.0
+        val param_t = if (args.size > 3) args(3).toInt else 2
+        val param_sig = if (args.size > 4) args(4) else "LMI"
+        val param_p = if (args.size > 5) args(5).toInt else 1000
+        val param_l = if (args.size > 6) args(6).toInt else 200
 
         val param_debug = true
 
-        val inDir = args(0)
-        val outDir = args(1)
+        val outDir = param_dataset;
         val conf = new SparkConf().setAppName("WordSim")
         val sc = new SparkContext(conf)
-        val file = sc.textFile(inDir)
+        val file = sc.textFile(param_dataset)
 
         val wordFeaturesOccurrences = file
             .map(line => line.split("\t"))
             .map({case Array(word, feature, dataset, wordPos, featurePos) => (word, feature, dataset.hashCode, wordPos, featurePos)
                   case _ => ("BROKEN_LINE", "BROKEN_LINE", "BROKEN_LINE", "BROKEN_LINE", "BROKEN_LINE")})
-        wordFeaturesOccurrences.cache()
+        //wordFeaturesOccurrences.cache()
 
         val wordFeatureCounts = wordFeaturesOccurrences
             .map({case (word, feature, dataset, wordPos, featurePos) => ((word, feature, dataset, wordPos, featurePos), 1)})
