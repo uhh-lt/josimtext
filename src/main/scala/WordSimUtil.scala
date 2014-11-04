@@ -95,16 +95,20 @@ object WordSimUtil {
             .map({case (word, (feature, wfc)) => (feature, word)})
             .groupByKey()
             .mapValues(v => v.size)
-            .filter({case (feature, numWords) => numWords < w})
+            .filter({case (feature, numWords) => numWords <= w})
 
         val featureCountsFiltered = featureCounts
             .filter({case (feature, fc) => fc >= t})
             .join(wordsPerFeature) // filter by using a join
             .map({case (feature, (fc, fwc)) => (feature, fc)}) // and remove unnecessary data from join
+        featureCountsFiltered.cache()
 
         val wordCountsFiltered = wordCounts
             .filter({case (word, wc) => wc >= t})
+        wordCountsFiltered.cache()
 
+        // Since word counts and feature counts are based on unfiltered word-feature
+        // occurrences, n must be based on unfiltered word-feature counts as well.
         val n = wordFeatureCounts
             .map({case (word, (feature, wfc)) => (feature, (word, wfc))})
             .aggregate(0L)(_ + _._2._2.toLong, _ + _) // we need Long because n might exceed the max. Int value
@@ -118,6 +122,7 @@ object WordSimUtil {
             .groupByKey()
             // (word, [(feature, score), (feature, score), ...])
             .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}).take(p)) // sort by value desc
+        featuresPerWordWithScore.cache()
 
         val featuresPerWord:RDD[(String, Array[String])] = featuresPerWordWithScore
             .map({case (word, featureScores) => (word, featureScores.map({case (feature, score) => feature}))})
