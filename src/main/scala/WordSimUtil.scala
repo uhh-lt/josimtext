@@ -87,7 +87,11 @@ object WordSimUtil {
                                     outDir:String)
     : RDD[(String, (String, Int, Set[String]))] = {
 
-        val wordsPerFeature = wordFeatureCounts
+        val wordFeatureCountsFiltered = wordFeatureCounts
+            .filter({case (word, (feature, wfc)) => wfc >= t})
+        wordFeatureCountsFiltered.cache()
+
+        val wordsPerFeature = wordFeatureCountsFiltered
             .map({case (word, (feature, wfc)) => (feature, word)})
             .groupByKey()
             .mapValues(v => v.size)
@@ -104,10 +108,6 @@ object WordSimUtil {
         val n = wordFeatureCounts
             .map({case (word, (feature, wfc)) => (feature, (word, wfc))})
             .aggregate(0L)(_ + _._2._2.toLong, _ + _) // we need Long because n might exceed the max. Int value
-
-        val wordFeatureCountsFiltered = wordFeatureCounts
-            .filter({case (word, (feature, wfc)) => wfc >= t})
-        wordFeatureCountsFiltered.cache()
 
         val featuresPerWordWithScore = wordFeatureCountsFiltered
             .join(wordCountsFiltered)
