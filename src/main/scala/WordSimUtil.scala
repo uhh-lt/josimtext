@@ -142,16 +142,16 @@ object WordSimUtil {
             .map({case (word, ((simWord, score, featureList1), featureList2)) => (word, (simWord, score, featureList1.toSet.intersect(featureList2.toSet)))})
 
         if (DEBUG) {
+            featuresPerWordWithScore
+                .flatMap({ case (word, featureScores) => for (featureScore <- featureScores) yield (word, featureScore)})
+                .map({ case (word, (feature, score)) => word + "\t" + feature + "\t" + score})
+                .saveAsTextFile(outDir + "__PruneGraph")
             wordFeatureCountsFiltered
                 .join(wordCountsFiltered)
                 .map({ case (word, ((feature, wfc), wc)) => (feature, (word, wfc, wc))})
                 .join(featureCountsFiltered)
                 .map({ case (feature, ((word, wfc, wc), fc)) => word + "\t" + feature + "\t" + wc + "\t" + fc + "\t" + wfc + "\t" + n + "\t" + sig(n, wc, fc, wfc)})
                 .saveAsTextFile(outDir + "__AllValuesPerWord")
-            featuresPerWordWithScore
-                .flatMap({ case (word, featureScores) => for (featureScore <- featureScores) yield (word, featureScore)})
-                .map({ case (word, (feature, score)) => word + "\t" + feature + "\t" + score})
-                .saveAsTextFile(outDir + "__PruneGraph")
             wordsPerFeatureWithScore
                 .map({ case (feature, wordList) => feature + "\t" + wordList.map(f => f._1).mkString("\t")})
                 .saveAsTextFile(outDir + "__AggrPerFeature")
