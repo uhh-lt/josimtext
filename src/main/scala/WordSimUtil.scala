@@ -109,20 +109,17 @@ object WordSimUtil {
             .filter({case (word, (feature, wfc)) => wfc >= t})
         wordFeatureCountsFiltered.cache()
 
-        val featuresPerWordWithScore:RDD[(String, Iterable[(String, Double)])] = wordFeatureCountsFiltered
+        val featuresPerWordWithScore = wordFeatureCountsFiltered
             .join(wordCountsFiltered)
             .map({case (word, ((feature, wfc), wc)) => (feature, (word, wfc, wc))})
             .join(featureCountsFiltered)
-            .map({case (feature, ((word, wfc, wc), fc)) => (sig(n, wc, fc, wfc), (word, feature))})
-            .filter({case (score, _) => score >= s})
-            .sortByKey(ascending = false) // sort in descending order
-            .map({case (score, (word, feature)) => (word, (feature, score))})
+            .map({case (feature, ((word, wfc, wc), fc)) => (word, (feature, sig(n, wc, fc, wfc)))})
+            .filter({case (word, (feature, score)) => score >= s})
             .groupByKey()
             // (word, [(feature, score), (feature, score), ...])
-            .mapValues(featureScores => featureScores.take(p))
-        featuresPerWordWithScore.cache()
+            .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}).take(p)) // sort by value desc
 
-        val featuresPerWord:RDD[(String, Iterable[String])] = featuresPerWordWithScore
+        val featuresPerWord:RDD[(String, Array[String])] = featuresPerWordWithScore
             .map({case (word, featureScores) => (word, featureScores.map({case (feature, score) => feature}))})
 
         val wordsPerFeatureWithScore = featuresPerWordWithScore
@@ -133,11 +130,9 @@ object WordSimUtil {
         val wordSims:RDD[(String, (String, Int))] = wordsPerFeatureWithScore
             .flatMap({case (feature, wordScores) => for((word1, score1) <- wordScores; (word2, score2) <- wordScores) yield ((word1, word2), score2)})
             .reduceByKey((score1, score2) => score1 + score2)
-            .map({case ((word1, word2), score) => (score, (word1, word2))})
-            .sortByKey(ascending = false)
-            .map({case (score, (word1, word2)) => (word1, (word2, score))})
+            .map({case ((word1, word2), score) => (word1, (word2, score))})
             .groupByKey()
-            .mapValues(simWords => simWords.take(l))
+            .mapValues(simWords => simWords.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}).take(l))
             .flatMap({case (word, simWords) => for(simWord <- simWords) yield (word, simWord)})
 
         val wordSimsWithFeatures:RDD[(String, (String, Int, Set[String]))] = wordSims
