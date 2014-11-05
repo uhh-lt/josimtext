@@ -6,9 +6,11 @@ import org.apache.spark.rdd._
 object ClusterContextClueAggregator {
     def main(args: Array[String]) {
         if (args.size != 3) {
-            println("Usage: ClusterContextClueAggregator cluster-file feature-file output")
+            println("Usage: ClusterContextClueAggregator cluster-file feature-file output [s]")
             return
         }
+
+        val param_s = if (args.length > 3) args(3).toInt else 0
 
         val conf = new SparkConf().setAppName("ClusterContextClueAggregator")
         val sc = new SparkContext(conf)
@@ -26,10 +28,11 @@ object ClusterContextClueAggregator {
             .map(line => line.split("\t"))
             .map(cols => (cols(0), cols(1)))
 
-        val clusterFeatures = clusterWords
+        clusterWords
             .join(wordFeatures)
             .map({case (simWord, ((word, sense), feature)) => ((word, sense, feature), 1)})
             .reduceByKey((v1, v2) => v1 + v2)
+            .filter({case (key, value) => value > param_s})
             .map({case ((word, sense, feature), count) => ((word, sense), (feature, count))})
             .groupByKey()
             .mapValues(featureCounts => featureCounts.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}))
