@@ -144,7 +144,7 @@ object WordSimUtil {
             .join(featuresPerWord)
             .map({case (word, ((simWord, score), featureList1)) => (simWord, (word, score, featureList1))})
             .join(featuresPerWord)
-            .map({case (word, ((simWord, score, featureList1), featureList2)) => (word, (simWord, score, featureList1.toSet.intersect(featureList2.toSet)))})
+            .map({case (simWord, ((word, score, featureList1), featureList2)) => (word, (simWord, score, featureList1.toSet.intersect(featureList2.toSet)))})
 
         if (DEBUG) {
             featuresPerWordWithScore
