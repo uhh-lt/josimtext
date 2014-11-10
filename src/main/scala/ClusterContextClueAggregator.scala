@@ -10,7 +10,7 @@ object ClusterContextClueAggregator {
             return
         }
 
-        val param_s = if (args.length > 3) args(3).toInt else 0
+        val param_s = if (args.length > 3) args(3).toDouble else 0.0
 
         val conf = new SparkConf().setAppName("ClusterContextClueAggregator")
         val sc = new SparkContext(conf)
@@ -26,17 +26,17 @@ object ClusterContextClueAggregator {
 
         val wordFeatures = featureFile
             .map(line => line.split("\t"))
-            .map(cols => (cols(0), cols(1)))
+            .map(cols => (cols(0), (cols(1), cols(2), cols(3), cols(4))))
 
         clusterWords
             .join(wordFeatures)
-            .map({case (simWord, ((word, sense), feature)) => ((word, sense, feature), 1)})
-            .reduceByKey((v1, v2) => v1 + v2)
+            .map({case (simWord, ((word, sense), (feature, wc, fc, wfc))) => ((word, sense, feature), wfc.toDouble / fc.toDouble)})
+            .reduceByKey((v1, v2) => math.max(v1, v2))
             .filter({case (key, value) => value > param_s})
-            .map({case ((word, sense, feature), count) => ((word, sense), (feature, count))})
+            .map({case ((word, sense, feature), score) => ((word, sense), (feature, score))})
             .groupByKey()
             .mapValues(featureCounts => featureCounts.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}))
-            .map({case ((word, sense), featureCounts) => word + "\t" + sense + "\t" + featureCounts.map({case (feature, count) => feature + ":" + count}).mkString("  ")})
+            .map({case ((word, sense), featureCounts) => word + "\t" + sense + "\t" + featureCounts.map({case (feature, score) => feature + ":" + score}).mkString("  ")})
             .saveAsTextFile(outputFile)
     }
 }
