@@ -5,7 +5,7 @@ import org.apache.spark.rdd._
 
 object ClusterContextClueAggregator {
     def main(args: Array[String]) {
-        if (args.size != 3) {
+        if (args.size < 3) {
             println("Usage: ClusterContextClueAggregator cluster-file feature-file output [s]")
             return
         }
@@ -27,7 +27,7 @@ object ClusterContextClueAggregator {
         val wordFeatures = featureFile
             .map(line => line.split("\t"))
             .map(cols => (cols(0), (cols(1), cols(4).toFloat / cols(3).toFloat))) // prob = wfc / fc
-            .filter({case (simWord, (word, prob)) => prob > param_s})
+            .filter({case (word, (feature, prob)) => prob > param_s})
 
         clusterWords
             .join(wordFeatures)
