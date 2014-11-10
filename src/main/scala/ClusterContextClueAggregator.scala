@@ -26,11 +26,11 @@ object ClusterContextClueAggregator {
 
         val wordFeatures = featureFile
             .map(line => line.split("\t"))
-            .map(cols => (cols(0), (cols(1), cols(2), cols(3), cols(4))))
+            .map(cols => (cols(0), (cols(1), cols(3).toFloat, cols(4).toFloat))) // left out cols(2) intentionally
 
         clusterWords
             .join(wordFeatures)
-            .map({case (simWord, ((word, sense), (feature, wc, fc, wfc))) => ((word, sense, feature), wfc.toDouble / fc.toDouble)})
+            .map({case (simWord, ((word, sense), (feature, fc, wfc))) => ((word, sense, feature), wfc / fc)})
             .reduceByKey((v1, v2) => math.max(v1, v2))
             .filter({case (key, value) => value > param_s})
             .map({case ((word, sense, feature), score) => ((word, sense), (feature, score))})
