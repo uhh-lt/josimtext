@@ -27,19 +27,23 @@ object ClusterContextClueAggregator {
             .map(cols => ((cols(0), cols(1) + "\t" + cols(2)), cols(3).split("  ")))
             .filter({case ((word, sense), simWords) => words == null || words.contains(word)})
 
-        val clusterWords:RDD[(String, (String, String))] = clusterSimWords
-            .flatMap({case ((word, sense), simWords) => for(simWord <- simWords) yield (simWord, (word, sense))})
+        val clusterWords:RDD[(String, (String, String, Int))] = clusterSimWords
+            .flatMap({case ((word, sense), simWords) => for(simWord <- simWords) yield (simWord, (word, sense, simWords.size))})
 
         val wordFeatures = featureFile
             .map(line => line.split("\t"))
             .map(cols => (cols(0), (cols(1), cols(4).toFloat / cols(3).toFloat, cols(4).toFloat / cols(2).toFloat))) // prob = wfc / fc, coverage = wfc / wc
             .filter({case (word, (feature, prob, coverage)) => prob >= param_s && coverage >= param_p})
 
+        val featuresPerWord = wordFeatures
+            .mapValues(feature => 1)
+            .reduceByKey((sum1, sum2) => sum1 + sum2)
+
         clusterWords
             .join(wordFeatures)
-            .map({case (simWord, ((word, sense), (feature, prob, coverage))) => ((word, sense, feature), (prob, coverage, 1.0f))})
-            .reduceByKey({case ((p1, c1, n1), (p2, c2, n2)) => (p1 + p2, c1 + c2, n1 + n2)})
-            .map({case ((word, sense, feature), (prob, coverage, n)) => ((word, sense), (feature, prob / n, coverage / n))})
+            .map({case (simWord, ((word, sense, numSimWords), (feature, prob, coverage))) => ((word, sense, feature), (prob, coverage, numSimWords))})
+            .reduceByKey({case ((p1, c1, n), (p2, c2, _)) => (p1 + p2, c1 + c2, n)})
+            .map({case ((word, sense, feature), (probSum, coverageSum, numSimWords)) => ((word, sense), (feature, probSum / numSimWords, coverageSum / numSimWords))})
             .groupByKey()
             .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, _, c1), (_, _, c2)) => c1 > c2}))
             .join(clusterSimWords)
