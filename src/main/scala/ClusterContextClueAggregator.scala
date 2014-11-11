@@ -31,9 +31,9 @@ object ClusterContextClueAggregator {
 
         clusterWords
             .join(wordFeatures)
-            .map({case (simWord, ((word, sense), (feature, score))) => ((word, sense, feature), score)})
-            .reduceByKey((v1, v2) => math.max(v1, v2))
-            .map({case ((word, sense, feature), score) => ((word, sense), (feature, score))})
+            .map({case (simWord, ((word, sense), (feature, score))) => ((word, sense, feature), (score, 1.0f))})
+            .reduceByKey({case ((v1, n1), (v2, n2)) => (v1 + v2, n1 + n2)})
+            .map({case ((word, sense, feature), (score, n)) => ((word, sense), (feature, score / n))})
             .groupByKey()
             .mapValues(featureCounts => featureCounts.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}))
             .map({case ((word, sense), featureCounts) => word + "\t" + sense + "\t" + featureCounts.map({case (feature, score) => feature + ":" + score}).mkString("  ")})
