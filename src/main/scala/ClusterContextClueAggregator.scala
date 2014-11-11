@@ -22,11 +22,13 @@ object ClusterContextClueAggregator {
         val featureFile = sc.textFile(args(1))
         val outputFile = args(2)
 
-        val clusterWords:RDD[(String, (String, String))] = clusterFile
+        val clusterSimWords:RDD[((String, String), Array[String])] = clusterFile
             .map(line => line.split("\t"))
-            .map(cols => (cols(0), cols(1) + "\t" + cols(2), cols(3).split("  ")))
-            .filter({case (word, sense, simWords) => words == null || words.contains(word)})
-            .flatMap({case (word, sense, simWords) => for(simWord <- simWords) yield (simWord, (word, sense))})
+            .map(cols => ((cols(0), cols(1) + "\t" + cols(2)), cols(3).split("  ")))
+            .filter({case ((word, sense), simWords) => words == null || words.contains(word)})
+
+        val clusterWords:RDD[(String, (String, String))] = clusterSimWords
+            .flatMap({case ((word, sense), simWords) => for(simWord <- simWords) yield (simWord, (word, sense))})
 
         val wordFeatures = featureFile
             .map(line => line.split("\t"))
@@ -39,8 +41,9 @@ object ClusterContextClueAggregator {
             .reduceByKey({case ((v1, n1), (v2, n2)) => (v1 + v2, n1 + n2)})
             .map({case ((word, sense, feature), (score, n)) => ((word, sense), (feature, score / n))})
             .groupByKey()
-            .mapValues(featureCounts => featureCounts.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}))
-            .map({case ((word, sense), featureCounts) => word + "\t" + sense + "\t" + featureCounts.map({case (feature, score) => feature + ":" + score}).mkString("  ")})
+            .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}))
+            .join(clusterSimWords)
+            .map({case ((word, sense), (featureScores, simWords)) => word + "\t" + sense + "\t" + simWords.mkString("  ") + "\t" + featureScores.map({case (feature, score) => feature + ":" + score}).mkString("  ")})
             .saveAsTextFile(outputFile)
     }
 }
