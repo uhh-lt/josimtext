@@ -37,13 +37,13 @@ object ClusterContextClueAggregator {
 
         clusterWords
             .join(wordFeatures)
-            .map({case (simWord, ((word, sense), (feature, prob, coverage))) => ((word, sense, feature), (prob, 1.0f))})
-            .reduceByKey({case ((v1, n1), (v2, n2)) => (v1 + v2, n1 + n2)})
-            .map({case ((word, sense, feature), (score, n)) => ((word, sense), (feature, score / n))})
+            .map({case (simWord, ((word, sense), (feature, prob, coverage))) => ((word, sense, feature), (prob, coverage, 1.0f))})
+            .reduceByKey({case ((p1, c1, n1), (p2, c2, n2)) => (p1 + p2, c1 + c2, n1 + n2)})
+            .map({case ((word, sense, feature), (prob, coverage, n)) => ((word, sense), (feature, prob / n, coverage / n))})
             .groupByKey()
-            .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}))
+            .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, _, c1), (_, _, c2)) => c1 > c2}))
             .join(clusterSimWords)
-            .map({case ((word, sense), (featureScores, simWords)) => word + "\t" + sense + "\t" + simWords.mkString("  ") + "\t" + featureScores.map({case (feature, score) => feature + ":" + score}).mkString("  ")})
+            .map({case ((word, sense), (featureScores, simWords)) => word + "\t" + sense + "\t" + simWords.mkString("  ") + "\t" + featureScores.map({case (feature, prob, coverage) => feature + ":" + prob + ":" + coverage}).mkString("  ")})
             .saveAsTextFile(outputFile)
     }
 }
