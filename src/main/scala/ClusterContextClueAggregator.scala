@@ -6,12 +6,14 @@ import org.apache.spark.rdd._
 object ClusterContextClueAggregator {
     def main(args: Array[String]) {
         if (args.size < 3) {
-            println("Usage: ClusterContextClueAggregator cluster-file feature-file output [min. probability] [min. coverage]")
+            println("Usage: ClusterContextClueAggregator cluster-file feature-file output [min. probability] [min. coverage] [wordlist]")
             return
         }
 
         val param_s = if (args.length > 3) args(3).toDouble else 0.0
         val param_p = if (args.length > 4) args(4).toDouble else 0.0
+
+        val words:Set[String] = if (args.length > 5) args(5).split(",").toSet else null
 
         val conf = new SparkConf().setAppName("ClusterContextClueAggregator")
         val sc = new SparkContext(conf)
@@ -23,6 +25,7 @@ object ClusterContextClueAggregator {
         val clusterWords:RDD[(String, (String, String))] = clusterFile
             .map(line => line.split("\t"))
             .map(cols => (cols(0), cols(1) + "\t" + cols(2), cols(3).split("  ")))
+            .filter({case (word, sense, simWords) => words == null || words.contains(word)})
             .flatMap({case (word, sense, simWords) => for(simWord <- simWords) yield (simWord, (word, sense))})
 
         val wordFeatures = featureFile
