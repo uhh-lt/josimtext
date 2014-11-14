@@ -46,7 +46,7 @@ object ClusterContextClueAggregator {
             .reduceByKey({case ((wc1, fc, wfc1, n), (wc2, _, wfc2, _)) => (wc1+wc2, fc, wfc1+wfc2, n)})
             .map({case ((word, sense, feature), (wc, fc, wfc, n)) => ((word, sense), (feature, WordSimUtil.lmi(n, wc, fc, wfc), wc, fc, wfc, n))})
             .groupByKey()
-            .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, lmi1, _, _), (_, lmi2, _, _)) => lmi1 > lmi2}))
+            .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, lmi1, _, _, _, _), (_, lmi2, _, _, _, _)) => lmi1 > lmi2}))
             .join(clusterSimWords)
             .map({case ((word, sense), (featureScores, simWords)) => word + "\t" + sense + "\t" + simWords.mkString("  ") + "\t" + featureScores.map({case (feature, lmi, wc, fc, wfc, n) => feature + ":" + lmi + ":" + wc + ":" + fc + ":" + wfc + ":" + n}).mkString("  ")})
             .saveAsTextFile(outputFile)
