@@ -41,14 +41,14 @@ object ClusterContextClueAggregator {
 
         clusterWords
             .join(wordFeatures)
-            .map({case (simWord, ((word, sense, numSimWords), (feature, wc, fc, wfc, n))) => ((word, sense, feature), (wc, fc, wfc, n))})
+            .map({case (simWord, ((word, sense, numSimWords), (feature, wc, fc, wfc, n))) => ((word, sense, feature), (wc, fc, wfc, n, wfc / fc.toDouble, wfc / wc.toDouble, numSimWords))})
             // Pretend cluster words are replaced with the same placeholder word and combine their counts:
-            .reduceByKey({case ((wc1, fc, wfc1, n), (wc2, _, wfc2, _)) => (wc1+wc2, fc, wfc1+wfc2, n)})
-            .map({case ((word, sense, feature), (wc, fc, wfc, n)) => ((word, sense), (feature, WordSimUtil.lmi(n, wc, fc, wfc), wc, fc, wfc, n))})
+            .reduceByKey({case ((wc1, fc, wfc1, n, prob1, cov1, numSimWords), (wc2, _, wfc2, _, prob2, cov2, _)) => (wc1+wc2, fc, wfc1+wfc2, n, prob1+prob2, cov1+cov2, numSimWords)})
+            .map({case ((word, sense, feature), (wc, fc, wfc, n, prob, cov, numSimWords)) => ((word, sense), (feature, WordSimUtil.lmi(n, wc, fc, wfc), prob / numSimWords, cov / numSimWords, wc, fc, wfc, n))})
             .groupByKey()
-            .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, lmi1, _, _, _, _), (_, lmi2, _, _, _, _)) => lmi1 > lmi2}))
+            .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, lmi1, _, _, _, _, _, _), (_, lmi2, _, _, _, _, _, _)) => lmi1 > lmi2}))
             .join(clusterSimWords)
-            .map({case ((word, sense), (featureScores, simWords)) => word + "\t" + sense + "\t" + simWords.mkString("  ") + "\t" + featureScores.map({case (feature, lmi, wc, fc, wfc, n) => feature + ":" + lmi + ":" + wc + ":" + fc + ":" + wfc + ":" + n}).mkString("  ")})
+            .map({case ((word, sense), (featureScores, simWords)) => word + "\t" + sense + "\t" + simWords.mkString("  ") + "\t" + featureScores.map({case (feature, lmi, avgProb, avgCov, wc, fc, wfc, n) => feature + ":" + lmi + ":" + avgProb + ":" + avgCov + ":" + wc + ":" + fc + ":" + wfc + ":" + n}).mkString("  ")})
             .saveAsTextFile(outputFile)
     }
 }
