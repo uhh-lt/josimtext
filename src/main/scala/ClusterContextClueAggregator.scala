@@ -33,7 +33,7 @@ object ClusterContextClueAggregator {
         val wordFeatures = featureFile
             .map(line => line.split("\t"))
             .map(cols => (cols(0), (cols(1), cols(2).toLong, cols(3).toLong, cols(4).toLong, cols(5).toLong))) // (feature, wc, fc, wfc, n)
-        //    .filter({case (word, (feature, prob, coverage)) => prob >= param_s && coverage >= param_p})
+            .filter({case (word, (feature, wc, fc, wfc, n)) => wfc.toDouble / fc.toDouble >= param_s && wfc.toDouble / wc.toDouble >= param_p})
 
         val featuresPerWord = wordFeatures
             .mapValues(feature => 1)
