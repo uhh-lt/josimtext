@@ -32,8 +32,8 @@ object ClusterContextClueAggregator {
 
         val wordFeatures = featureFile
             .map(line => line.split("\t"))
-            .map(cols => (cols(0), (cols(1), cols(4).toFloat / cols(3).toFloat, cols(4).toFloat / cols(2).toFloat))) // prob = wfc / fc, coverage = wfc / wc
-            .filter({case (word, (feature, prob, coverage)) => prob >= param_s && coverage >= param_p})
+            .map(cols => (cols(0), (cols(1), cols(2).toLong, cols(3).toLong, cols(4).toLong, cols(5).toLong))) // (feature, wc, fc, wfc, n)
+        //    .filter({case (word, (feature, prob, coverage)) => prob >= param_s && coverage >= param_p})
 
         val featuresPerWord = wordFeatures
             .mapValues(feature => 1)
@@ -41,13 +41,14 @@ object ClusterContextClueAggregator {
 
         clusterWords
             .join(wordFeatures)
-            .map({case (simWord, ((word, sense, numSimWords), (feature, prob, coverage))) => ((word, sense, feature), (prob, coverage, numSimWords))})
-            .reduceByKey({case ((p1, c1, n), (p2, c2, _)) => (p1 + p2, c1 + c2, n)})
-            .map({case ((word, sense, feature), (probSum, coverageSum, numSimWords)) => ((word, sense), (feature, probSum / numSimWords, coverageSum / numSimWords))})
+            .map({case (simWord, ((word, sense, numSimWords), (feature, wc, fc, wfc, n))) => ((word, sense, feature), (wc, fc, wfc, n))})
+            // Pretend cluster words are replaced with the same placeholder word and combine their counts:
+            .reduceByKey({case ((wc1, fc, wfc1, n), (wc2, _, wfc2, _)) => (wc1+wc2, fc, wfc1+wfc2, n)})
+            .map({case ((word, sense, feature), (wc, fc, wfc, n)) => ((word, sense), (feature, WordSimUtil.lmi(n, wc, fc, wfc), wc, fc, wfc, n))})
             .groupByKey()
-            .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, _, c1), (_, _, c2)) => c1 > c2}))
+            .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, lmi1, _, _), (_, lmi2, _, _)) => lmi1 > lmi2}))
             .join(clusterSimWords)
-            .map({case ((word, sense), (featureScores, simWords)) => word + "\t" + sense + "\t" + simWords.mkString("  ") + "\t" + featureScores.map({case (feature, prob, coverage) => feature + ":" + prob + ":" + coverage}).mkString("  ")})
+            .map({case ((word, sense), (featureScores, simWords)) => word + "\t" + sense + "\t" + simWords.mkString("  ") + "\t" + featureScores.map({case (feature, lmi, wc, fc, wfc, n) => feature + ":" + lmi + ":" + wc + ":" + fc + ":" + wfc + ":" + n}).mkString("  ")})
             .saveAsTextFile(outputFile)
     }
 }
