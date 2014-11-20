@@ -104,7 +104,9 @@ object WordSimUtil {
                                     wordCounts:RDD[(String, Int)],
                                     featureCounts:RDD[(String, Int)],
                                     w:Int,    // max. number of words per feature
-                                    t:Int,    // lower word-feature count threshold
+                                    t_wf:Int,    // lower word-feature count threshold
+                                    t_w:Int,    // lower word count threshold
+                                    t_f:Int,    // lower feature count threshold
                                     s:Double, // lower significance threshold
                                     p:Int,    // max. number of features per word
                                     l:Int,    // max. number of similar words per word
@@ -113,7 +115,7 @@ object WordSimUtil {
     : RDD[(String, (String, Int, Set[String]))] = {
 
         val wordFeatureCountsFiltered = wordFeatureCounts
-            .filter({case (word, (feature, wfc)) => wfc >= t})
+            .filter({case (word, (feature, wfc)) => wfc >= t_wf})
         wordFeatureCountsFiltered.cache()
 
         val wordsPerFeature = wordFeatureCountsFiltered
@@ -123,13 +125,13 @@ object WordSimUtil {
             .filter({case (feature, numWords) => numWords <= w})
 
         val featureCountsFiltered = featureCounts
-            .filter({case (feature, fc) => fc >= t})
+            .filter({case (feature, fc) => fc >= t_f})
             .join(wordsPerFeature) // filter by using a join
             .map({case (feature, (fc, fwc)) => (feature, fc)}) // and remove unnecessary data from join
         featureCountsFiltered.cache()
 
         val wordCountsFiltered = wordCounts
-            .filter({case (word, wc) => wc >= t})
+            .filter({case (word, wc) => wc >= t_w})
         wordCountsFiltered.cache()
 
         // Since word counts and feature counts are based on unfiltered word-feature
