@@ -33,6 +33,10 @@ object WordSimUtil {
         if ((n*n_AB)<(n_A*n_B)) -res.toDouble else res.toDouble
     }
 
+    def descriptivity(n_A:Long, n_B:Long, n_AB:Long): Double = {
+        n_AB.toDouble*n_AB.toDouble / (n_A.toDouble*n_B.toDouble)
+    }
+
     /**
      * Computes the lexicographer's mutual information (LMI) score:<br/>
      *

@@ -20,7 +20,10 @@ object WordSimFromCounts {
         val param_p = if (args.size > 8) args(8).toInt else 1000
         val param_l = if (args.size > 9) args(9).toInt else 200
 
-        def sig(_n:Long, wc:Long, fc:Long, bc:Long) = if (param_sig == "LMI") WordSimUtil.lmi(_n,wc,fc,bc) else WordSimUtil.ll(_n,wc,fc,bc)
+        def sig(_n:Long, wc:Long, fc:Long, bc:Long) =
+            if (param_sig == "LMI") WordSimUtil.lmi(_n,wc,fc,bc)
+            else if (param_sig == "DESC") WordSimUtil.descriptivity(wc,fc,bc)
+            else WordSimUtil.ll(_n,wc,fc,bc)
 
         val conf = new SparkConf().setAppName("WordSim")
         val sc = new SparkContext(conf)
