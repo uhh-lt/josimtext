@@ -163,6 +163,9 @@ object WordSimUtil {
             .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}).take(p)) // sort by value desc
         featuresPerWordWithScore.cache()
 
+        val wordScoreSums:RDD[(String, Double)] = featuresPerWordWithScore
+            .mapValues(featureScores => featureScores.foldLeft(0.0)({case (sum, (_, score)) => sum + score}))
+
         val featuresPerWord:RDD[(String, Array[String])] = featuresPerWordWithScore
             .map({case (word, featureScores) => (word, featureScores.map({case (feature, score) => feature}))})
 
@@ -174,14 +177,18 @@ object WordSimUtil {
         val wordSims:RDD[(String, (String, Double))] = wordsPerFeatureWithScore
             .flatMap({case (feature, wordScores) =>
                 for((word1, score1) <- wordScores; (word2, score2) <- wordScores)
-                    yield ((word1, word2), (score1*(1.0 - Math.abs(score1 - score2)), score1))})
-            .reduceByKey({case ((score1, weight1), (score2, weight2)) => (score1 + score2, weight1 + weight2)})
-            .map({case ((word1, word2), (scoreSum, weightSum)) => (word1, (word2, scoreSum / weightSum))})
+                    yield ((word1, word2), score1)})
+            .reduceByKey({case (score1, score2) => score1 + score2})
+            .map({case ((word1, word2), scoreSum) => (word1, (word2, scoreSum))})
+            .join(wordScoreSums)
+            .map({case (word1, ((word2, scoreSum), wordScoreSum)) => (word1, (word2, scoreSum / wordScoreSum))})
+
+        val wordSimsSorted:RDD[(String, (String, Double))] = wordSims
             .groupByKey()
             .mapValues(simWords => simWords.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}).take(l))
             .flatMap({case (word, simWords) => for(simWord <- simWords) yield (word, simWord)})
 
-        val wordSimsWithFeatures:RDD[(String, (String, Double, Set[String]))] = wordSims
+        val wordSimsWithFeatures:RDD[(String, (String, Double, Set[String]))] = wordSimsSorted
             .join(featuresPerWord)
             .map({case (word, ((simWord, score), featureList1)) => (simWord, (word, score, featureList1))})
             .join(featuresPerWord)
