@@ -100,6 +100,18 @@ object WordSimUtil {
         (wordFeatureCounts, wordCounts, featureCounts)
     }
 
+    /**
+     * Computes a score for a mutual feature of two words. Note that this score is asymmetrical.
+     *
+     * The score is higher the smaller the difference between both scores and the higher word1Score.
+     *
+     * @param word1Score Score of focus word (between 0 and 1)
+     * @param word2Score Score of similar word (between 0 and 1)
+     */
+    def mutualFeatureScore(word1Score:Double, word2Score:Double): Double = {
+        word1Score * (1.0 - Math.abs(word1Score - word2Score))
+    }
+
     def computeWordSimsWithFeatures(wordFeatureCounts:RDD[(String, (String, Int))],
                                     wordCounts:RDD[(String, Int)],
                                     featureCounts:RDD[(String, Int)],
@@ -112,7 +124,7 @@ object WordSimUtil {
                                     l:Int,    // max. number of similar words per word
                                     sig:(Long, Long, Long, Long) => Double,
                                     outDir:String)
-    : RDD[(String, (String, Int, Set[String]))] = {
+    : RDD[(String, (String, Double, Set[String]))] = {
 
         val wordFeatureCountsFiltered = wordFeatureCounts
             .filter({case (word, (feature, wfc)) => wfc >= t_wf})
@@ -155,19 +167,21 @@ object WordSimUtil {
             .map({case (word, featureScores) => (word, featureScores.map({case (feature, score) => feature}))})
 
         val wordsPerFeatureWithScore = featuresPerWordWithScore
-            .flatMap({case (word, featureScores) => for(featureScore <- featureScores) yield (featureScore._1, (word, 1))})
+            .flatMap({case (word, featureScores) => for(featureScore <- featureScores) yield (featureScore._1, (word, featureScore._2))})
             .groupByKey()
         wordsPerFeatureWithScore.cache()
 
-        val wordSims:RDD[(String, (String, Int))] = wordsPerFeatureWithScore
-            .flatMap({case (feature, wordScores) => for((word1, score1) <- wordScores; (word2, score2) <- wordScores) yield ((word1, word2), score2)})
-            .reduceByKey((score1, score2) => score1 + score2)
-            .map({case ((word1, word2), score) => (word1, (word2, score))})
+        val wordSims:RDD[(String, (String, Double))] = wordsPerFeatureWithScore
+            .flatMap({case (feature, wordScores) =>
+                for((word1, score1) <- wordScores; (word2, score2) <- wordScores)
+                    yield ((word1, word2), (score1*(1.0 - Math.abs(score1 - score2)), score1))})
+            .reduceByKey({case ((score1, weight1), (score2, weight2)) => (score1 + score2, weight1 + weight2)})
+            .map({case ((word1, word2), (scoreSum, weightSum)) => (word1, (word2, scoreSum / weightSum))})
             .groupByKey()
             .mapValues(simWords => simWords.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}).take(l))
             .flatMap({case (word, simWords) => for(simWord <- simWords) yield (word, simWord)})
 
-        val wordSimsWithFeatures:RDD[(String, (String, Int, Set[String]))] = wordSims
+        val wordSimsWithFeatures:RDD[(String, (String, Double, Set[String]))] = wordSims
             .join(featuresPerWord)
             .map({case (word, ((simWord, score), featureList1)) => (simWord, (word, score, featureList1))})
             .join(featuresPerWord)
