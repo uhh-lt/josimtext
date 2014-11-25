@@ -19,7 +19,8 @@ object WordSimFromCounts {
         val param_t_w = if (args.size > 7) args(7).toInt else 2
         val param_t_f = if (args.size > 8) args(8).toInt else 2
         val param_sig = if (args.size > 9) args(9) else "LMI"
-        val param_p = if (args.size > 10) args(10).toInt else 1000
+        val param_p1 = if (args.size > 10) args(10).toInt else 1000
+        val param_p2 = if (args.size > 10) args(10).toInt else 1000
         val param_l = if (args.size > 11) args(11).toInt else 200
 
         def sig(_n:Long, wc:Long, fc:Long, bc:Long) =
@@ -43,7 +44,7 @@ object WordSimFromCounts {
             .map({case Array(feature, count) => (feature, count.toInt)})
 
         val wordSimsWithFeatures = WordSimUtil.computeWordSimsWithFeatures(wordFeatureCounts, wordCounts, featureCounts,
-            param_w, param_t_wf, param_t_w, param_t_f, param_s, param_p, param_l, sig, outDir)
+            param_w, param_t_wf, param_t_w, param_t_f, param_s, param_p1, param_p2, param_l, sig, outDir)
 
         wordSimsWithFeatures
             .map({case (word1, (word2, score, featureSet)) => word1 + "\t" + word2 + "\t" + score + "\t" + featureSet.mkString("  ")})
