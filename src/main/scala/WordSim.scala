@@ -26,7 +26,7 @@ object WordSim {
 
         val (wordFeatureCounts, wordCounts, featureCounts) = WordSimUtil.computeWordFeatureCounts(file, outDir)
         val wordSimsWithFeatures = WordSimUtil.computeWordSimsWithFeatures(wordFeatureCounts, wordCounts, featureCounts,
-                                                                 param_w, param_t, param_t, param_t, param_s, param_p, param_p, param_l, sig, outDir)
+                                                                 param_w, param_t, param_t, param_t, param_s, param_p, param_p, param_l, sig, 3, outDir)
 
         wordSimsWithFeatures
             .map({case (word1, (word2, score, featureSet)) => word1 + "\t" + word2 + "\t" + score + "\t" + featureSet.mkString("  ")})
