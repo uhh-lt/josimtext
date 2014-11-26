@@ -26,6 +26,7 @@ object WordSimFromCounts {
         def sig(_n:Long, wc:Long, fc:Long, bc:Long) =
             if (param_sig == "LMI") WordSimUtil.lmi(_n,wc,fc,bc)
             else if (param_sig == "DESC") WordSimUtil.descriptivity(wc,fc,bc)
+            else if (param_sig == "COV") WordSimUtil.cov(_n,wc,fc,bc)
             else WordSimUtil.ll(_n,wc,fc,bc)
 
         val conf = new SparkConf().setAppName("WordSim")

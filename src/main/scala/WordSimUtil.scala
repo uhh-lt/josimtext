@@ -54,6 +54,10 @@ object WordSimUtil {
         n_AB*(log2(n*n_AB) - log2(n_A*n_B))
     }
 
+    def cov(n:Long, n_A:Long, n_B:Long, n_AB:Long): Double = {
+        n_AB.toDouble/n_A.toDouble
+    }
+
     def computeWordFeatureCounts(file:RDD[String],
                                  outDir:String)
     : (RDD[(String, (String, Int))], RDD[(String, Int)], RDD[(String, Int)]) = {
