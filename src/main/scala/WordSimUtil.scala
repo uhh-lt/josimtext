@@ -128,6 +128,7 @@ object WordSimUtil {
                                     p2:Int,    // max. number of features per word 2 (compared word, p1 <= p2)
                                     l:Int,    // max. number of similar words per word
                                     sig:(Long, Long, Long, Long) => Double,
+                                    r:Int,  // # decimal places to round score to
                                     outDir:String)
     : RDD[(String, (String, Double, Set[String]))] = {
 
@@ -192,7 +193,7 @@ object WordSimUtil {
                 for((word1, score1) <- wordScores1; (word2, score2) <- wordScores2)
                     yield ((word1, word2), 1.0)})
             .reduceByKey({case (score1, score2) => score1 + score2})
-            .map({case ((word1, word2), scoreSum) => (word1, (word2, scoreSum / p1))})
+            .map({case ((word1, word2), scoreSum) => (word1, (word2, BigDecimal(scoreSum / p1).setScale(r, BigDecimal.RoundingMode.HALF_UP).toDouble))})
             //.join(wordScoreSums)
             //.map({case (word1, ((word2, scoreSum), wordScoreSum)) => (word1, (word2, scoreSum / wordScoreSum))})
 
