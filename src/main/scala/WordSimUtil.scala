@@ -199,7 +199,7 @@ object WordSimUtil {
 
         val wordSimsSorted:RDD[(String, (String, Double))] = wordSims
             .groupByKey()
-            .mapValues(simWords => simWords.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}).take(l))
+            .mapValues(simWords => simWords.toArray.sortWith({case ((_, s1), (_, s2)) => if (s1.equals("__RANDOM__")) true else if (s2.equals("__RANDOM__")) false else s1 > s2}).take(l))
             .flatMap({case (word, simWords) => for(simWord <- simWords) yield (word, simWord)})
 
         val wordSimsWithFeatures:RDD[(String, (String, Double, Set[String]))] = wordSimsSorted
