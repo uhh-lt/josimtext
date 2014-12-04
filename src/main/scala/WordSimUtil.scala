@@ -134,7 +134,7 @@ object WordSimUtil {
 
         val wordFeatureCountsFiltered = wordFeatureCounts
             .filter({case (word, (feature, wfc)) => wfc >= t_wf})
-        wordFeatureCountsFiltered.cache()
+        //wordFeatureCountsFiltered.cache()
 
         val wordsPerFeature = wordFeatureCountsFiltered
             .map({case (word, (feature, wfc)) => (feature, word)})
@@ -167,7 +167,7 @@ object WordSimUtil {
             .groupByKey()
             // (word, [(feature, score), (feature, score), ...])
             .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}).take(p2)) // sort by value desc
-        featuresPerWordWithScore.cache()
+        //featuresPerWordWithScore.cache()
 
         //val wordScoreSums:RDD[(String, Double)] = featuresPerWordWithScore
         //    .mapValues(featureScores => featureScores.foldLeft(0.0)({case (sum, (_, score)) => sum + score}))
@@ -179,19 +179,13 @@ object WordSimUtil {
 
         val wordsPerFeatureWithScore1 = featuresPerWordWithScore
             .flatMap({case (word, featureScores) => for(featureScore <- featureScores.take(p1)) yield (featureScore._1, (word, featureScore._2))})
-            .groupByKey()
-        wordsPerFeatureWithScore1.cache()
 
         val wordsPerFeatureWithScore2 = featuresPerWordWithScore
             .flatMap({case (word, featureScores) => for(featureScore <- featureScores) yield (featureScore._1, (word, featureScore._2))})
-            .groupByKey()
-        wordsPerFeatureWithScore2.cache()
 
         val wordSims:RDD[(String, (String, Double))] = wordsPerFeatureWithScore1
             .join(wordsPerFeatureWithScore2)
-            .flatMap({case (feature, (wordScores1, wordScores2)) =>
-                for((word1, score1) <- wordScores1; (word2, score2) <- wordScores2)
-                    yield ((word1, word2), 1.0)})
+            .map({case (feature, (wordScore1, wordScore2)) => ((wordScore1._1, wordScore2._1), 1.0)})
             .reduceByKey({case (score1, score2) => score1 + score2})
             .map({case ((word1, word2), scoreSum) => (word1, (word2, BigDecimal(scoreSum / p1).setScale(r, BigDecimal.RoundingMode.HALF_UP).toDouble))})
             //.join(wordScoreSums)
@@ -199,7 +193,7 @@ object WordSimUtil {
 
         val wordSimsSorted:RDD[(String, (String, Double))] = wordSims
             .groupByKey()
-            .mapValues(simWords => simWords.toArray.sortWith({case ((_, s1), (_, s2)) => if (s1.equals("__RANDOM__")) true else if (s2.equals("__RANDOM__")) false else s1 > s2}).take(l))
+            .mapValues(simWords => simWords.toArray.sortWith({case ((w1, s1), (w2, s2)) => if (w1.equals("__RANDOM__")) true else if (w2.equals("__RANDOM__")) false else s1 > s2}).take(l))
             .flatMap({case (word, simWords) => for(simWord <- simWords) yield (word, simWord)})
 
         val wordSimsWithFeatures:RDD[(String, (String, Double, Set[String]))] = wordSimsSorted
@@ -219,9 +213,9 @@ object WordSimUtil {
                 .join(featureCountsFiltered)
                 .map({ case (feature, ((word, wfc, wc), fc)) => word + "\t" + feature + "\t" + wc + "\t" + fc + "\t" + wfc + "\t" + n + "\t" + sig(n, wc, fc, wfc)})
                 .saveAsTextFile(outDir + "__AllValuesPerWord")
-            wordsPerFeatureWithScore2
-                .map({ case (feature, wordList) => feature + "\t" + wordList.map(f => f._1).mkString("\t")})
-                .saveAsTextFile(outDir + "__AggrPerFeature")
+            //wordsPerFeatureWithScore2
+            //    .map({ case (feature, wordList) => feature + "\t" + wordList.map(f => f._1).mkString("\t")})
+            //    .saveAsTextFile(outDir + "__AggrPerFeature")
         }
 
         wordSimsWithFeatures
