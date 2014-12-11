@@ -1,5 +1,7 @@
+import org.apache.spark.HashPartitioner
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
 
 object WordSimUtil {
     val DEBUG = true
@@ -136,7 +138,7 @@ object WordSimUtil {
             .filter({case (word, (feature, wfc)) => wfc >= t_wf})
         //wordFeatureCountsFiltered.cache()
 
-        val wordsPerFeature = wordFeatureCountsFiltered
+        val wordsPerFeatureCounts = wordFeatureCountsFiltered
             .map({case (word, (feature, wfc)) => (feature, word)})
             .groupByKey()
             .mapValues(v => v.size)
@@ -144,7 +146,7 @@ object WordSimUtil {
 
         val featureCountsFiltered = featureCounts
             .filter({case (feature, fc) => fc >= t_f})
-            .join(wordsPerFeature) // filter by using a join
+            .join(wordsPerFeatureCounts) // filter by using a join
             .map({case (feature, (fc, fwc)) => (feature, fc)}) // and remove unnecessary data from join
         featureCountsFiltered.cache()
 
@@ -177,15 +179,21 @@ object WordSimUtil {
         val featuresPerWord2:RDD[(String, Array[String])] = featuresPerWordWithScore
             .map({case (word, featureScores) => (word, featureScores.map({case (feature, score) => feature}))})
 
-        val wordsPerFeatureWithScore1 = featuresPerWordWithScore
-            .flatMap({case (word, featureScores) => for(featureScore <- featureScores.take(p1)) yield (featureScore._1, (word, featureScore._2))})
+        //val wordsPerFeatureWithScore1 = featuresPerWordWithScore
+        //    .flatMap({case (word, featureScores) => for(featureScore <- featureScores.take(p1)) yield (featureScore._1, (word, featureScore._2))})
+        //    .partitionBy(new HashPartitioner(10000))
 
-        val wordsPerFeatureWithScore2 = featuresPerWordWithScore
-            .flatMap({case (word, featureScores) => for(featureScore <- featureScores) yield (featureScore._1, (word, featureScore._2))})
+        val wordsPerFeature = wordFeatureCountsFiltered
+            .join(wordCountsFiltered) // filter by join
+            .map({case (word, ((feature, wfc), wc)) => (feature, word)})
+            .join(featureCountsFiltered) // filter by join
+            .map({case (feature, (word, fc)) => (feature, word)})
+            .groupByKey()
+            .filter({case (feature, words) => words.size <= w})
+            .partitionBy(new HashPartitioner(1000))
 
-        val wordSims:RDD[(String, (String, Double))] = wordsPerFeatureWithScore1
-            .join(wordsPerFeatureWithScore2)
-            .map({case (feature, (wordScore1, wordScore2)) => ((wordScore1._1, wordScore2._1), 1.0)})
+        val wordSims:RDD[(String, (String, Double))] = wordsPerFeature
+            .flatMap({case (feature, words) => for(word1 <- words.iterator; word2 <- words.iterator) yield ((word1, word2), 1.0)})
             .reduceByKey({case (score1, score2) => score1 + score2})
             .map({case ((word1, word2), scoreSum) => (word1, (word2, BigDecimal(scoreSum / p1).setScale(r, BigDecimal.RoundingMode.HALF_UP).toDouble))})
             //.join(wordScoreSums)

@@ -31,6 +31,7 @@ object WordSimFromCounts {
             else WordSimUtil.ll(_n,wc,fc,bc)
 
         val conf = new SparkConf().setAppName("WordSim")
+        conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         val sc = new SparkContext(conf)
 
         val wordFeatureCounts = sc.textFile(wordFeatureCountsFile)
