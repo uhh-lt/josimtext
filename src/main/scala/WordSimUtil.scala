@@ -1,7 +1,5 @@
-import org.apache.spark.HashPartitioner
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.storage.StorageLevel
 
 object WordSimUtil {
     val DEBUG = true
@@ -187,7 +185,12 @@ object WordSimUtil {
             .flatMap({case (word, features) => for (feature <- features.iterator) yield (feature, word)})
             .groupByKey()
             .filter({case (feature, words) => words.size <= w})
-            .partitionBy(new HashPartitioner(1000))
+            // the following 5 lines sort and partition the RDD for equal words-per-feature distribution over the partitions
+            .sortBy(_._2.size, ascending=false)
+            .zipWithIndex()
+            .map({case ((feature, words), index) => (index, (feature, words))})
+            .partitionBy(new IndexModuloPartitioner(1000))
+            .map({case (index, (feature, words)) => (feature, words)})
 
         val wordSims:RDD[(String, (String, Double))] = wordsPerFeature
             .flatMap({case (feature, words) => for(word1 <- words.iterator; word2 <- words.iterator) yield ((word1, word2), 1.0)})
