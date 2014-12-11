@@ -180,7 +180,7 @@ object WordSimUtil {
             .map({case (word, featureScores) => (word, featureScores.map({case (feature, score) => feature}))})
 
         //val wordsPerFeatureWithScore1 = featuresPerWordWithScore
-        //    .flatMap({case (word, featureScores) => for(featureScore <- featureScores.take(p1)) yield (featureScore._1, (word, featureScore._2))})
+        //    .flatMap({case (word, featureScores) => for(featureScore <- featureScores.take(p1).iterator) yield (featureScore._1, (word, featureScore._2))})
         //    .partitionBy(new HashPartitioner(10000))
 
         val wordsPerFeature = wordFeatureCountsFiltered
@@ -202,7 +202,7 @@ object WordSimUtil {
         val wordSimsSorted:RDD[(String, (String, Double))] = wordSims
             .groupByKey()
             .mapValues(simWords => simWords.toArray.sortWith({case ((w1, s1), (w2, s2)) => if (w1.equals("__RANDOM__")) true else if (w2.equals("__RANDOM__")) false else s1 > s2}).take(l))
-            .flatMap({case (word, simWords) => for(simWord <- simWords) yield (word, simWord)})
+            .flatMap({case (word, simWords) => for(simWord <- simWords.iterator) yield (word, simWord)})
 
         val wordSimsWithFeatures:RDD[(String, (String, Double, Set[String]))] = wordSimsSorted
             .join(featuresPerWord1)
@@ -212,7 +212,7 @@ object WordSimUtil {
 
         if (DEBUG) {
             featuresPerWordWithScore
-                .flatMap({ case (word, featureScores) => for (featureScore <- featureScores) yield (word, featureScore)})
+                .flatMap({ case (word, featureScores) => for (featureScore <- featureScores.iterator) yield (word, featureScore)})
                 .map({ case (word, (feature, score)) => word + "\t" + feature + "\t" + score})
                 .saveAsTextFile(outDir + "__PruneGraph")
             wordFeatureCountsFiltered
