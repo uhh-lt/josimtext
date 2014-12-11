@@ -183,11 +183,8 @@ object WordSimUtil {
         //    .flatMap({case (word, featureScores) => for(featureScore <- featureScores.take(p1).iterator) yield (featureScore._1, (word, featureScore._2))})
         //    .partitionBy(new HashPartitioner(10000))
 
-        val wordsPerFeature = wordFeatureCountsFiltered
-            .join(wordCountsFiltered) // filter by join
-            .map({case (word, ((feature, wfc), wc)) => (feature, word)})
-            .join(featureCountsFiltered) // filter by join
-            .map({case (feature, (word, fc)) => (feature, word)})
+        val wordsPerFeature = featuresPerWord1
+            .flatMap({case (word, features) => for (feature <- features.iterator) yield (feature, word)})
             .groupByKey()
             .filter({case (feature, words) => words.size <= w})
             .partitionBy(new HashPartitioner(1000))
