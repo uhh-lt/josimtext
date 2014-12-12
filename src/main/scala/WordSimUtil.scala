@@ -58,6 +58,10 @@ object WordSimUtil {
         n_AB.toDouble/n_A.toDouble
     }
 
+    def freq(n:Long, n_A:Long, n_B:Long, n_AB:Long): Double = {
+        n_AB.toDouble
+    }
+
     def computeWordFeatureCounts(file:RDD[String],
                                  outDir:String)
     : (RDD[(String, (String, Int))], RDD[(String, Int)], RDD[(String, Int)]) = {
