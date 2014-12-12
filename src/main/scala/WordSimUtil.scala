@@ -185,14 +185,21 @@ object WordSimUtil {
             .flatMap({case (word, features) => for (feature <- features.iterator) yield (feature, word)})
             .groupByKey()
             .filter({case (feature, words) => words.size <= w})
-            // the following 5 lines sort and partition the RDD for equal words-per-feature distribution over the partitions
             .sortBy(_._2.size, ascending=false)
+
+        wordsPerFeature
+            .map({case (feature, words) => feature + "\t" + words.mkString("  ")})
+            .saveAsTextFile(outDir + "__WordsPerFeature")
+
+        val wordsPerFeatureFairPartitioned = wordsPerFeature
+            // the following 4 lines partition the RDD for equal words-per-feature distribution over the partitions
             .zipWithIndex()
             .map({case ((feature, words), index) => (index, (feature, words))})
             .partitionBy(new IndexModuloPartitioner(1000))
             .map({case (index, (feature, words)) => (feature, words)})
+        wordsPerFeatureFairPartitioned.cache()
 
-        val wordSims:RDD[(String, (String, Double))] = wordsPerFeature
+        val wordSims:RDD[(String, (String, Double))] = wordsPerFeatureFairPartitioned
             .flatMap({case (feature, words) => for(word1 <- words.iterator; word2 <- words.iterator) yield ((word1, word2), 1.0)})
             .reduceByKey({case (score1, score2) => score1 + score2})
             .map({case ((word1, word2), scoreSum) => (word1, (word2, BigDecimal(scoreSum / p1).setScale(r, BigDecimal.RoundingMode.HALF_UP).toDouble))})
