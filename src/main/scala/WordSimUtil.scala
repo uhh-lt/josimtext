@@ -220,8 +220,14 @@ object WordSimUtil {
             .map({case (word, ((simWord, score), featureList1)) => (simWord, (word, score, featureList1))})
             .join(featuresPerWord2)
             .map({case (simWord, ((word, score, featureList1), featureList2)) => (word, (simWord, score, featureList1.toSet.intersect(featureList2.toSet)))})
+            .sortBy({case (word, (simWord, score, mutualFeatureSet)) => (word, score)}, ascending=false)
 
         if (DEBUG) {
+            wordSimsWithFeatures
+                .map({case (word, (simWord, score, mutualFeatureSet)) => (simWord, (word, score))})
+                .join(wordCountsFiltered)
+                .map({case (simWord, ((word, score), simWordCount)) => word + "\t" + simWord + "\t" + score + "\t" + simWordCount})
+                .saveAsTextFile(outDir + "__SimWithWordCounts")
             featuresPerWordWithScore
                 .flatMap({ case (word, featureScores) => for (featureScore <- featureScores.iterator) yield (word, featureScore)})
                 .map({ case (word, (feature, score)) => word + "\t" + feature + "\t" + score})
