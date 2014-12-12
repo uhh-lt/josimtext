@@ -219,7 +219,9 @@ object WordSimUtil {
                 .join(wordCountsFiltered)
                 .map({ case (word, ((feature, wfc), wc)) => (feature, (word, wfc, wc))})
                 .join(featureCountsFiltered)
-                .map({ case (feature, ((word, wfc, wc), fc)) => word + "\t" + feature + "\t" + wc + "\t" + fc + "\t" + wfc + "\t" + n + "\t" + sig(n, wc, fc, wfc)})
+                .map({ case (feature, ((word, wfc, wc), fc)) => (word, feature, wc, fc, wfc, sig(n, wc, fc, wfc))})
+                .sortBy({ case (word, feature, wc, fc, wfc, score) => score}, ascending=false)
+                .map({ case (word, feature, wc, fc, wfc, score) => word + "\t" + feature + "\t" + wc + "\t" + fc + "\t" + wfc + "\t" + n + "\t" + score})
                 .saveAsTextFile(outDir + "__AllValuesPerWord")
             //wordsPerFeatureWithScore2
             //    .map({ case (feature, wordList) => feature + "\t" + wordList.map(f => f._1).mkString("\t")})
