@@ -188,7 +188,7 @@ object WordSimUtil {
             .sortBy(_._2.size, ascending=false)
 
         wordsPerFeature
-            .map({case (feature, words) => feature + "\t" + words.mkString("  ")})
+            .map({case (feature, words) => feature + "\t" + words.size + "\t" + words.mkString("  ")})
             .saveAsTextFile(outDir + "__WordsPerFeature")
 
         val wordsPerFeatureFairPartitioned = wordsPerFeature
