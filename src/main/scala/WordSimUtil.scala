@@ -215,6 +215,10 @@ object WordSimUtil {
             .mapValues(simWords => simWords.toArray.sortWith({case ((w1, s1), (w2, s2)) => if (w1.equals("__RANDOM__")) true else if (w2.equals("__RANDOM__")) false else s1 > s2}).take(l))
             .flatMap({case (word, simWords) => for(simWord <- simWords.iterator) yield (word, simWord)})
 
+        val wordSimsAll:RDD[(String, (String, Double))] = wordSims
+            .groupByKey()
+            .flatMap({case (word, simWords) => for(simWord <- simWords.iterator) yield (word, simWord)})
+
         val wordSimsWithFeatures:RDD[(String, (String, Double, Set[String]))] = wordSimsSorted
             .join(featuresPerWord1)
             .map({case (word, ((simWord, score), featureList1)) => (simWord, (word, score, featureList1))})
@@ -223,14 +227,15 @@ object WordSimUtil {
             .sortBy({case (word, (simWord, score, mutualFeatureSet)) => (word, score)}, ascending=false)
 
         if (DEBUG) {
-            wordSimsWithFeatures
-                .map({case (word, (simWord, score, mutualFeatureSet)) => (simWord, (word, score))})
+            wordSimsAll
+                .map({case (word, (simWord, score)) => (simWord, (word, score))})
                 .join(wordCountsFiltered)
                 .map({case (simWord, ((word, score), simWordCount)) => word + "\t" + simWord + "\t" + score + "\t" + simWordCount})
                 .saveAsTextFile(outDir + "__SimWithWordCounts")
             featuresPerWordWithScore
-                .flatMap({ case (word, featureScores) => for (featureScore <- featureScores.iterator) yield (word, featureScore)})
-                .map({ case (word, (feature, score)) => word + "\t" + feature + "\t" + score})
+                .flatMap({ case (word, featureScores) => for (featureScore <- featureScores.iterator) yield (featureScore._1, (word, featureScore._2))})
+                .join(featureCountsFiltered)
+                .map({ case (feature, ((word, score), fc)) => word + "\t" + feature + "\t" + score + "\t" + fc})
                 .saveAsTextFile(outDir + "__PruneGraph")
             wordFeatureCountsFiltered
                 .join(wordCountsFiltered)
