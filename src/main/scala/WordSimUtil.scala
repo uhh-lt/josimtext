@@ -231,6 +231,7 @@ object WordSimUtil {
             wordSimsAll
                 .map({case (word, (simWord, score)) => (simWord, (word, score))})
                 .join(wordCountsFiltered)
+                .sortBy({case (simWord, ((word, score), simWordCount)) => (word, score)}, ascending=false)
                 .map({case (simWord, ((word, score), simWordCount)) => word + "\t" + simWord + "\t" + score + "\t" + simWordCount})
                 .saveAsTextFile(outDir + "/SimWithWordCounts")
             featuresPerWordWithScore
