@@ -52,6 +52,6 @@ object WordSimFromCounts {
 
         wordSimsWithFeatures
             .map({case (word1, (word2, score, featureSet)) => word1 + "\t" + word2 + "\t" + score + "\t" + featureSet.toList.sorted.mkString("  ")})
-            .saveAsTextFile(outDir + "__SimWithFeatures")
+            .saveAsTextFile(outDir + "/SimWithFeatures")
     }
 }

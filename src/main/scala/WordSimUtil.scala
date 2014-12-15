@@ -96,13 +96,13 @@ object WordSimUtil {
         if (DEBUG) {
             wordCounts
                 .map({ case (word, count) => word + "\t" + count})
-                .saveAsTextFile(outDir + "__WordCount")
+                .saveAsTextFile(outDir + "/WordCount")
             featureCounts
                 .map({ case (feature, count) => feature + "\t" + count})
-                .saveAsTextFile(outDir + "__FeatureCount")
+                .saveAsTextFile(outDir + "/FeatureCount")
             wordFeatureCounts
                 .map({ case (word, (feature, count)) => word + "\t" + feature + "\t" + count})
-                .saveAsTextFile(outDir + "__WordFeatureCount")
+                .saveAsTextFile(outDir + "/WordFeatureCount")
         }
 
         (wordFeatureCounts, wordCounts, featureCounts)
@@ -193,7 +193,7 @@ object WordSimUtil {
 
         wordsPerFeature
             .map({case (feature, words) => feature + "\t" + words.size + "\t" + words.mkString("  ")})
-            .saveAsTextFile(outDir + "__WordsPerFeature")
+            .saveAsTextFile(outDir + "/WordsPerFeature")
 
         val wordsPerFeatureFairPartitioned = wordsPerFeature
             // the following 4 lines partition the RDD for equal words-per-feature distribution over the partitions
@@ -231,12 +231,12 @@ object WordSimUtil {
                 .map({case (word, (simWord, score)) => (simWord, (word, score))})
                 .join(wordCountsFiltered)
                 .map({case (simWord, ((word, score), simWordCount)) => word + "\t" + simWord + "\t" + score + "\t" + simWordCount})
-                .saveAsTextFile(outDir + "__SimWithWordCounts")
+                .saveAsTextFile(outDir + "/SimWithWordCounts")
             featuresPerWordWithScore
                 .flatMap({ case (word, featureScores) => for (featureScore <- featureScores.iterator) yield (featureScore._1, (word, featureScore._2))})
                 .join(featureCountsFiltered)
                 .map({ case (feature, ((word, score), fc)) => word + "\t" + feature + "\t" + score + "\t" + fc})
-                .saveAsTextFile(outDir + "__PruneGraph")
+                .saveAsTextFile(outDir + "/PruneGraph")
             wordFeatureCountsFiltered
                 .join(wordCountsFiltered)
                 .map({ case (word, ((feature, wfc), wc)) => (feature, (word, wfc, wc))})
@@ -244,7 +244,7 @@ object WordSimUtil {
                 .map({ case (feature, ((word, wfc, wc), fc)) => (word, feature, wc, fc, wfc, sig(n, wc, fc, wfc))})
                 .sortBy({ case (word, feature, wc, fc, wfc, score) => score}, ascending=false)
                 .map({ case (word, feature, wc, fc, wfc, score) => word + "\t" + feature + "\t" + wc + "\t" + fc + "\t" + wfc + "\t" + n + "\t" + score})
-                .saveAsTextFile(outDir + "__AllValuesPerWord")
+                .saveAsTextFile(outDir + "/AllValuesPerWord")
             //wordsPerFeatureWithScore2
             //    .map({ case (feature, wordList) => feature + "\t" + wordList.map(f => f._1).mkString("\t")})
             //    .saveAsTextFile(outDir + "__AggrPerFeature")
