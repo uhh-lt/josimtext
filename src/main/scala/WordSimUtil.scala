@@ -209,6 +209,7 @@ object WordSimUtil {
             .map({case ((word1, word2), scoreSum) => (word1, (word2, BigDecimal(scoreSum / p1).setScale(r, BigDecimal.RoundingMode.HALF_UP).toDouble))})
             //.join(wordScoreSums)
             //.map({case (word1, ((word2, scoreSum), wordScoreSum)) => (word1, (word2, scoreSum / wordScoreSum))})
+        wordSims.cache()
 
         val wordSimsSorted:RDD[(String, (String, Double))] = wordSims
             .groupByKey()
