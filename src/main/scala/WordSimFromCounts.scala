@@ -47,11 +47,15 @@ object WordSimFromCounts {
             .map(line => line.split("\t"))
             .map({case Array(feature, count) => (feature, count.toInt)})
 
-        val wordSimsWithFeatures = WordSimUtil.computeWordSimsWithFeatures(wordFeatureCounts, wordCounts, featureCounts,
+        val (wordSims, wordSimsWithFeatures) = WordSimUtil.computeWordSimsWithFeatures(wordFeatureCounts, wordCounts, featureCounts,
             param_w, param_t_wf, param_t_w, param_t_f, param_s, param_p1, param_p2, param_l, sig, param_r, outDir)
+
+        wordSims
+            .map({case (word1, (word2, score)) => word1 + "\t" + word2 + "\t" + score})
+            .saveAsTextFile(outDir + "/SimPruned")
 
         wordSimsWithFeatures
             .map({case (word1, (word2, score, featureSet)) => word1 + "\t" + word2 + "\t" + score + "\t" + featureSet.toList.sorted.mkString("  ")})
-            .saveAsTextFile(outDir + "/SimWithFeatures")
+            .saveAsTextFile(outDir + "/SimPrunedWithFeatures")
     }
 }

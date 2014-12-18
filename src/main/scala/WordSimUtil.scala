@@ -134,7 +134,7 @@ object WordSimUtil {
                                     sig:(Long, Long, Long, Long) => Double,
                                     r:Int,  // # decimal places to round score to
                                     outDir:String)
-    : RDD[(String, (String, Double, Set[String]))] = {
+    : (RDD[(String, (String, Double))], RDD[(String, (String, Double, Set[String]))]) = {
 
         val wordFeatureCountsFiltered = wordFeatureCounts
             .filter({case (word, (feature, wfc)) => wfc >= t_wf})
@@ -207,6 +207,7 @@ object WordSimUtil {
             .flatMap({case (feature, words) => for(word1 <- words.iterator; word2 <- words.iterator) yield ((word1, word2), 1.0)})
             .reduceByKey({case (score1, score2) => score1 + score2})
             .map({case ((word1, word2), scoreSum) => (word1, (word2, BigDecimal(scoreSum / p1).setScale(r, BigDecimal.RoundingMode.HALF_UP).toDouble))})
+            .sortBy({case (word, (simWord, score)) => (word, score)}, ascending=false)
             //.join(wordScoreSums)
             //.map({case (word1, ((word2, scoreSum), wordScoreSum)) => (word1, (word2, scoreSum / wordScoreSum))})
         wordSims.cache()
@@ -252,7 +253,7 @@ object WordSimUtil {
             //    .saveAsTextFile(outDir + "__AggrPerFeature")
         }
 
-        wordSimsWithFeatures
+        (wordSims, wordSimsWithFeatures)
     }
 
 }
