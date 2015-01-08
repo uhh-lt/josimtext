@@ -23,6 +23,7 @@ object WordSimPseudoSenseErrorEval {
 
         val res:(Float, Int) = sc.textFile(param_dataset)
             .map(line => line.split("\t"))
+            .filter(array => array.length == 4) // filter erroneous lines
             .map({case Array(word1, word2, score, features) => ((word1, word2.replaceAll("\\$\\$.*", "")), score.toFloat)})
             .groupByKey()
             .map({case ((word1, word2), scores) => (computeRelativeError(word1, word2, scores.toArray), 1)})
