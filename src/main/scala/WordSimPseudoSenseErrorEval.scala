@@ -3,9 +3,9 @@ import org.apache.spark.SparkContext._
 
 object WordSimPseudoSenseErrorEval {
 
-    def computeRelativeError(scores:Array[Float]):Float = {
+    def computeRelativeError(word1:String, word2:String, scores:Array[Float]):Float = {
         if (scores.length == 2) {
-            2*math.abs(scores(1) - scores(2)) / (scores(1) + scores(2))
+            2*math.abs(scores(0) - scores(1)) / (scores(0) + scores(1))
         } else 0
     }
 
@@ -23,9 +23,9 @@ object WordSimPseudoSenseErrorEval {
 
         val res:(Float, Int) = sc.textFile(param_dataset)
             .map(line => line.split("\t"))
-            .map({case Array(word1, word2, score) => ((word1, word2.replace("\\$\\$", "")), score.toFloat)})
+            .map({case Array(word1, word2, score, features) => ((word1, word2.replaceAll("\\$\\$.*", "")), score.toFloat)})
             .groupByKey()
-            .map({case ((word1, word2), scores) => (computeRelativeError(scores.toArray), 1)})
+            .map({case ((word1, word2), scores) => (computeRelativeError(word1, word2, scores.toArray), 1)})
             .reduce({case ((score1, aggr1), (score2, aggr2)) => (score1+score2, aggr1+aggr2)})
 
         println("Result: " + res._1 / res._2)
