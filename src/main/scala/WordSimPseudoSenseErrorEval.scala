@@ -6,7 +6,7 @@ object WordSimPseudoSenseErrorEval {
     def computeRelativeError(word1:String, word2:String, scores:Array[Float]):Float = {
         if (scores.length == 2) {
             2*math.abs(scores(0) - scores(1)) / (scores(0) + scores(1))
-        } else 0
+        } else 1
     }
 
     def main(args: Array[String]) {
