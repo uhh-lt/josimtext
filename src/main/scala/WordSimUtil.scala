@@ -203,25 +203,21 @@ object WordSimUtil {
             .map({case (index, (feature, words)) => (feature, words)})
         wordsPerFeatureFairPartitioned.cache()
 
-        val wordSims:RDD[(String, (String, Double))] = wordsPerFeatureFairPartitioned
+        val wordSimsAll:RDD[(String, (String, Double))] = wordsPerFeatureFairPartitioned
             .flatMap({case (feature, words) => for(word1 <- words.iterator; word2 <- words.iterator) yield ((word1, word2), 1.0)})
             .reduceByKey({case (score1, score2) => score1 + score2})
             .map({case ((word1, word2), scoreSum) => (word1, (word2, BigDecimal(scoreSum / p1).setScale(r, BigDecimal.RoundingMode.HALF_UP).toDouble))})
             .sortBy({case (word, (simWord, score)) => (word, score)}, ascending=false)
             //.join(wordScoreSums)
             //.map({case (word1, ((word2, scoreSum), wordScoreSum)) => (word1, (word2, scoreSum / wordScoreSum))})
-        wordSims.cache()
+        wordSimsAll.cache()
 
-        val wordSimsSorted:RDD[(String, (String, Double))] = wordSims
+        val wordSimsPruned:RDD[(String, (String, Double))] = wordSimsAll
             .groupByKey()
             .mapValues(simWords => simWords.toArray.sortWith({case ((w1, s1), (w2, s2)) => if (w1.equals("__RANDOM__")) true else if (w2.equals("__RANDOM__")) false else s1 > s2}).take(l))
             .flatMap({case (word, simWords) => for(simWord <- simWords.iterator) yield (word, simWord)})
 
-        val wordSimsAll:RDD[(String, (String, Double))] = wordSims
-            .groupByKey()
-            .flatMap({case (word, simWords) => for(simWord <- simWords.iterator) yield (word, simWord)})
-
-        val wordSimsWithFeatures:RDD[(String, (String, Double, Set[String]))] = wordSimsSorted
+        val wordSimsPrunedWithFeatures:RDD[(String, (String, Double, Set[String]))] = wordSimsPruned
             .join(featuresPerWord1)
             .map({case (word, ((simWord, score), featureList1)) => (simWord, (word, score, featureList1))})
             .join(featuresPerWord2)
@@ -253,7 +249,7 @@ object WordSimUtil {
             //    .saveAsTextFile(outDir + "__AggrPerFeature")
         }
 
-        (wordSims, wordSimsWithFeatures)
+        (wordSimsPruned, wordSimsPrunedWithFeatures)
     }
 
 }
