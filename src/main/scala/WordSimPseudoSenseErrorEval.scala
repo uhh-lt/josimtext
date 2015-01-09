@@ -10,7 +10,7 @@ object WordSimPseudoSenseErrorEval {
                 math.abs(scores(0) - scores(1)),
                 (scores(0) + scores(1)) / 2
             )
-        } else (1,1,scores(0) / 2) // if the other sense does not appear at all that's equivalent to sim = 0
+        } else (1,scores(0),scores(0) / 2) // if the other sense does not appear at all that's equivalent to sim = 0
     }
 
     def main(args: Array[String]) {
