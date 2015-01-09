@@ -26,8 +26,8 @@ object WordSimPseudoSenseErrorEval {
 
         val res = sc.textFile(param_dataset)
             .map(line => line.split("\t"))
-            .filter(array => array.length == 4) // filter erroneous lines
-            .map({case Array(word1, word2, score, features) => ((word1, word2.replaceAll("\\$\\$.*", "")), score.toFloat)})
+            .filter(array => array.length >= 3) // filter erroneous lines
+            .map({case Array(word1, word2, score, _*) => ((word1, word2.replaceAll("\\$\\$.*", "")), score.toFloat)})
             .groupByKey()
             .map({case ((word1, word2), scores) => (word1.replaceAll("\\$\\$.*", ""), (computeRelativeError(word1, word2, scores.toArray), 1))})
             .reduceByKey({case (((score11, score12), aggr1), ((score21, score22), aggr2)) => ((score11+score21,score12+score22), aggr1+aggr2)})
