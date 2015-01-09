@@ -13,6 +13,13 @@ object WordSimPseudoSenseErrorEval {
         } else (1,scores(0),scores(0) / 2) // if the other sense does not appear at all that's equivalent to sim = 0
     }
 
+    def computeDiscriminativeScore(word:String, list:List[Float]):Float = {
+        val sortedList = list.sortWith({case (s1, s2) => s1 > s2})
+        var relDiffSum = 0.0f
+        for (i <- 1 to sortedList.size - 1) relDiffSum += (sortedList(i - 1) - sortedList(i)) / sortedList(i - 1)
+        relDiffSum / (sortedList.size - 1)
+    }
+
     def main(args: Array[String]) {
         if (args.size < 1) {
             println("Usage: WordSimPseudoSenseErrorEval sims [output]")
@@ -31,16 +38,17 @@ object WordSimPseudoSenseErrorEval {
             .map({case Array(word1, word2, score, _*) => ((word1, word2.replaceAll("\\$\\$.*", "")), score.toFloat)})
             .groupByKey()
             .map({case ((word1, word2), scores) => (word1.replaceAll("\\$\\$.*", ""), (computeRelativeError(word1, word2, scores.toArray), 1))})
-            .reduceByKey({case (((score11, score12, sum1), aggr1), ((score21, score22, sum2), aggr2)) => ((score11+score21,score12+score22, sum1+sum2), aggr1+aggr2)})
-            .map({case (word, ((relErrorSum, absErrorSum, simSum), aggr)) => (word, (relErrorSum / aggr, absErrorSum / aggr, simSum / aggr, aggr))})
+            .map({case (word, ((score1, score2, sim), aggr)) => (word, ((score1, score2, sim), List(sim), aggr))})
+            .reduceByKey({case (((score11, score12, sum1), simList1, aggr1), ((score21, score22, sum2), simList2, aggr2)) => ((score11+score21,score12+score22, sum1+sum2), simList1 ::: simList2, aggr1+aggr2)})
+            .map({case (word, ((relErrorSum, absErrorSum, simSum), simList, aggr)) => (word, (relErrorSum / aggr, absErrorSum / aggr, simSum / aggr, computeDiscriminativeScore(word, simList), aggr))})
 
-        res.map({case (word, (relErrorSum, absErrorSum, simSum, aggr)) => word + "\t" + relErrorSum + "\t" + absErrorSum + "\t" + simSum + "\t" + aggr})
+        res.map({case (word, (avgRelError, avgAbsError, simAvg, discrScore, simWordNum)) => word + "\t" + avgRelError + "\t" + avgAbsError + "\t" + simAvg + "\t" + discrScore + "\t" + simWordNum})
            .saveAsTextFile(outDir + "AvgRelErrorPerWord")
 
-        res.map({case (word, (avgRelError, avgAbsError, simAvg, simWordNum)) => ("TOTAL", ((avgRelError, avgAbsError, simAvg, simWordNum), 1))})
-            .reduceByKey({case (((score11, score12, simAvg1, simWordNum1), aggr1), ((score21, score22, simAvg2, simWordNum2), aggr2)) => ((score11+score21,score12+score22, simAvg1+simAvg2, simWordNum1+simWordNum2), aggr1+aggr2)})
-            .map({case (word, ((avgRelErrorSum, avgAbsErrorSum, simAvgSum, simWordNumSum), aggr)) => (word, (avgRelErrorSum / aggr, avgAbsErrorSum / aggr, simAvgSum / aggr, simWordNumSum / aggr, aggr))})
-            .map({case (word, (relErrorSum, absErrorSum, simAvgAvg, simWordNumAvg, aggr)) => word + "\t" + relErrorSum + "\t" + absErrorSum + "\t" + simAvgAvg + "\t" + simWordNumAvg + "\t" + aggr})
+        res.map({case (word, (avgRelError, avgAbsError, simAvg, discrScore, simWordNum)) => ("TOTAL", ((avgRelError, avgAbsError, simAvg, discrScore, simWordNum), 1))})
+            .reduceByKey({case (((score11, score12, simAvg1, discrScore1, simWordNum1), aggr1), ((score21, score22, simAvg2, discrScore2, simWordNum2), aggr2)) => ((score11+score21,score12+score22, simAvg1+simAvg2, discrScore1+discrScore2, simWordNum1+simWordNum2), aggr1+aggr2)})
+            .map({case (word, ((avgRelErrorSum, avgAbsErrorSum, simAvgSum, discrScoreSum, simWordNumSum), aggr)) => (word, (avgRelErrorSum / aggr, avgAbsErrorSum / aggr, simAvgSum / aggr, discrScoreSum / aggr, simWordNumSum / aggr, aggr))})
+            .map({case (word, (relErrorSum, absErrorSum, simAvgAvg, discrScoreAvg, simWordNumAvg, aggr)) => word + "\t" + relErrorSum + "\t" + absErrorSum + "\t" + simAvgAvg + "\t" + discrScoreAvg + "\t" + simWordNumAvg + "\t" + aggr})
             .saveAsTextFile(outDir + "AvgRelErrorTotal")
 
 
