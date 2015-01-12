@@ -24,6 +24,8 @@ object WordSimFromCounts {
         val param_p2 = if (args.size > 12) args(12).toInt else 1000
         val param_l = if (args.size > 13) args(13).toInt else 200
 
+        val words:Set[String] = if (args.length > 14) args(14).split(",").toSet else null
+
         def sig(_n:Long, wc:Long, fc:Long, bc:Long) =
             if (param_sig == "LMI") WordSimUtil.lmi(_n,wc,fc,bc)
             else if (param_sig == "DESC") WordSimUtil.descriptivity(wc,fc,bc)
@@ -42,6 +44,7 @@ object WordSimFromCounts {
         val wordCounts = sc.textFile(wordCountsFile)
             .map(line => line.split("\t"))
             .map({case Array(word, count) => (word, count.toInt)})
+            .filter({case (word, count) => words == null || words.contains(word)})
 
         val featureCounts = sc.textFile(featureCountsFile)
             .map(line => line.split("\t"))
