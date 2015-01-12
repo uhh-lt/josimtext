@@ -14,6 +14,7 @@ object WordSimPseudoSenseErrorEval {
     }
 
     def computeDiscriminativeScore(word:String, list:List[Float]):Float = {
+        if (list.size == 1) return 0
         val sortedList = list.sortWith({case (s1, s2) => s1 > s2})
         var relDiffSum = 0.0f
         for (i <- 1 to sortedList.size - 1) relDiffSum += (sortedList(i - 1) - sortedList(i)) / sortedList(i - 1)
