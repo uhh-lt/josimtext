@@ -72,13 +72,13 @@ object WSDEvaluation {
 
         val sentLinkedTokenizedContextualized = sentLinkedTokenized
             .join(clustersWithClues)
-            .map({case (lemma, ((target, tokens), featureProbsPerSense)) => (lemma, target, chooseSense(tokens, featureProbsPerSense))})
+            .map({case (lemma, ((target, tokens), featureProbsPerSense)) => (lemma, target, chooseSense(tokens, featureProbsPerSense), tokens)})
 
         sentLinkedTokenizedContextualized
             .saveAsTextFile(outputFile + "__Contexts")
 
         val senseTargetCounts = sentLinkedTokenizedContextualized
-            .map({case (lemma, target, sense) => ((lemma, target, sense), 1)})
+            .map({case (lemma, target, sense, tokens) => ((lemma, target, sense), 1)})
             .reduceByKey({case (s1, s2) => s1 + s2})
 
         val sensesPerTarget = senseTargetCounts
