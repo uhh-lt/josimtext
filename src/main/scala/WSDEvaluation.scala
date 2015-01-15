@@ -29,7 +29,7 @@ object WSDEvaluation {
     }
 
     def chooseSense(contextFeatures:Set[String], featureProbsPerSense:Map[Int, Map[String, Double]]):Int = {
-        val senseScores = Map[Int, Double]().withDefaultValue(0.0)
+        val senseScores = collection.mutable.Map[Int, Double]().withDefaultValue(0.0)
         for (feature <- contextFeatures) {
             for (sense <- featureProbsPerSense.keys) {
                 val featureProb = featureProbsPerSense(sense)(feature)
