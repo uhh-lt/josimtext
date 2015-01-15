@@ -133,11 +133,13 @@ object WordSimUtil {
                              outDir:String)
     : (RDD[(String, Array[(String, Double)])]) = {
 
-        val wordFeatureCountsFiltered = wordFeatureCounts
-            .filter({case (word, (feature, wfc)) => wfc >= t_wf})
+        val wordFeatureCountsFiltered =
+            if (t_wf > 1) wordFeatureCounts.filter({ case (word, (feature, wfc)) => wfc >= t_wf})
+            else          wordFeatureCounts
 
-        var featureCountsFiltered = featureCounts
-            .filter({case (feature, fc) => fc >= t_f})
+        var featureCountsFiltered =
+            if (t_f > 1) featureCounts.filter({case (feature, fc) => fc >= t_f})
+            else         featureCounts
 
         if (w != Int.MaxValue) {
             val wordsPerFeatureCounts = wordFeatureCountsFiltered
@@ -152,8 +154,9 @@ object WordSimUtil {
         }
         featureCountsFiltered.cache()
 
-        val wordCountsFiltered = wordCounts
-            .filter({case (word, wc) => wc >= t_w})
+        val wordCountsFiltered =
+            if (t_w > 1) wordCounts.filter({case (word, wc) => wc >= t_w})
+            else         wordCounts
         wordCountsFiltered.cache()
 
         // Since word counts and feature counts are based on unfiltered word-feature
