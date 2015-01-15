@@ -185,11 +185,11 @@ object WordSimUtil {
                 .sortBy({ case (word, feature, wc, fc, wfc, score) => score}, ascending = false)
                 .map({ case (word, feature, wc, fc, wfc, score) => word + "\t" + feature + "\t" + wc + "\t" + fc + "\t" + wfc + "\t" + n + "\t" + score})
                 .saveAsTextFile(outDir + "/AllValuesPerWord")
-            featuresPerWordWithScore
+            /*featuresPerWordWithScore
                 .flatMap({ case (word, featureScores) => for (featureScore <- featureScores.iterator) yield (featureScore._1, (word, featureScore._2))})
                 .join(featureCountsFiltered)
                 .map({ case (feature, ((word, score), fc)) => word + "\t" + feature + "\t" + score + "\t" + fc})
-                .saveAsTextFile(outDir + "/PruneGraph")
+                .saveAsTextFile(outDir + "/PruneGraph")*/
         }
 
         featuresPerWordWithScore
