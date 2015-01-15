@@ -136,16 +136,20 @@ object WordSimUtil {
         val wordFeatureCountsFiltered = wordFeatureCounts
             .filter({case (word, (feature, wfc)) => wfc >= t_wf})
 
-        val wordsPerFeatureCounts = wordFeatureCountsFiltered
-            .map({case (word, (feature, wfc)) => (feature, word)})
-            .groupByKey()
-            .mapValues(v => v.size)
-            .filter({case (feature, numWords) => numWords <= w})
-
-        val featureCountsFiltered = featureCounts
+        var featureCountsFiltered = featureCounts
             .filter({case (feature, fc) => fc >= t_f})
-            .join(wordsPerFeatureCounts) // filter by using a join
-            .map({case (feature, (fc, fwc)) => (feature, fc)}) // and remove unnecessary data from join
+
+        if (w != Int.MaxValue) {
+            val wordsPerFeatureCounts = wordFeatureCountsFiltered
+                .map({ case (word, (feature, wfc)) => (feature, word)})
+                .groupByKey()
+                .mapValues(v => v.size)
+                .filter({ case (feature, numWords) => numWords <= w})
+
+            featureCountsFiltered = featureCountsFiltered
+                .join(wordsPerFeatureCounts) // filter by using a join
+                .map({ case (feature, (fc, fwc)) => (feature, fc)}) // and remove unnecessary data from join
+        }
         featureCountsFiltered.cache()
 
         val wordCountsFiltered = wordCounts
