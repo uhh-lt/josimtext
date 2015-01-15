@@ -5,6 +5,8 @@ import org.apache.spark.rdd._
 object WSDEvaluation {
     def computeFeatureProb(featureArr:Array[String], numFeatures:Int, clusterSize:Int): (String, Double, Double) = {
         val feature = featureArr(0)
+        if (featureArr.length != 8)
+            return (feature, 0, 0)
         //val lmi     = featureArr(1).toFloat
         val avgProb = featureArr(2).toFloat
         val avgCov  = featureArr(3).toFloat
@@ -61,7 +63,7 @@ object WSDEvaluation {
         // (lemma, (sense -> (feature -> prob)))
         val clustersWithClues:RDD[(String, Map[Int, Map[String, Double]])] = clusterFile
             .map(line => line.split("\t"))
-            .map({case Array(lemma, sense, simWords, featuresWithValues) => (lemma, (sense.toInt, computeFeatureProbs(featuresWithValues.split("  "), numFeatures, simWords.size)))})
+            .map({case Array(lemma, sense, senseLabel, simWords, featuresWithValues) => (lemma, (sense.toInt, computeFeatureProbs(featuresWithValues.split("  "), numFeatures, simWords.size)))})
             .groupByKey()
             .mapValues(featureProbsPerSense => featureProbsPerSense.toMap)
 
