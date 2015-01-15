@@ -33,6 +33,6 @@ object WordFeatureCountsJoin {
             .map({case Array(feature, count) => (feature, count.toInt)})
 
         WordSimUtil.computeFeatureScores(wordFeatureCounts, wordCounts, featureCounts,
-            Int.MaxValue, 0, 0, 0, 0, 100, WordSimUtil.lmi, outDir)
+            Int.MaxValue, 2, 2, 2, 0, 100, WordSimUtil.lmi, outDir)
     }
 }
