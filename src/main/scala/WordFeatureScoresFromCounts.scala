@@ -3,8 +3,8 @@ import org.apache.spark.{SparkConf, SparkContext}
 object WordFeatureScoresFromCounts {
     def main(args: Array[String]) {
         if (args.size < 1) {
-            println("Usage: WordSim word-feature-counts word-counts feature-counts output [w=1000] [s=0.0] [t=2] [sig=LMI] [p=1000] [l=200]")
-            println("For example, the arguments \"wikipedia wikipedia-out 500 0.0 3\" will override w with 500 and t with 3, leaving the rest at the default values")
+            println("Usage: WordSim word-feature-counts word-counts feature-counts output [w=10000] [s=0.0] [t_wf=2] [t_w=2] [t_f=2] [sig=LMI] [p=1000] [wordlist]")
+            println("For example, the arguments \"wikipedia wikipedia-out 100000 0.0 3\" will override w with 100000 and t_wf with 3, leaving the rest at the default values")
             return
         }
 
