@@ -34,8 +34,10 @@ object WSDEvaluation {
         val senseScores = collection.mutable.Map[Int, Double]().withDefaultValue(0.0)
         for (feature <- contextFeatures) {
             for (sense <- featureProbsPerSense.keys) {
-                val featureProb = featureProbsPerSense(sense)(feature)
-                senseScores(sense) += featureProb
+                if (featureProbsPerSense(sense).contains(feature)) {
+                    val featureProb = featureProbsPerSense(sense)(feature)
+                    senseScores(sense) += featureProb
+                }
             }
         }
 
