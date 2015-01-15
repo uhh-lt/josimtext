@@ -1,7 +1,6 @@
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkConf
+import org.apache.spark.{SparkConf, SparkContext}
 
-object WordSimFromCounts {
+object WordFeatureScoresFromCounts {
     def main(args: Array[String]) {
         if (args.size < 1) {
             println("Usage: WordSim word-feature-counts word-counts feature-counts output [w=1000] [s=0.0] [t=2] [sig=LMI] [p=1000] [l=200]")
@@ -19,11 +18,9 @@ object WordSimFromCounts {
         val param_t_w = if (args.size > 7) args(7).toInt else 2
         val param_t_f = if (args.size > 8) args(8).toInt else 2
         val param_sig = if (args.size > 9) args(9) else "LMI"
-        val param_r = if (args.size > 10) args(10).toInt else 3
-        val param_p = if (args.size > 11) args(11).toInt else 1000
-        val param_l = if (args.size > 12) args(12).toInt else 200
+        val param_p = if (args.size > 10) args(10).toInt else 1000
 
-        val words:Set[String] = if (args.length > 13) args(13).split(",").toSet else null
+        val words:Set[String] = if (args.length > 11) args(11).split(",").toSet else null
 
         def sig(_n:Long, wc:Long, fc:Long, bc:Long) =
             if (param_sig == "LMI") WordSimUtil.lmi(_n,wc,fc,bc)
@@ -49,15 +46,7 @@ object WordSimFromCounts {
             .map(line => line.split("\t"))
             .map({case Array(feature, count) => (feature, count.toInt)})
 
-        val (wordSims, wordSimsWithFeatures) = WordSimUtil.computeWordSimsWithFeatures(wordFeatureCounts, wordCounts, featureCounts,
-            param_w, param_t_wf, param_t_w, param_t_f, param_s, param_p, param_l, sig, param_r, outDir)
-
-        wordSims
-            .map({case (word1, (word2, score)) => word1 + "\t" + word2 + "\t" + score})
-            .saveAsTextFile(outDir + "/SimPruned")
-
-        wordSimsWithFeatures
-            .map({case (word1, (word2, score, featureSet)) => word1 + "\t" + word2 + "\t" + score + "\t" + featureSet.toList.sorted.mkString("  ")})
-            .saveAsTextFile(outDir + "/SimPrunedWithFeatures")
+        WordSimUtil.computeFeatureScores(wordFeatureCounts, wordCounts, featureCounts,
+            param_w, param_t_wf, param_t_w, param_t_f, param_s, param_p, sig, outDir)
     }
 }

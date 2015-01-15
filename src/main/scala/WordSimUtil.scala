@@ -120,25 +120,21 @@ object WordSimUtil {
         word1Score * (1.0 - Math.abs(word1Score - word2Score))
     }
 
-    def computeWordSimsWithFeatures(wordFeatureCounts:RDD[(String, (String, Int))],
-                                    wordCounts:RDD[(String, Int)],
-                                    featureCounts:RDD[(String, Int)],
-                                    w:Int,    // max. number of words per feature
-                                    t_wf:Int,    // lower word-feature count threshold
-                                    t_w:Int,    // lower word count threshold
-                                    t_f:Int,    // lower feature count threshold
-                                    s:Double, // lower significance threshold
-                                    p1:Int,    // max. number of features per word 1 (focus word, p1 <= p2)
-                                    p2:Int,    // max. number of features per word 2 (compared word, p1 <= p2)
-                                    l:Int,    // max. number of similar words per word
-                                    sig:(Long, Long, Long, Long) => Double,
-                                    r:Int,  // # decimal places to round score to
-                                    outDir:String)
-    : (RDD[(String, (String, Double))], RDD[(String, (String, Double, Set[String]))]) = {
+    def computeFeatureScores(wordFeatureCounts:RDD[(String, (String, Int))],
+                             wordCounts:RDD[(String, Int)],
+                             featureCounts:RDD[(String, Int)],
+                             w:Int,    // max. number of words per feature
+                             t_wf:Int,    // lower word-feature count threshold
+                             t_w:Int,    // lower word count threshold
+                             t_f:Int,    // lower feature count threshold
+                             s:Double, // lower significance threshold
+                             p:Int,    // max. number of features per word
+                             sig:(Long, Long, Long, Long) => Double,
+                             outDir:String)
+    : (RDD[(String, Array[(String, Double)])]) = {
 
         val wordFeatureCountsFiltered = wordFeatureCounts
             .filter({case (word, (feature, wfc)) => wfc >= t_wf})
-        //wordFeatureCountsFiltered.cache()
 
         val wordsPerFeatureCounts = wordFeatureCountsFiltered
             .map({case (word, (feature, wfc)) => (feature, word)})
@@ -170,30 +166,53 @@ object WordSimUtil {
             .filter({case (word, (feature, score)) => score >= s})
             .groupByKey()
             // (word, [(feature, score), (feature, score), ...])
-            .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}).take(p2)) // sort by value desc
+            .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}).take(p)) // sort by value desc
         //featuresPerWordWithScore.cache()
 
-        //val wordScoreSums:RDD[(String, Double)] = featuresPerWordWithScore
-        //    .mapValues(featureScores => featureScores.foldLeft(0.0)({case (sum, (_, score)) => sum + score}))
+        if (DEBUG) {
+            wordFeatureCountsFiltered
+                .join(wordCountsFiltered)
+                .map({ case (word, ((feature, wfc), wc)) => (feature, (word, wfc, wc))})
+                .join(featureCountsFiltered)
+                .map({ case (feature, ((word, wfc, wc), fc)) => (word, feature, wc, fc, wfc, sig(n, wc, fc, wfc))})
+                .sortBy({ case (word, feature, wc, fc, wfc, score) => score}, ascending = false)
+                .map({ case (word, feature, wc, fc, wfc, score) => word + "\t" + feature + "\t" + wc + "\t" + fc + "\t" + wfc + "\t" + n + "\t" + score})
+                .saveAsTextFile(outDir + "/AllValuesPerWord")
+            featuresPerWordWithScore
+                .flatMap({ case (word, featureScores) => for (featureScore <- featureScores.iterator) yield (featureScore._1, (word, featureScore._2))})
+                .join(featureCountsFiltered)
+                .map({ case (feature, ((word, score), fc)) => word + "\t" + feature + "\t" + score + "\t" + fc})
+                .saveAsTextFile(outDir + "/PruneGraph")
+        }
 
-        val featuresPerWord1:RDD[(String, Array[String])] = featuresPerWordWithScore
-            .map({case (word, featureScores) => (word, featureScores.take(p1).map({case (feature, score) => feature}))})
-        val featuresPerWord2:RDD[(String, Array[String])] = featuresPerWordWithScore
+        featuresPerWordWithScore
+    }
+
+    def computeWordSimsWithFeatures(wordFeatureCounts:RDD[(String, (String, Int))],
+                                    wordCounts:RDD[(String, Int)],
+                                    featureCounts:RDD[(String, Int)],
+                                    w:Int,    // max. number of words per feature
+                                    t_wf:Int,    // lower word-feature count threshold
+                                    t_w:Int,    // lower word count threshold
+                                    t_f:Int,    // lower feature count threshold
+                                    s:Double, // lower significance threshold
+                                    p:Int,    // max. number of features per word
+                                    l:Int,    // max. number of similar words per word
+                                    sig:(Long, Long, Long, Long) => Double,
+                                    r:Int,  // # decimal places to round score to
+                                    outDir:String)
+    : (RDD[(String, (String, Double))], RDD[(String, (String, Double, Set[String]))]) = {
+
+        val featuresPerWordWithScore = computeFeatureScores(wordFeatureCounts, wordCounts, featureCounts, w, t_wf, t_w, t_f, s, p, sig, outDir)
+
+        val featuresPerWord:RDD[(String, Array[String])] = featuresPerWordWithScore
             .map({case (word, featureScores) => (word, featureScores.map({case (feature, score) => feature}))})
 
-        //val wordsPerFeatureWithScore1 = featuresPerWordWithScore
-        //    .flatMap({case (word, featureScores) => for(featureScore <- featureScores.take(p1).iterator) yield (featureScore._1, (word, featureScore._2))})
-        //    .partitionBy(new HashPartitioner(10000))
-
-        val wordsPerFeature = featuresPerWord1
+        val wordsPerFeature = featuresPerWord
             .flatMap({case (word, features) => for (feature <- features.iterator) yield (feature, word)})
             .groupByKey()
             .filter({case (feature, words) => words.size <= w})
             .sortBy(_._2.size, ascending=false)
-
-        wordsPerFeature
-            .map({case (feature, words) => feature + "\t" + words.size + "\t" + words.mkString("  ")})
-            .saveAsTextFile(outDir + "/WordsPerFeature")
 
         val wordsPerFeatureFairPartitioned = wordsPerFeature
             // the following 4 lines partition the RDD for equal words-per-feature distribution over the partitions
@@ -206,7 +225,7 @@ object WordSimUtil {
         val wordSimsAll:RDD[(String, (String, Double))] = wordsPerFeatureFairPartitioned
             .flatMap({case (feature, words) => for(word1 <- words.iterator; word2 <- words.iterator) yield ((word1, word2), 1.0)})
             .reduceByKey({case (score1, score2) => score1 + score2})
-            .map({case ((word1, word2), scoreSum) => (word1, (word2, BigDecimal(scoreSum / p1).setScale(r, BigDecimal.RoundingMode.HALF_UP).toDouble))})
+            .map({case ((word1, word2), scoreSum) => (word1, (word2, BigDecimal(scoreSum / p).setScale(r, BigDecimal.RoundingMode.HALF_UP).toDouble))})
             .sortBy({case (word, (simWord, score)) => (word, score)}, ascending=false)
             //.join(wordScoreSums)
             //.map({case (word1, ((word2, scoreSum), wordScoreSum)) => (word1, (word2, scoreSum / wordScoreSum))})
@@ -218,32 +237,22 @@ object WordSimUtil {
             .flatMap({case (word, simWords) => for(simWord <- simWords.iterator) yield (word, simWord)})
 
         val wordSimsPrunedWithFeatures:RDD[(String, (String, Double, Set[String]))] = wordSimsPruned
-            .join(featuresPerWord1)
+            .join(featuresPerWord)
             .map({case (word, ((simWord, score), featureList1)) => (simWord, (word, score, featureList1))})
-            .join(featuresPerWord2)
+            .join(featuresPerWord)
             .map({case (simWord, ((word, score, featureList1), featureList2)) => (word, (simWord, score, featureList1.toSet.intersect(featureList2.toSet)))})
             .sortBy({case (word, (simWord, score, mutualFeatureSet)) => (word, score)}, ascending=false)
 
         if (DEBUG) {
-            wordSimsAll
+            wordsPerFeature
+                .map({ case (feature, words) => feature + "\t" + words.size + "\t" + words.mkString("  ")})
+                .saveAsTextFile(outDir + "/WordsPerFeature")
+            /*wordSimsAll
                 .map({case (word, (simWord, score)) => (simWord, (word, score))})
                 .join(wordCountsFiltered)
                 .sortBy({case (simWord, ((word, score), simWordCount)) => (word, score)}, ascending=false)
                 .map({case (simWord, ((word, score), simWordCount)) => word + "\t" + simWord + "\t" + score + "\t" + simWordCount})
-                .saveAsTextFile(outDir + "/SimWithWordCounts")
-            featuresPerWordWithScore
-                .flatMap({ case (word, featureScores) => for (featureScore <- featureScores.iterator) yield (featureScore._1, (word, featureScore._2))})
-                .join(featureCountsFiltered)
-                .map({ case (feature, ((word, score), fc)) => word + "\t" + feature + "\t" + score + "\t" + fc})
-                .saveAsTextFile(outDir + "/PruneGraph")
-            wordFeatureCountsFiltered
-                .join(wordCountsFiltered)
-                .map({ case (word, ((feature, wfc), wc)) => (feature, (word, wfc, wc))})
-                .join(featureCountsFiltered)
-                .map({ case (feature, ((word, wfc, wc), fc)) => (word, feature, wc, fc, wfc, sig(n, wc, fc, wfc))})
-                .sortBy({ case (word, feature, wc, fc, wfc, score) => score}, ascending=false)
-                .map({ case (word, feature, wc, fc, wfc, score) => word + "\t" + feature + "\t" + wc + "\t" + fc + "\t" + wfc + "\t" + n + "\t" + score})
-                .saveAsTextFile(outDir + "/AllValuesPerWord")
+                .saveAsTextFile(outDir + "/SimWithWordCounts")*/
             //wordsPerFeatureWithScore2
             //    .map({ case (feature, wordList) => feature + "\t" + wordList.map(f => f._1).mkString("\t")})
             //    .saveAsTextFile(outDir + "__AggrPerFeature")
