@@ -88,7 +88,35 @@ object WSDEvaluation {
             .reduceByKey({case (s1, s2) => s1 + s2})
 
 
-        // SENSE -> TARGET
+
+        // LEMMA -> MOST FREQ. TARGET (***BASELINE***)
+        val targetsPerLemma = senseTargetCounts
+            .map({case ((lemma, target, sense), count) => ((lemma, target), count)})
+            .reduceByKey(_+_)
+            .map({case ((lemma, target), count) => (lemma, (target, count))})
+            .groupByKey()
+            .map({case (lemma, targetCounts) => (lemma, targetCounts.toArray.sortBy(_._2).reverse)})
+
+        targetsPerLemma
+            .map({case (lemma, targetCounts) => lemma + "\t" + targetCounts.map(targetCount => targetCount._1 + ":" + targetCount._2).mkString("  ")})
+            .saveAsTextFile(outputFile + "__TargetsPerLemma")
+
+        val targetsPerLemmaResults = targetsPerLemma
+            .map({case (lemma, targetCounts) => (lemma, computeMatchingScore(targetCounts))})
+
+        targetsPerLemmaResults
+            .map({case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
+            .saveAsTextFile(outputFile + "__TargetsPerLemma__Results")
+
+        targetsPerLemmaResults
+            .map({case (lemma, (correct, total)) => ("TOTAL", (correct, total))})
+            .reduceByKey({case ((correct1, total1), (correct2, total2)) => (correct1+correct2, total1+total2)})
+            .map({case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
+            .saveAsTextFile(outputFile + "__TargetsPerLemma__ResultsAggregated")
+
+
+
+        // SENSE -> MOST FREQ. TARGET
         val targetsPerSense = senseTargetCounts
             .map({case ((lemma, target, sense), count) => ((lemma, sense), (target, count))})
             .groupByKey()
@@ -114,7 +142,7 @@ object WSDEvaluation {
 
 
 
-        // TARGET -> SENSE
+        // TARGET -> MOST FREQ. SENSE
         val sensesPerTarget = senseTargetCounts
             .map({case ((lemma, target, sense), count) => ((lemma, target), (sense, count))})
             .groupByKey()
@@ -131,5 +159,11 @@ object WSDEvaluation {
         sensesPerTargetResults
             .map({case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
             .saveAsTextFile(outputFile + "__SensesPerTarget__Results")
+
+        sensesPerTargetResults
+            .map({case (lemma, (correct, total)) => ("TOTAL", (correct, total))})
+            .reduceByKey({case ((correct1, total1), (correct2, total2)) => (correct1+correct2, total1+total2)})
+            .map({case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
+            .saveAsTextFile(outputFile + "__SensesPerTarget__ResultsAggregated")
     }
 }
