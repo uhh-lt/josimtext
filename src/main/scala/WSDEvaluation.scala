@@ -32,6 +32,7 @@ object WSDEvaluation {
 
     def chooseSense(contextFeatures:Set[String], featureProbsPerSense:Map[Int, Map[String, Double]]):Int = {
         val senseScores = collection.mutable.Map[Int, Double]().withDefaultValue(0.0)
+        senseScores(-1) = 0 // fall-back sense indicates that no context features match one of the senses
         for (feature <- contextFeatures) {
             for (sense <- featureProbsPerSense.keys) {
                 if (featureProbsPerSense(sense).contains(feature)) {
