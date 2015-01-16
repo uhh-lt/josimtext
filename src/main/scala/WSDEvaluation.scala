@@ -3,26 +3,34 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.rdd._
 
 object WSDEvaluation {
-    def computeFeatureProb(featureArr:Array[String], numFeatures:Int, clusterSize:Int): (String, Double, Double) = {
+    def computeFeatureProb(featureArr:Array[String], clusterSize:Int): (String, Double, Double) = {
         val feature = featureArr(0)
         if (featureArr.length != 8)
             return (feature, 0, 0)
         //val lmi     = featureArr(1).toFloat
-        val avgProb = featureArr(2).toFloat
-        val avgCov  = featureArr(3).toFloat
-        val wc      = featureArr(4).toLong
-        val fc      = featureArr(5).toLong
-        val avgWc   = wc.toFloat / clusterSize
+        val avgProb = featureArr(2).toFloat // (p(w1|f) + .. + p(wn|f)) / n
+        val avgCov  = featureArr(3).toFloat // (p(f|w1) + .. + p(f|wn)) / n
+        val wc      = featureArr(4).toLong  // c(w1) + .. + c(wn) = c(s)
+        val fc      = featureArr(5).toLong  // c(f)
+        val avgWc   = wc.toFloat / clusterSize // c(s) / n = (c(w1) + .. + c(wn)) / n
         //val wfc     = featureArr(6).toLong
-        //val n       = featureArr(7).toLong
-        val normalizedAvgWfc = avgCov * avgWc
+        //val totalNumObservations = featureArr(7).toLong
+        val normalizedAvgWfc = avgCov * avgWc // (p(f|w1) + .. + p(f|wn))/n * c(s)/n = (c(w1,f) + .. + c(wn,f))/n = c(s,f)/n
         val score = (normalizedAvgWfc * normalizedAvgWfc) / (avgWc * fc)
+        //val pmi = (avgProb * totalNumObservations) / wc; // p(w|f)*n / c(w) = c(w|f) / c(w) = pmi(w,f)
         (feature, avgProb, score)
+    }
+
+    def computeFeatureProbs(featuresWithValues:Array[String], clusterSize:Int): Map[String, Double] = {
+        featuresWithValues
+            .map(featureArr => computeFeatureProb(featureArr.split(":"), clusterSize))
+            .map({case (feature, avgProb, score) => (feature, avgProb)})
+            .toMap
     }
 
     def computeFeatureProbs(featuresWithValues:Array[String], numFeatures:Int, clusterSize:Int): Map[String, Double] = {
         featuresWithValues
-            .map(featureArr => computeFeatureProb(featureArr.split(":"), numFeatures, clusterSize))
+            .map(featureArr => computeFeatureProb(featureArr.split(":"), clusterSize))
             .sortBy({case (feature, avgProb, score) => score})
             .reverse
             .take(numFeatures)
@@ -30,15 +38,19 @@ object WSDEvaluation {
             .toMap
     }
 
-    def chooseSense(contextFeatures:Set[String], featureProbsPerSense:Map[Int, Map[String, Double]]):Int = {
+    def chooseSense(contextFeatures:Set[String], featureProbsPerSense:Map[Int, Map[String, Double]], alpha:Double):Int = {
+        // TODO: Use the prior sense probability here
         val senseScores = collection.mutable.Map[Int, Double]().withDefaultValue(0.0)
-        senseScores(-1) = 0 // fall-back sense indicates that no context features match one of the senses
+        // p(s|f1..fn) = 1/p(f1..fn) * p(s) * p(f1|s) * .. * p(fn|s)
+        // where 1/p(f1..fn) is ignored as it is equal for all senses
         for (feature <- contextFeatures) {
             for (sense <- featureProbsPerSense.keys) {
+                // Smoothing for previously unseen context features
+                var featureProb = alpha
                 if (featureProbsPerSense(sense).contains(feature)) {
-                    val featureProb = featureProbsPerSense(sense)(feature)
-                    senseScores(sense) += featureProb
+                    featureProb += featureProbsPerSense(sense)(feature)
                 }
+                senseScores(sense) += math.log(featureProb)
             }
         }
 
@@ -53,7 +65,7 @@ object WSDEvaluation {
 
     def main(args: Array[String]) {
         if (args.size < 3) {
-            println("Usage: WSDEvaluation cluster-file-with-clues linked-sentences-tokenized output")
+            println("Usage: WSDEvaluation cluster-file-with-clues linked-sentences-tokenized output prob-smoothing-addend")
             return
         }
 
@@ -63,7 +75,10 @@ object WSDEvaluation {
         val clusterFile = sc.textFile(args(0))
         val sentFile = sc.textFile(args(1))
         val outputFile = args(2)
-        val numFeatures = args(3).toInt
+        val alpha = args(3).toDouble
+        //val numFeatures = args(3).toInt
+        //val minPMI = args(4).toDouble
+        //val multiplyScores = args(5).toBoolean
 
         val sentLinkedTokenized = sentFile
             .map(line => line.split("\t"))
@@ -72,20 +87,27 @@ object WSDEvaluation {
         // (lemma, (sense -> (feature -> prob)))
         val clustersWithClues:RDD[(String, Map[Int, Map[String, Double]])] = clusterFile
             .map(line => line.split("\t"))
-            .map({case Array(lemma, sense, senseLabel, simWords, featuresWithValues) => (lemma, (sense.toInt, computeFeatureProbs(featuresWithValues.split("  "), numFeatures, simWords.size)))})
+            .map({case Array(lemma, sense, senseLabel, simWords, featuresWithValues) => (lemma, (sense.toInt, computeFeatureProbs(featuresWithValues.split("  "), simWords.size)))})
             .groupByKey()
             .mapValues(featureProbsPerSense => featureProbsPerSense.toMap)
 
         val sentLinkedTokenizedContextualized = sentLinkedTokenized
             .join(clustersWithClues)
-            .map({case (lemma, ((target, tokens), featureProbsPerSense)) => (lemma, target, chooseSense(tokens, featureProbsPerSense), tokens)})
+            .map({case (lemma, ((target, tokens), featureProbsPerSense)) => (lemma, target, chooseSense(tokens, featureProbsPerSense, alpha), tokens)})
 
         sentLinkedTokenizedContextualized
-            .saveAsTextFile(outputFile + "__Contexts")
+            .saveAsTextFile(outputFile + "/Contexts")
 
         val senseTargetCounts = sentLinkedTokenizedContextualized
             .map({case (lemma, target, sense, tokens) => ((lemma, target, sense), 1)})
-            .reduceByKey({case (s1, s2) => s1 + s2})
+            .reduceByKey(_+_)
+            .cache()
+
+        senseTargetCounts
+            .filter({case ((lemma, target, sense), count) => sense == -1})
+            .map({case ((lemma, target, sense), count) => ("NO_SENSE_FOUND", count)})
+            .reduceByKey(_+_)
+            .saveAsTextFile(outputFile + "/FailedContextualizationCounts")
 
 
 
@@ -99,20 +121,20 @@ object WSDEvaluation {
 
         targetsPerLemma
             .map({case (lemma, targetCounts) => lemma + "\t" + targetCounts.map(targetCount => targetCount._1 + ":" + targetCount._2).mkString("  ")})
-            .saveAsTextFile(outputFile + "__TargetsPerLemma")
+            .saveAsTextFile(outputFile + "/TargetsPerLemma")
 
         val targetsPerLemmaResults = targetsPerLemma
             .map({case (lemma, targetCounts) => (lemma, computeMatchingScore(targetCounts))})
 
         targetsPerLemmaResults
             .map({case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
-            .saveAsTextFile(outputFile + "__TargetsPerLemma__Results")
+            .saveAsTextFile(outputFile + "/TargetsPerLemma__Results")
 
         targetsPerLemmaResults
             .map({case (lemma, (correct, total)) => ("TOTAL", (correct, total))})
             .reduceByKey({case ((correct1, total1), (correct2, total2)) => (correct1+correct2, total1+total2)})
             .map({case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
-            .saveAsTextFile(outputFile + "__TargetsPerLemma__ResultsAggregated")
+            .saveAsTextFile(outputFile + "/TargetsPerLemma__ResultsAggregated")
 
 
 
@@ -124,7 +146,7 @@ object WSDEvaluation {
 
         targetsPerSense
             .map({case ((lemma, sense), targetCounts) => lemma + "\t" + sense + "\t" + targetCounts.map(targetCount => targetCount._1 + ":" + targetCount._2).mkString("  ")})
-            .saveAsTextFile(outputFile + "__TargetsPerSense")
+            .saveAsTextFile(outputFile + "/TargetsPerSense")
 
         val targetsPerSenseResults = targetsPerSense
             .map({case ((lemma, sense), targetCounts) => (lemma, computeMatchingScore(targetCounts))})
@@ -132,13 +154,13 @@ object WSDEvaluation {
 
         targetsPerSenseResults
             .map({case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
-            .saveAsTextFile(outputFile + "__TargetsPerSense__Results")
+            .saveAsTextFile(outputFile + "/TargetsPerSense__Results")
 
         targetsPerSenseResults
             .map({case (lemma, (correct, total)) => ("TOTAL", (correct, total))})
             .reduceByKey({case ((correct1, total1), (correct2, total2)) => (correct1+correct2, total1+total2)})
             .map({case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
-            .saveAsTextFile(outputFile + "__TargetsPerSense__ResultsAggregated")
+            .saveAsTextFile(outputFile + "/TargetsPerSense__ResultsAggregated")
 
 
 
@@ -150,7 +172,7 @@ object WSDEvaluation {
 
         sensesPerTarget
             .map({case ((lemma, target), senseCounts) => lemma + "\t" + target + "\t" + senseCounts.map(senseCount => senseCount._1 + ":" + senseCount._2).mkString("  ")})
-            .saveAsTextFile(outputFile + "__SensesPerTarget")
+            .saveAsTextFile(outputFile + "/SensesPerTarget")
 
         val sensesPerTargetResults = sensesPerTarget
             .map({case ((lemma, target), senseCounts) => (lemma, computeMatchingScore(senseCounts))})
@@ -158,12 +180,12 @@ object WSDEvaluation {
 
         sensesPerTargetResults
             .map({case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
-            .saveAsTextFile(outputFile + "__SensesPerTarget__Results")
+            .saveAsTextFile(outputFile + "/SensesPerTarget__Results")
 
         sensesPerTargetResults
             .map({case (lemma, (correct, total)) => ("TOTAL", (correct, total))})
             .reduceByKey({case ((correct1, total1), (correct2, total2)) => (correct1+correct2, total1+total2)})
             .map({case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
-            .saveAsTextFile(outputFile + "__SensesPerTarget__ResultsAggregated")
+            .saveAsTextFile(outputFile + "/SensesPerTarget__ResultsAggregated")
     }
 }
