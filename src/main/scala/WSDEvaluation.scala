@@ -3,29 +3,22 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.rdd._
 
 object WSDEvaluation {
-    def computeFeatureProb(featureArr:Array[String], clusterSize:Int): (String, Double, Double) = {
+    /*def computeFeatureProb(featureArr:Array[String], clusterSize:Int): (String, Double, Double) = {
         val feature = featureArr(0)
         if (featureArr.length != 8)
             return (feature, 0, 0)
         //val lmi     = featureArr(1).toFloat
-        val avgProb = featureArr(2).toFloat // (p(w1|f) + .. + p(wn|f)) / n
-        val avgCov  = featureArr(3).toFloat // (p(f|w1) + .. + p(f|wn)) / n
-        val wc      = featureArr(4).toLong  // c(w1) + .. + c(wn) = c(s)
+        //val avgProb = featureArr(2).toFloat // (p(w1|f) + .. + p(wn|f)) / n
+        //val avgCov  = featureArr(3).toFloat // (p(f|w1) + .. + p(f|wn)) / n
+        val sc      = featureArr(4).toLong  // c(w1) + .. + c(wn) = c(s)
         val fc      = featureArr(5).toLong  // c(f)
-        val avgWc   = wc.toFloat / clusterSize // c(s) / n = (c(w1) + .. + c(wn)) / n
-        //val wfc     = featureArr(6).toLong
+        //val avgWc   = wc.toFloat / clusterSize // c(s) / n = (c(w1) + .. + c(wn)) / n
+        val sfc     = featureArr(6).toLong // c(s,f)
         //val totalNumObservations = featureArr(7).toLong
-        val normalizedAvgWfc = avgCov * avgWc // (p(f|w1) + .. + p(f|wn))/n * c(s)/n = (c(w1,f) + .. + c(wn,f))/n = c(s,f)/n
-        val score = (normalizedAvgWfc * normalizedAvgWfc) / (avgWc * fc)
+        //val normalizedAvgWfc = avgCov * avgWc // (p(f|w1) + .. + p(f|wn))/n * c(s)/n = (c(w1,f) + .. + c(wn,f))/n = c(s,f)/n
+        //val score = (normalizedAvgWfc * normalizedAvgWfc) / (avgWc * fc)
         //val pmi = (avgProb * totalNumObservations) / wc; // p(w|f)*n / c(w) = c(w|f) / c(w) = pmi(w,f)
-        (feature, avgProb, score)
-    }
-
-    def computeFeatureProbs(featuresWithValues:Array[String], clusterSize:Int): Map[String, Double] = {
-        featuresWithValues
-            .map(featureArr => computeFeatureProb(featureArr.split(":"), clusterSize))
-            .map({case (feature, avgProb, score) => (feature, avgProb)})
-            .toMap
+        (feature, 0, 0)
     }
 
     def computeFeatureProbs(featuresWithValues:Array[String], numFeatures:Int, clusterSize:Int): Map[String, Double] = {
@@ -36,25 +29,55 @@ object WSDEvaluation {
             .take(numFeatures)
             .map({case (feature, avgProb, score) => (feature, avgProb)})
             .toMap
+    }*/
+
+    def computeFeatureValues(featureArr:Array[String]): (String, Long) = {
+        val feature = featureArr(0)
+        if (featureArr.length != 3)
+            return (feature, 0L)
+        //val lmi     = featureArr(1).toFloat
+        //val avgProb = featureArr(2).toFloat // (p(w1|f) + .. + p(wn|f)) / n
+        //val avgCov  = featureArr(3).toFloat // (p(f|w1) + .. + p(f|wn)) / n
+        //val sc      = featureArr(1).toLong  // c(w1) + .. + c(wn) = c(s)
+        //val fc      = featureArr(5).toLong  // c(f)
+        //val avgWc   = wc.toFloat / clusterSize // c(s) / n = (c(w1) + .. + c(wn)) / n
+        val sfc     = featureArr(2).toLong // c(s,f)
+        //val totalNumObservations = featureArr(7).toLong
+        //val normalizedAvgWfc = avgCov * avgWc // (p(f|w1) + .. + p(f|wn))/n * c(s)/n = (c(w1,f) + .. + c(wn,f))/n = c(s,f)/n
+        //val score = (normalizedAvgWfc * normalizedAvgWfc) / (avgWc * fc)
+        //val pmi = (avgProb * totalNumObservations) / wc; // p(w|f)*n / c(w) = c(w|f) / c(w) = pmi(w,f)
+        (feature, sfc)
     }
 
-    def chooseSense(contextFeatures:Set[String], featureProbsPerSense:Map[Int, Map[String, Double]], alpha:Double):Int = {
-        // TODO: Use the prior sense probability here
-        val senseScores = collection.mutable.Map[Int, Double]().withDefaultValue(0.0)
+    def computeFeatureProbs(featuresWithValues:Array[String], clusterSize:Int): Map[String, Long] = {
+        featuresWithValues
+            .map(featureArr => computeFeatureValues(featureArr.split(":")))
+            .toMap
+    }
+
+    def chooseSense(contextFeatures:Set[String], senseInfo:Map[Int, (Long, Map[String, Long])], alpha:Double):Int = {
+        val senseProbs = collection.mutable.Map[Int, Double]()
+        val J = senseInfo.size
+        for (sense <- senseInfo.keys) {
+            val senseCount = senseInfo(sense)._1
+            senseProbs(sense) = (J - 1) * math.log(senseCount)
+        }
         // p(s|f1..fn) = 1/p(f1..fn) * p(s) * p(f1|s) * .. * p(fn|s)
         // where 1/p(f1..fn) is ignored as it is equal for all senses
-        for (feature <- contextFeatures) {
-            for (sense <- featureProbsPerSense.keys) {
+        for (sense <- senseInfo.keys) {
+            val featureSenseCounts = senseInfo(sense)._2
+            for (feature <- contextFeatures) {
                 // Smoothing for previously unseen context features
-                var featureProb = alpha
-                if (featureProbsPerSense(sense).contains(feature)) {
-                    featureProb += featureProbsPerSense(sense)(feature)
+                var featureSenseCount = alpha
+                if (featureSenseCounts.contains(feature)) {
+                    featureSenseCount += featureSenseCounts(feature)
                 }
-                senseScores(sense) += math.log(featureProb)
+                senseProbs(sense) += math.log(featureSenseCount)
             }
         }
 
-        senseScores.toList.sortBy(_._2).last._1 // return index of highest-scoring sense
+        // return index of most probable sense
+        senseProbs.toList.sortBy(_._2).last._1
     }
 
     def computeMatchingScore[T](matchingCountsSorted:Array[(T, Int)]):(Int, Int) = {
@@ -85,15 +108,15 @@ object WSDEvaluation {
             .map({case Array(lemma, target, tokens) => (lemma, (target, tokens.split(" ").toSet))})
 
         // (lemma, (sense -> (feature -> prob)))
-        val clustersWithClues:RDD[(String, Map[Int, Map[String, Double]])] = clusterFile
+        val clustersWithClues:RDD[(String, Map[Int, (Long, Map[String, Long])])] = clusterFile
             .map(line => line.split("\t"))
-            .map({case Array(lemma, sense, senseLabel, simWords, featuresWithValues) => (lemma, (sense.toInt, computeFeatureProbs(featuresWithValues.split("  "), simWords.size)))})
+            .map({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, (sense.toInt, (senseCount.toLong, computeFeatureProbs(featuresWithValues.split("  "), simWords.size))))})
             .groupByKey()
-            .mapValues(featureProbsPerSense => featureProbsPerSense.toMap)
+            .mapValues(senseInfo => senseInfo.toMap)
 
         val sentLinkedTokenizedContextualized = sentLinkedTokenized
             .join(clustersWithClues)
-            .map({case (lemma, ((target, tokens), featureProbsPerSense)) => (lemma, target, chooseSense(tokens, featureProbsPerSense, alpha), tokens)})
+            .map({case (lemma, ((target, tokens), senseInfo)) => (lemma, target, chooseSense(tokens, senseInfo, alpha), tokens)})
 
         sentLinkedTokenizedContextualized
             .saveAsTextFile(outputFile + "/Contexts")
