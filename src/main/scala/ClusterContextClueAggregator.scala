@@ -32,21 +32,16 @@ object ClusterContextClueAggregator {
 
         val wordFeatures = featureFile
             .map(line => line.split("\t"))
-            .map(cols => (cols(0), (cols(1), cols(2).toLong, cols(3).toLong, cols(4).toLong, cols(5).toLong))) // (feature, wc, fc, wfc, n)
-            .filter({case (word, (feature, wc, fc, wfc, n)) => wfc.toDouble / fc.toDouble >= param_s && wfc.toDouble / wc.toDouble >= param_p})
-
-        val featuresPerWord = wordFeatures
-            .mapValues(feature => 1)
-            .reduceByKey((sum1, sum2) => sum1 + sum2)
+            .map(cols => (cols(0), (cols(1), cols(4).toLong))) // (word, (feature, wfc))
 
         clusterWords
             .join(wordFeatures)
-            .map({case (simWord, ((word, sense, numSimWords), (feature, wc, fc, wfc, n))) => ((word, sense, feature), (wc, fc, wfc, n, wfc / fc.toDouble, wfc / wc.toDouble, numSimWords))})
+            .map({case (simWord, ((word, sense, numSimWords), (feature, wfc))) => ((word, sense, feature), (wfc, numSimWords))})
             // Pretend cluster words are replaced with the same placeholder word and combine their counts:
-            .reduceByKey({case ((wc1, fc, wfc1, n, prob1, cov1, numSimWords), (wc2, _, wfc2, _, prob2, cov2, _)) => (wc1+wc2, fc, wfc1+wfc2, n, prob1+prob2, cov1+cov2, numSimWords)})
-            .map({case ((word, sense, feature), (wc, fc, wfc, n, prob, cov, numSimWords)) => ((word, sense, wc), (feature, /*WordSimUtil.lmi(n, wc, fc, wfc), prob / numSimWords, cov / numSimWords, wc,*/ fc, wfc/*, n*/))})
+            .reduceByKey({case ((wfc1, numSimWords), (wfc2, _)) => (wfc1+wfc2, numSimWords)})
+            .map({case ((word, sense, feature), (wc, fc, wfc, n, prob, cov, numSimWords)) => ((word, sense, wc), (feature, fc, wfc))})
             .groupByKey()
-            .map({case ((word, sense, senseCount), featureScores) => ((word, sense), (senseCount, featureScores/*.toArray.sortWith({case ((_, lmi1, _, _, _, _, _, _), (_, lmi2, _, _, _, _, _, _)) => lmi1 > lmi2})*/))})
+            .map({case ((word, sense, senseCount), featureScores) => ((word, sense), (senseCount, featureScores))})
             .join(clusterSimWords)
             .sortByKey()
             .map({case ((word, sense), ((senseCount, featureScores), simWords)) => word + "\t" + sense + "\t" + senseCount + "\t" + simWords.mkString("  ") + "\t" + featureScores.map(tuple => tuple.productIterator.mkString(":")).mkString("  ")})
