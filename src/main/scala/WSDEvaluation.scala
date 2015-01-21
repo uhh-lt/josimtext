@@ -37,31 +37,32 @@ object WSDEvaluation {
             .toMap
     }*/
 
-    def computeFeatureValues(featureArr:Array[String], clusterSize:Int): (String, Double) = {
+    def computeFeatureValues(featureArr:Array[String], clusterSize:Int): (String, (Double, Double)) = {
         val feature = featureArr(0)
         if (featureArr.length != 3)
-            return (feature, 0L)
+            return (feature, (0, 0))
         //val lmi     = featureArr(1).toFloat
         //val avgProb = featureArr(2).toFloat // (p(w1|f) + .. + p(wn|f)) / n
         //val avgCov  = featureArr(3).toFloat // (p(f|w1) + .. + p(f|wn)) / n
         //val sc      = featureArr(1).toLong  // c(w1) + .. + c(wn) = c(s)
         //val fc      = featureArr(5).toLong  // c(f)
         //val avgWc   = wc.toFloat / clusterSize // c(s) / n = (c(w1) + .. + c(wn)) / n
-        val sfc     = featureArr(2).toDouble / clusterSize // c(s,f)
+        val sfc     = featureArr(1).toDouble / clusterSize // c(s,f)
+        val fc      = featureArr(2).toDouble // c(f)
         //val totalNumObservations = featureArr(7).toLong
         //val normalizedAvgWfc = avgCov * avgWc // (p(f|w1) + .. + p(f|wn))/n * c(s)/n = (c(w1,f) + .. + c(wn,f))/n = c(s,f)/n
         //val score = (normalizedAvgWfc * normalizedAvgWfc) / (avgWc * fc)
         //val pmi = (avgProb * totalNumObservations) / wc; // p(w|f)*n / c(w) = c(w|f) / c(w) = pmi(w,f)
-        (feature, sfc)
+        (feature, (sfc, fc))
     }
 
-    def computeFeatureProbs(featuresWithValues:Array[String], clusterSize:Int): Map[String, Double] = {
+    def computeFeatureProbs(featuresWithValues:Array[String], clusterSize:Int): Map[String, (Double, Double)] = {
         featuresWithValues
             .map(featureArr => computeFeatureValues(featureArr.split(":"), clusterSize))
             .toMap
     }
 
-    def chooseSense(contextFeatures:Set[String], senseInfo:Map[Int, (Double, Map[String, Double])], alpha:Double, wsdMode:WSDMode.WSDMode):Int = {
+    def chooseSense(contextFeatures:Set[String], senseInfo:Map[Int, (Double, Map[String, (Double, Double)])], alpha:Double, wsdMode:WSDMode.WSDMode):Int = {
         val senseProbs = collection.mutable.Map[Int, Double]()
         val J = senseInfo.size
         for (sense <- senseInfo.keys) {
@@ -79,15 +80,17 @@ object WSDEvaluation {
             for (feature <- contextFeatures) {
                 // Smoothing for previously unseen context features
                 var featureSenseCount = if (wsdMode == WSDMode.Product) alpha else 0
+                var featureCount = 1.0 // arbitrary default value != 0 if feature is not present (0/X is 0)
                 if (featureSenseCounts.contains(feature)) {
-                    featureSenseCount += featureSenseCounts(feature)
+                    featureSenseCount += featureSenseCounts(feature)._1
+                    featureCount = featureSenseCounts(feature)._2
                 }
                 if (wsdMode == WSDMode.Product) {
                     senseProbs(sense) += math.log(featureSenseCount)
                 } else if (wsdMode == WSDMode.Average) {
-                    senseProbs(sense) += featureSenseCount
+                    senseProbs(sense) += featureSenseCount / featureCount
                 } else if (wsdMode == WSDMode.Maximum) {
-                    senseProbs(sense) = math.max(senseProbs(sense), featureSenseCount)
+                    senseProbs(sense) = math.max(senseProbs(sense), featureSenseCount / featureCount)
                 }
             }
         }
@@ -125,7 +128,7 @@ object WSDEvaluation {
             .map({case Array(lemma, target, tokens) => (lemma, (target, tokens.split(" ").toSet))})
 
         // (lemma, (sense -> (feature -> prob)))
-        val clustersWithClues:RDD[(String, Map[Int, (Double, Map[String, Double])])] = clusterFile
+        val clustersWithClues:RDD[(String, Map[Int, (Double, Map[String, (Double, Double)])])] = clusterFile
             .map(line => line.split("\t"))
             .map({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, (sense.toInt, (senseCount.toDouble / simWords.size, computeFeatureProbs(featuresWithValues.split("  "), simWords.size))))})
             .groupByKey()
