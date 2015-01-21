@@ -136,6 +136,7 @@ object WSDEvaluation {
             .map({case (lemma, ((target, tokens), senseInfo)) => (lemma, target, chooseSense(tokens, senseInfo, alpha, wsdMode), tokens)})
 
         sentLinkedTokenizedContextualized
+            .map({case (lemma, target, sense, tokens) => lemma + "\t" + target + "\t" + sense + "\t" + tokens.mkString(" ")})
             .saveAsTextFile(outputFile + "/Contexts")
 
         val senseTargetCounts = sentLinkedTokenizedContextualized
