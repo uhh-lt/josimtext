@@ -39,7 +39,7 @@ object WSDEvaluationBaseline {
             .saveAsTextFile(outputFile + "/Contexts")
 
         val senseTargetCounts = sentLinkedTokenizedContextualized
-            .map({case (lemma, target, sense, tokens) => ((lemma, target, sense), 1)})
+            .map({case (lemma, target, sense) => ((lemma, target, sense), 1)})
             .reduceByKey(_+_)
             .cache()
 
