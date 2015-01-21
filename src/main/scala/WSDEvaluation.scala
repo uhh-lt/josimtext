@@ -31,7 +31,7 @@ object WSDEvaluation {
             .toMap
     }*/
 
-    def computeFeatureValues(featureArr:Array[String]): (String, Long) = {
+    def computeFeatureValues(featureArr:Array[String], clusterSize:Int): (String, Double) = {
         val feature = featureArr(0)
         if (featureArr.length != 3)
             return (feature, 0L)
@@ -41,7 +41,7 @@ object WSDEvaluation {
         //val sc      = featureArr(1).toLong  // c(w1) + .. + c(wn) = c(s)
         //val fc      = featureArr(5).toLong  // c(f)
         //val avgWc   = wc.toFloat / clusterSize // c(s) / n = (c(w1) + .. + c(wn)) / n
-        val sfc     = featureArr(2).toLong // c(s,f)
+        val sfc     = featureArr(2).toDouble / clusterSize // c(s,f)
         //val totalNumObservations = featureArr(7).toLong
         //val normalizedAvgWfc = avgCov * avgWc // (p(f|w1) + .. + p(f|wn))/n * c(s)/n = (c(w1,f) + .. + c(wn,f))/n = c(s,f)/n
         //val score = (normalizedAvgWfc * normalizedAvgWfc) / (avgWc * fc)
@@ -49,13 +49,13 @@ object WSDEvaluation {
         (feature, sfc)
     }
 
-    def computeFeatureProbs(featuresWithValues:Array[String], clusterSize:Int): Map[String, Long] = {
+    def computeFeatureProbs(featuresWithValues:Array[String], clusterSize:Int): Map[String, Double] = {
         featuresWithValues
-            .map(featureArr => computeFeatureValues(featureArr.split(":")))
+            .map(featureArr => computeFeatureValues(featureArr.split(":"), clusterSize))
             .toMap
     }
 
-    def chooseSense(contextFeatures:Set[String], senseInfo:Map[Int, (Long, Map[String, Long])], alpha:Double):Int = {
+    def chooseSense(contextFeatures:Set[String], senseInfo:Map[Int, (Long, Map[String, Double])], alpha:Double):Int = {
         val senseProbs = collection.mutable.Map[Int, Double]()
         val J = senseInfo.size
         for (sense <- senseInfo.keys) {
@@ -108,7 +108,7 @@ object WSDEvaluation {
             .map({case Array(lemma, target, tokens) => (lemma, (target, tokens.split(" ").toSet))})
 
         // (lemma, (sense -> (feature -> prob)))
-        val clustersWithClues:RDD[(String, Map[Int, (Long, Map[String, Long])])] = clusterFile
+        val clustersWithClues:RDD[(String, Map[Int, (Long, Map[String, Double])])] = clusterFile
             .map(line => line.split("\t"))
             .map({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, (sense.toInt, (senseCount.toLong, computeFeatureProbs(featuresWithValues.split("  "), simWords.size))))})
             .groupByKey()
