@@ -60,7 +60,11 @@ object WSDEvaluation {
         val J = senseInfo.size
         for (sense <- senseInfo.keys) {
             val senseCount = senseInfo(sense)._1
-            senseProbs(sense) = (J - 1) * math.log(senseCount)
+            if (wsdMode == WSDMode.Product) {
+                senseProbs(sense) = (J - 1) * math.log(senseCount)
+            } else {
+                senseProbs(sense) = 0
+            }
         }
         // p(s|f1..fn) = 1/p(f1..fn) * p(s) * p(f1|s) * .. * p(fn|s)
         // where 1/p(f1..fn) is ignored as it is equal for all senses
@@ -68,11 +72,17 @@ object WSDEvaluation {
             val featureSenseCounts = senseInfo(sense)._2
             for (feature <- contextFeatures) {
                 // Smoothing for previously unseen context features
-                var featureSenseCount = alpha
+                var featureSenseCount = if (wsdMode == WSDMode.Product) alpha else 0
                 if (featureSenseCounts.contains(feature)) {
                     featureSenseCount += featureSenseCounts(feature)
                 }
-                senseProbs(sense) += math.log(featureSenseCount)
+                if (wsdMode == WSDMode.Product) {
+                    senseProbs(sense) += math.log(featureSenseCount)
+                } else if (wsdMode == WSDMode.Average) {
+                    senseProbs(sense) += featureSenseCount
+                } else if (wsdMode == WSDMode.Maximum) {
+                    senseProbs(sense) = math.max(senseProbs(sense), featureSenseCount)
+                }
             }
         }
 
@@ -86,9 +96,16 @@ object WSDEvaluation {
         (matchingCountsSorted.head._2, countSum)
     }
 
+    object WSDMode extends Enumeration {
+        type WSDMode = Value
+        val Product, Maximum, Average = Value
+    }
+
+    var wsdMode = WSDMode.Product
+
     def main(args: Array[String]) {
-        if (args.size < 3) {
-            println("Usage: WSDEvaluation cluster-file-with-clues linked-sentences-tokenized output prob-smoothing-addend")
+        if (args.size < 5) {
+            println("Usage: WSDEvaluation cluster-file-with-clues linked-sentences-tokenized output prob-smoothing-addend wsd-mode")
             return
         }
 
@@ -99,6 +116,7 @@ object WSDEvaluation {
         val sentFile = sc.textFile(args(1))
         val outputFile = args(2)
         val alpha = args(3).toDouble
+        wsdMode = WSDMode.withName(args(4))
         //val numFeatures = args(3).toInt
         //val minPMI = args(4).toDouble
         //val multiplyScores = args(5).toBoolean
