@@ -10,9 +10,9 @@ object ClusterContextClueAggregator {
             return
         }
 
-        val t_wfc = if (args.length > 4) args(4).toDouble else 0.0
+        val t_wfc = if (args.length > 5) args(5).toDouble else 0.0
 
-        val words:Set[String] = if (args.length > 5) args(5).split(",").toSet else null
+        val words:Set[String] = if (args.length > 6) args(6).split(",").toSet else null
 
         val conf = new SparkConf().setAppName("ClusterContextClueAggregator")
         val sc = new SparkContext(conf)
