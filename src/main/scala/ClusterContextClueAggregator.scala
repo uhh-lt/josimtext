@@ -6,7 +6,7 @@ import org.apache.spark.rdd._
 object ClusterContextClueAggregator {
     def main(args: Array[String]) {
         if (args.size < 3) {
-            println("Usage: ClusterContextClueAggregator cluster-file word-counts word-feature-counts output [min. wfc] [wordlist]")
+            println("Usage: ClusterContextClueAggregator cluster-file word-counts feature-counts word-feature-counts output [min. wfc] [wordlist]")
             return
         }
 
@@ -19,7 +19,8 @@ object ClusterContextClueAggregator {
 
         val clusterFile = sc.textFile(args(0))
         val wordCountFile = sc.textFile(args(1))
-        val featureFile = sc.textFile(args(2))
+        val featureCountFile = sc.textFile(args(2))
+        val wordFeatureCountFile = sc.textFile(args(2))
         val outputFile = args(3)
 
         val clusterSimWords:RDD[((String, String), Array[String])] = clusterFile
@@ -31,13 +32,19 @@ object ClusterContextClueAggregator {
             .map(line => line.split("\t"))
             .map(cols => (cols(0), cols(1).toLong))
 
+        val featureCounts:RDD[(String, Long)] = featureCountFile
+            .map(line => line.split("\t"))
+            .map(cols => (cols(0), cols(1).toLong))
+
         val clusterWords:RDD[(String, (String, String, Int))] = clusterSimWords
             .flatMap({case ((word, sense), simWords) => for(simWord <- simWords) yield (simWord, (word, sense, simWords.size))})
 
-        val wordFeatures = featureFile
+        val wordFeatures = wordFeatureCountFile
             .map(line => line.split("\t"))
-            .map(cols => (cols(0), (cols(1), cols(2).toLong))) // (word, (feature, wfc))
-            .filter({case (word, (feature, wfc)) => wfc >= t_wfc})
+            .map(cols => (cols(1), (cols(0), cols(2).toLong))) // (word, (feature, wfc))
+            .join(featureCounts)
+            .map({case (feature, ((word, wfc), fc)) => (word, (feature, wfc, fc))})
+            .filter({case (word, (feature, wfc, fc)) => wfc >= t_wfc})
 
         val wordSenseCounts = clusterWords
             .join(wordCounts)
@@ -46,16 +53,16 @@ object ClusterContextClueAggregator {
 
         clusterWords
             .join(wordFeatures)
-            .map({case (simWord, ((word, sense, numSimWords), (feature, wfc))) => ((word, sense, feature), (wfc, numSimWords))})
+            .map({case (simWord, ((word, sense, numSimWords), (feature, wfc, fc))) => ((word, sense, feature), (wfc, fc, numSimWords))})
             // Pretend cluster words are replaced with the same placeholder word and combine their word-feature counts:
-            .reduceByKey({case ((wfc1, numSimWords), (wfc2, _)) => (wfc1+wfc2, numSimWords)})
-            .map({case ((word, sense, feature), (wfc, numSimWords)) => ((word, sense), (feature, wfc))})
+            .reduceByKey({case ((wfc1, fc, numSimWords), (wfc2, _, _)) => (wfc1+wfc2, fc, numSimWords)})
+            .map({case ((word, sense, feature), (wfc, fc, numSimWords)) => ((word, sense), (feature, wfc, fc))})
             .groupByKey()
             .join(wordSenseCounts)
             .map({case ((word, sense), (senseFeatureCounts, senseCount)) => ((word, sense), (senseCount, senseFeatureCounts))})
             .join(clusterSimWords)
             .sortByKey()
-            .map({case ((word, sense), ((senseCount, senseFeatureCounts), simWords)) => word + "\t" + sense + "\t" + senseCount + "\t" + simWords.mkString("  ") + "\t" + senseFeatureCounts.map(tuple => tuple._1 + ":" + tuple._2).mkString("  ")})
+            .map({case ((word, sense), ((senseCount, senseFeatureCounts), simWords)) => word + "\t" + sense + "\t" + senseCount + "\t" + simWords.mkString("  ") + "\t" + senseFeatureCounts.map(tuple => tuple._1 + ":" + tuple._2 + ":" + tuple._3).mkString("  ")})
             .saveAsTextFile(outputFile)
     }
 }
