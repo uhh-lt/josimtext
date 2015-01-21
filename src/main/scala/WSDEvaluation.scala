@@ -2,7 +2,13 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd._
 
+object WSDMode extends Enumeration {
+    type WSDMode = Value
+    val Product, Maximum, Average = Value
+}
+
 object WSDEvaluation {
+
     /*def computeFeatureProb(featureArr:Array[String], clusterSize:Int): (String, Double, Double) = {
         val feature = featureArr(0)
         if (featureArr.length != 8)
@@ -55,7 +61,7 @@ object WSDEvaluation {
             .toMap
     }
 
-    def chooseSense(contextFeatures:Set[String], senseInfo:Map[Int, (Double, Map[String, Double])], alpha:Double):Int = {
+    def chooseSense(contextFeatures:Set[String], senseInfo:Map[Int, (Double, Map[String, Double])], alpha:Double, wsdMode:WSDMode.WSDMode):Int = {
         val senseProbs = collection.mutable.Map[Int, Double]()
         val J = senseInfo.size
         for (sense <- senseInfo.keys) {
@@ -96,13 +102,6 @@ object WSDEvaluation {
         (matchingCountsSorted.head._2, countSum)
     }
 
-    object WSDMode extends Enumeration {
-        type WSDMode = Value
-        val Product, Maximum, Average = Value
-    }
-
-    var wsdMode = WSDMode.Product
-
     def main(args: Array[String]) {
         if (args.size < 5) {
             println("Usage: WSDEvaluation cluster-file-with-clues linked-sentences-tokenized output prob-smoothing-addend wsd-mode")
@@ -116,7 +115,7 @@ object WSDEvaluation {
         val sentFile = sc.textFile(args(1))
         val outputFile = args(2)
         val alpha = args(3).toDouble
-        wsdMode = WSDMode.withName(args(4))
+        val wsdMode = WSDMode.withName(args(4))
         //val numFeatures = args(3).toInt
         //val minPMI = args(4).toDouble
         //val multiplyScores = args(5).toBoolean
@@ -134,7 +133,7 @@ object WSDEvaluation {
 
         val sentLinkedTokenizedContextualized = sentLinkedTokenized
             .join(clustersWithClues)
-            .map({case (lemma, ((target, tokens), senseInfo)) => (lemma, target, chooseSense(tokens, senseInfo, alpha), tokens)})
+            .map({case (lemma, ((target, tokens), senseInfo)) => (lemma, target, chooseSense(tokens, senseInfo, alpha, wsdMode), tokens)})
 
         sentLinkedTokenizedContextualized
             .saveAsTextFile(outputFile + "/Contexts")
