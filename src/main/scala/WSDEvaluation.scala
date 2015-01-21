@@ -55,7 +55,7 @@ object WSDEvaluation {
             .toMap
     }
 
-    def chooseSense(contextFeatures:Set[String], senseInfo:Map[Int, (Long, Map[String, Double])], alpha:Double):Int = {
+    def chooseSense(contextFeatures:Set[String], senseInfo:Map[Int, (Double, Map[String, Double])], alpha:Double):Int = {
         val senseProbs = collection.mutable.Map[Int, Double]()
         val J = senseInfo.size
         for (sense <- senseInfo.keys) {
@@ -108,9 +108,9 @@ object WSDEvaluation {
             .map({case Array(lemma, target, tokens) => (lemma, (target, tokens.split(" ").toSet))})
 
         // (lemma, (sense -> (feature -> prob)))
-        val clustersWithClues:RDD[(String, Map[Int, (Long, Map[String, Double])])] = clusterFile
+        val clustersWithClues:RDD[(String, Map[Int, (Double, Map[String, Double])])] = clusterFile
             .map(line => line.split("\t"))
-            .map({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, (sense.toInt, (senseCount.toLong, computeFeatureProbs(featuresWithValues.split("  "), simWords.size))))})
+            .map({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, (sense.toInt, (senseCount.toDouble / simWords.size, computeFeatureProbs(featuresWithValues.split("  "), simWords.size))))})
             .groupByKey()
             .mapValues(senseInfo => senseInfo.toMap)
 
