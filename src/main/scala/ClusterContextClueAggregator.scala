@@ -5,7 +5,7 @@ import org.apache.spark.rdd._
 
 object ClusterContextClueAggregator {
     def main(args: Array[String]) {
-        if (args.size < 3) {
+        if (args.size < 5) {
             println("Usage: ClusterContextClueAggregator cluster-file word-counts feature-counts word-feature-counts output [min. wfc] [wordlist]")
             return
         }
@@ -20,8 +20,8 @@ object ClusterContextClueAggregator {
         val clusterFile = sc.textFile(args(0))
         val wordCountFile = sc.textFile(args(1))
         val featureCountFile = sc.textFile(args(2))
-        val wordFeatureCountFile = sc.textFile(args(2))
-        val outputFile = args(3)
+        val wordFeatureCountFile = sc.textFile(args(3))
+        val outputFile = args(4)
 
         val clusterSimWords:RDD[((String, String), Array[String])] = clusterFile
             .map(line => line.split("\t"))
