@@ -140,7 +140,7 @@ object WSDEvaluation {
 
         val sentLinkedTokenized = sentFile
             .map(line => line.split("\t"))
-            .map({case Array(lemma, target, tokens) => (lemma, (target, tokens.split(" ").toSet))})
+            .map({case Array(lemma, target, tokens) => (lemma, (target, tokens.split(" ")))})
 
         // (lemma, (sense -> (feature -> prob)))
         val clustersWithClues:RDD[(String, Map[Int, (Double, Map[String, (Double, Double)])])] = clusterFile
@@ -151,7 +151,7 @@ object WSDEvaluation {
 
         val sentLinkedTokenizedContextualized = sentLinkedTokenized
             .join(clustersWithClues)
-            .map({case (lemma, ((target, tokens), senseInfo)) => (lemma, target, chooseSense(tokens, senseInfo, alpha, wsdMode), tokens)})
+            .map({case (lemma, ((target, tokens), senseInfo)) => (lemma, target, chooseSense(tokens.toSet, senseInfo, alpha, wsdMode), tokens)})
 
         sentLinkedTokenizedContextualized
             .map({case (lemma, target, sense, tokens) => lemma + "\t" + target + "\t" + sense + "\t" + tokens.mkString(" ")})
