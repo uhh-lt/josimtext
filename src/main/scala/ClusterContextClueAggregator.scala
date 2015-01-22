@@ -41,7 +41,7 @@ object ClusterContextClueAggregator {
 
         val wordFeatures = wordFeatureCountFile
             .map(line => line.split("\t"))
-            .map(cols => (cols(1), (cols(0), cols(2).toLong))) // (word, (feature, wfc))
+            .map(cols => (cols(1), (cols(0), cols(2).toLong))) // (feature, (word, wfc))
             .join(featureCounts)
             .map({case (feature, ((word, wfc), fc)) => (word, (feature, wfc, fc))})
             .filter({case (word, (feature, wfc, fc)) => wfc >= t_wfc})

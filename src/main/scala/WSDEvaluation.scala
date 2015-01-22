@@ -37,18 +37,33 @@ object WSDEvaluation {
             .toMap
     }*/
 
-    def computeFeatureValues(featureArr:Array[String], clusterSize:Int): (String, (Double, Double)) = {
+    def splitLastN(text:String, del:String, n:Int):Array[String] = {
+        val featureArr = new Array[String](3)
+        var lastPos = text.length
+        for (i <- (0 to n-1).reverse) {
+            // for the first element we position an imaginary delimeter at position -1
+            val nextPos = if (i == 0) -1 else text.lastIndexOf(del, lastPos-1)
+            featureArr(i) = text.substring(nextPos+1, lastPos)
+            lastPos = nextPos
+        }
+        featureArr
+    }
+
+    def computeFeatureValues(word:String, featureValues:String, clusterSize:Int): (String, (Double, Double)) = {
+        val featureArr = splitLastN(featureValues, ":", 3)
         val feature = featureArr(0)
         if (featureArr.length != 3)
-            return (feature, (0, 0))
+            return (feature, (0, 1))
         //val lmi     = featureArr(1).toFloat
         //val avgProb = featureArr(2).toFloat // (p(w1|f) + .. + p(wn|f)) / n
         //val avgCov  = featureArr(3).toFloat // (p(f|w1) + .. + p(f|wn)) / n
         //val sc      = featureArr(1).toLong  // c(w1) + .. + c(wn) = c(s)
         //val fc      = featureArr(5).toLong  // c(f)
         //val avgWc   = wc.toFloat / clusterSize // c(s) / n = (c(w1) + .. + c(wn)) / n
-        val sfc     = featureArr(1).toDouble / clusterSize // c(s,f)
+        var sfc     = featureArr(1).toDouble / clusterSize // c(s,f)
         val fc      = featureArr(2).toDouble // c(f)
+        if (feature.equals(word))
+            sfc = 0
         //val totalNumObservations = featureArr(7).toLong
         //val normalizedAvgWfc = avgCov * avgWc // (p(f|w1) + .. + p(f|wn))/n * c(s)/n = (c(w1,f) + .. + c(wn,f))/n = c(s,f)/n
         //val score = (normalizedAvgWfc * normalizedAvgWfc) / (avgWc * fc)
@@ -56,9 +71,9 @@ object WSDEvaluation {
         (feature, (sfc, fc))
     }
 
-    def computeFeatureProbs(featuresWithValues:Array[String], clusterSize:Int): Map[String, (Double, Double)] = {
+    def computeFeatureProbs(word:String, featuresWithValues:Array[String], clusterSize:Int): Map[String, (Double, Double)] = {
         featuresWithValues
-            .map(featureArr => computeFeatureValues(featureArr.split(":"), clusterSize))
+            .map(featureValues => computeFeatureValues(word, featureValues, clusterSize))
             .toMap
     }
 
@@ -130,7 +145,7 @@ object WSDEvaluation {
         // (lemma, (sense -> (feature -> prob)))
         val clustersWithClues:RDD[(String, Map[Int, (Double, Map[String, (Double, Double)])])] = clusterFile
             .map(line => line.split("\t"))
-            .map({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, (sense.toInt, (senseCount.toDouble / simWords.size, computeFeatureProbs(featuresWithValues.split("  "), simWords.size))))})
+            .map({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, (sense.toInt, (senseCount.toDouble / simWords.size, computeFeatureProbs(lemma, featuresWithValues.split("  "), simWords.size))))})
             .groupByKey()
             .mapValues(senseInfo => senseInfo.toMap)
 
