@@ -74,6 +74,9 @@ object WSDEvaluation {
     def computeFeatureProbs(word:String, featuresWithValues:Array[String], clusterSize:Int): Map[String, (Double, Double)] = {
         featuresWithValues
             .map(featureValues => computeFeatureValues(word, featureValues, clusterSize))
+            //.sortBy({case (feature, (sfc, fc)) => (sfc * sfc)/fc.toDouble})
+            //.reverse
+            //.take(10000)
             .toMap
     }
 
@@ -88,6 +91,7 @@ object WSDEvaluation {
                 senseProbs(sense) = 0
             }
         }
+        var atLeastOneFeatureFound = false
         // p(s|f1..fn) = 1/p(f1..fn) * p(s) * p(f1|s) * .. * p(fn|s)
         // where 1/p(f1..fn) is ignored as it is equal for all senses
         for (sense <- senseInfo.keys) {
@@ -97,6 +101,7 @@ object WSDEvaluation {
                 var featureSenseCount = if (wsdMode == WSDMode.Product) alpha else 0
                 var featureCount = 1.0 // arbitrary default value != 0 if feature is not present (0/X is 0)
                 if (featureSenseCounts.contains(feature)) {
+                    atLeastOneFeatureFound = true
                     featureSenseCount += featureSenseCounts(feature)._1
                     featureCount = featureSenseCounts(feature)._2
                 }
@@ -111,7 +116,10 @@ object WSDEvaluation {
         }
 
         // return index of most probable sense
-        senseProbs.toList.sortBy(_._2).last._1
+        if (atLeastOneFeatureFound)
+            senseProbs.toList.sortBy(_._2).last._1
+        else
+            -1
     }
 
     def computeMatchingScore[T](matchingCountsSorted:Array[(T, Int)]):(Int, Int) = {
@@ -121,8 +129,8 @@ object WSDEvaluation {
     }
 
     def main(args: Array[String]) {
-        if (args.size < 5) {
-            println("Usage: WSDEvaluation cluster-file-with-clues linked-sentences-tokenized output prob-smoothing-addend wsd-mode")
+        if (args.size < 6) {
+            println("Usage: WSDEvaluation cluster-file-with-clues linked-sentences-tokenized output prob-smoothing-addend wsd-mode min-cluster-size")
             return
         }
 
@@ -134,6 +142,7 @@ object WSDEvaluation {
         val outputFile = args(2)
         val alpha = args(3).toDouble
         val wsdMode = WSDMode.withName(args(4))
+        val minClusterSize = args(5).toInt
         //val numFeatures = args(3).toInt
         //val minPMI = args(4).toDouble
         //val multiplyScores = args(5).toBoolean
@@ -145,6 +154,7 @@ object WSDEvaluation {
         // (lemma, (sense -> (feature -> prob)))
         val clustersWithClues:RDD[(String, Map[Int, (Double, Map[String, (Double, Double)])])] = clusterFile
             .map(line => line.split("\t"))
+            .filter({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => simWords.size > minClusterSize})
             .map({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, (sense.toInt, (senseCount.toDouble / simWords.size, computeFeatureProbs(lemma, featuresWithValues.split("  "), simWords.size))))})
             .groupByKey()
             .mapValues(senseInfo => senseInfo.toMap)
