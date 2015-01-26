@@ -16,7 +16,7 @@ object WordDictionaryTargetExtractor {
 
         file.map(line => line.split("\t"))
             .flatMap({case Array(word, wc, numTargets, targets) => for (target <- targets.split("  ")) yield (word, WSDEvaluation.splitLastN(target, ":", 2))})
-            .map({case (word, targetCount) => word + "\t" + targetCount(0) + "\t" + targetCount(1)})
+            .map({case (word, targetCount) => word + "@@" + targetCount(0)})
             .saveAsTextFile(outDir)
         }
 }
