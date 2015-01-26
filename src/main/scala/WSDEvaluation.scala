@@ -154,7 +154,7 @@ object WSDEvaluation {
         // (lemma, (sense -> (feature -> prob)))
         val clustersWithClues:RDD[(String, Map[Int, (Double, Map[String, (Double, Double)])])] = clusterFile
             .map(line => line.split("\t"))
-            .filter({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => simWords.size > minClusterSize})
+            .filter({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => simWords.size >= minClusterSize})
             .map({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, (sense.toInt, (senseCount.toDouble / simWords.size, computeFeatureProbs(lemma, featuresWithValues.split("  "), simWords.size))))})
             .groupByKey()
             .mapValues(senseInfo => senseInfo.toMap)
