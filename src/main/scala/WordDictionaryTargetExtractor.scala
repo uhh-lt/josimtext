@@ -1,6 +1,6 @@
 import org.apache.spark.{SparkConf, SparkContext}
 
-object WordDictionaryTargetExtraxtor {
+object WordDictionaryTargetExtractor {
     def main(args: Array[String]) {
         if (args.size < 1) {
             println("Usage: WordDictionaryTargetExtraxtor dictionary-path")
@@ -15,7 +15,7 @@ object WordDictionaryTargetExtraxtor {
         val file = sc.textFile(param_dataset)
 
         file.map(line => line.split("\t"))
-            .flatMap({case Array(word, wc, numTargets, targets) => for (target <- targets.split("  ")) yield (word, WSDEvaluation.splitLastN(target, ":", 1)(0))})
+            .flatMap({case Array(word, wc, numTargets, targets) => for (target <- targets.split("  ")) yield word + "\t" + WSDEvaluation.splitLastN(target, ":", 2)(0)})
             .saveAsTextFile(outDir)
         }
 }
