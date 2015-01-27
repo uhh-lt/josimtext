@@ -4,7 +4,6 @@ object WordFeatureCountsJoin {
     def main(args: Array[String]) {
         if (args.size < 1) {
             println("Usage: WordFeatureCountsJoin word-feature-counts word-counts feature-counts output [wordlist]")
-            println("For example, the arguments \"wikipedia wikipedia-out 100000 0.0 3\" will override w with 100000 and t_wf with 3, leaving the rest at the default values")
             return
         }
 
