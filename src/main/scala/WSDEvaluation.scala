@@ -37,6 +37,43 @@ object WSDEvaluation {
             .toMap
     }*/
 
+    /**
+     * Computes the NMI (normalized mutual information) of two clustering of the same N documents.
+     * A clustering here is an aggregation of documents into multiple sets (clusters).
+     * @tparam D    Type of document representation (e.g. Int or Long as document IDs)
+     * @param clustering1 First clustering
+     * @param clustering2 Second clustering
+     * @param N     Number of documents
+     * @return      NMI of both clusterings
+     */
+    def nmi[D](clustering1:Seq[Set[D]], clustering2:Seq[Set[D]], N:Int): Double = {
+        var H1 = 0.0
+        var H2 = 0.0
+        for (docIDs <- clustering1) {
+            val n = docIDs.size
+            val p = n.toDouble / N.toDouble
+            H1 -= p * math.log(p)
+        }
+        for (docIDs <- clustering2  ) {
+            val n = docIDs.size
+            val p = n.toDouble / N.toDouble
+            H2 -= p * math.log(p)
+        }
+
+        var I = 0.0
+        for (docIDs1 <- clustering1; docIDs2 <- clustering2) {
+            val p_ij = docIDs1.intersect(docIDs2).size / N.toDouble
+            val p_i = docIDs1.size / N.toDouble
+            val p_j = docIDs2.size / N.toDouble
+
+            if (p_ij != 0) {
+                I += p_ij * math.log(p_ij / (p_i * p_j))
+            }
+        }
+
+        2*I / (H1 + H2)
+    }
+
     def splitLastN(text:String, del:String, n:Int):Array[String] = {
         val featureArr = new Array[String](3)
         var lastPos = text.length
@@ -128,6 +165,12 @@ object WSDEvaluation {
         (matchingCountsSorted.head._2, countSum)
     }
 
+    def mappingToClusters[A, B](mapping:Iterable[(A, B)]):Seq[Set[A]] = {
+        mapping.groupBy(_._2)
+               .toSeq
+               .map({case (b,aAndBs) => aAndBs.map(_._1).toSet})
+    }
+
     def main(args: Array[String]) {
         if (args.size < 6) {
             println("Usage: WSDEvaluation cluster-file-with-clues linked-sentences-tokenized output prob-smoothing-addend wsd-mode min-cluster-size")
@@ -149,7 +192,8 @@ object WSDEvaluation {
 
         val sentLinkedTokenized = sentFile
             .map(line => line.split("\t"))
-            .map({case Array(lemma, target, tokens) => (lemma, (target, tokens.split(" ")))})
+            .zipWithIndex()
+            .map({case (Array(lemma, target, tokens), sentId) => (lemma, (sentId, target, tokens.split(" ")))})
 
         // (lemma, (sense -> (feature -> prob)))
         val clustersWithClues:RDD[(String, Map[Int, (Double, Map[String, (Double, Double)])])] = clusterFile
@@ -162,14 +206,36 @@ object WSDEvaluation {
 
         val sentLinkedTokenizedContextualized = sentLinkedTokenized
             .join(clustersWithClues)
-            .map({case (lemma, ((target, tokens), senseInfo)) => (lemma, target, chooseSense(tokens.toSet, senseInfo, alpha, wsdMode), tokens)})
+            .map({case (lemma, ((sentId, target, tokens), senseInfo)) => (lemma, sentId, target, chooseSense(tokens.toSet, senseInfo, alpha, wsdMode), tokens)})
+            .cache()
+
+        val goldClustering = sentLinkedTokenizedContextualized
+            .map({case (lemma, sentId, target, sense, tokens) => (lemma, (sentId, target))})
+            .groupByKey()
+            .mapValues(mappingToClusters)
+
+        val testClustering = sentLinkedTokenizedContextualized
+            .map({case (lemma, sentId, target, sense, tokens) => (lemma, (sentId, sense))})
+            .groupByKey()
+            .mapValues(mappingToClusters)
+
+        val nmiScores = goldClustering.join(testClustering)
+            .mapValues(clusterings => nmi(clusterings._1, clusterings._2, 100))
+
+        nmiScores.map({case (lemma, nmiScore) => lemma + "\t" + nmiScore})
+                 .saveAsTextFile(outputFile + "/NMIPerLemma")
+
+        nmiScores.map({case (lemma, nmiScore) => ("FOO", (nmiScore, 1))})
+                 .reduceByKey({case ((a1,b1), (a2,b2)) => (a1+a2,b1+b2)})
+                 .map({case (_, (avgNmiScore, numLemmas)) => "AVG_NMI\t" + avgNmiScore / numLemmas})
+                 .saveAsTextFile(outputFile + "/NMIPerLemma__Total")
 
         sentLinkedTokenizedContextualized
-            .map({case (lemma, target, sense, tokens) => lemma + "\t" + target + "\t" + sense + "\t" + tokens.mkString(" ")})
+            .map({case (lemma, sentId, target, sense, tokens) => lemma + "\t" + target + "\t" + sense + "\t" + tokens.mkString(" ")})
             .saveAsTextFile(outputFile + "/Contexts")
 
         val senseTargetCounts = sentLinkedTokenizedContextualized
-            .map({case (lemma, target, sense, tokens) => ((lemma, target, sense), 1)})
+            .map({case (lemma, sentId, target, sense, tokens) => ((lemma, target, sense), 1)})
             .reduceByKey(_+_)
             .cache()
 

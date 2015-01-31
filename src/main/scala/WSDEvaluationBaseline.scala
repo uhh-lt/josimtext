@@ -16,84 +16,110 @@ object WSDEvaluationBaseline {
     }
 
     def main(args: Array[String]) {
-        if (args.size < 3) {
-            println("Usage: WSDEvaluationBaseline linked-sentences-tokenized output num-senses")
+        if (args.size < 2) {
+            println("Usage: WSDEvaluationBaseline linked-sentences-tokenized output")
             return
         }
 
         val conf = new SparkConf().setAppName("ClusterContextClueAggregator")
         val sc = new SparkContext(conf)
 
-        val sentFile = sc.textFile(args(0))
-        val outputFile = args(1)
-        val numSenses = args(2).toInt
+        val sents = sc.textFile(args(0))
+            .map(line => line.split("\t"))
+            .zipWithIndex()
+            .cache()
+        //val numSenses = args(2).toInt
         //val numFeatures = args(3).toInt
         //val minPMI = args(4).toDouble
         //val multiplyScores = args(5).toBoolean
 
-        val sentLinkedTokenizedContextualized = sentFile
-            .map(line => line.split("\t"))
-            .map({case Array(lemma, target, tokens) => (lemma, target, chooseSense(numSenses))})
+        for (numSenses <- List(2,3,4,5,6,7,8,9,10,15,20,50,100)) {
+            val outputFile = args(1) + "__s" + numSenses
 
-        sentLinkedTokenizedContextualized
-            .saveAsTextFile(outputFile + "/Contexts")
+            val sentLinkedTokenizedContextualized = sents
+                .map({ case (Array(lemma, target, tokens), sentId) => (lemma, sentId, target, chooseSense(numSenses))})
 
-        val senseTargetCounts = sentLinkedTokenizedContextualized
-            .map({case (lemma, target, sense) => ((lemma, target, sense), 1)})
-            .reduceByKey(_+_)
-            .cache()
+            sentLinkedTokenizedContextualized
+                .saveAsTextFile(outputFile + "/Contexts")
+
+            val senseTargetCounts = sentLinkedTokenizedContextualized
+                .map({ case (lemma, sentId, target, sense) => ((lemma, target, sense), 1)})
+                .reduceByKey(_ + _)
+                .cache()
+
+            val goldClustering = sentLinkedTokenizedContextualized
+                .map({ case (lemma, sentId, target, sense) => (lemma, (sentId, target))})
+                .groupByKey()
+                .mapValues(WSDEvaluation.mappingToClusters)
 
 
+            val baselineClustering = sentLinkedTokenizedContextualized
+                .map({ case (lemma, sentId, target, sense) => (lemma, (sentId, sense))})
+                .groupByKey()
+                .mapValues(WSDEvaluation.mappingToClusters)
 
+            val nmiScoresBaseline = goldClustering.join(baselineClustering)
+                .mapValues(clusterings => WSDEvaluation.nmi(clusterings._1, clusterings._2, 100))
 
-        // SENSE -> MOST FREQ. TARGET
-        val targetsPerSense = senseTargetCounts
-            .map({case ((lemma, target, sense), count) => ((lemma, sense), (target, count))})
-            .groupByKey()
-            .map({case ((lemma, sense), targetCounts) => ((lemma, sense), targetCounts.toArray.sortBy(_._2).reverse)})
+            nmiScoresBaseline.map({ case (lemma, nmiScore) => lemma + "\t" + nmiScore})
+                .saveAsTextFile(outputFile + "/NMIPerLemma")
 
-        targetsPerSense
-            .map({case ((lemma, sense), targetCounts) => lemma + "\t" + sense + "\t" + targetCounts.map(targetCount => targetCount._1 + ":" + targetCount._2).mkString("  ")})
-            .saveAsTextFile(outputFile + "/TargetsPerSense")
-
-        val targetsPerSenseResults = targetsPerSense
-            .map({case ((lemma, sense), targetCounts) => (lemma, computeMatchingScore(targetCounts))})
-            .reduceByKey({case ((correct1, total1), (correct2, total2)) => (correct1+correct2, total1+total2)})
-
-        targetsPerSenseResults
-            .map({case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
-            .saveAsTextFile(outputFile + "/TargetsPerSense__Results")
-
-        targetsPerSenseResults
-            .map({case (lemma, (correct, total)) => ("TOTAL", (correct, total))})
-            .reduceByKey({case ((correct1, total1), (correct2, total2)) => (correct1+correct2, total1+total2)})
-            .map({case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
-            .saveAsTextFile(outputFile + "/TargetsPerSense__ResultsAggregated")
+            nmiScoresBaseline.map({ case (lemma, nmiScore) => ("FOO", (nmiScore, 1))})
+                .reduceByKey({ case ((a1, b1), (a2, b2)) => (a1 + a2, b1 + b2)})
+                .map({ case (_, (avgNmiScore, numLemmas)) => "AVG_NMI\t" + avgNmiScore / numLemmas})
+                .saveAsTextFile(outputFile + "/NMIPerLemma__Total")
 
 
 
-        // TARGET -> MOST FREQ. SENSE
-        val sensesPerTarget = senseTargetCounts
-            .map({case ((lemma, target, sense), count) => ((lemma, target), (sense, count))})
-            .groupByKey()
-            .map({case ((lemma, target), senseCounts) => ((lemma, target), senseCounts.toArray.sortBy(_._2).reverse)})
+            // SENSE -> MOST FREQ. TARGET
+            val targetsPerSense = senseTargetCounts
+                .map({ case ((lemma, target, sense), count) => ((lemma, sense), (target, count))})
+                .groupByKey()
+                .map({ case ((lemma, sense), targetCounts) => ((lemma, sense), targetCounts.toArray.sortBy(_._2).reverse)})
 
-        sensesPerTarget
-            .map({case ((lemma, target), senseCounts) => lemma + "\t" + target + "\t" + senseCounts.map(senseCount => senseCount._1 + ":" + senseCount._2).mkString("  ")})
-            .saveAsTextFile(outputFile + "/SensesPerTarget")
+            targetsPerSense
+                .map({ case ((lemma, sense), targetCounts) => lemma + "\t" + sense + "\t" + targetCounts.map(targetCount => targetCount._1 + ":" + targetCount._2).mkString("  ")})
+                .saveAsTextFile(outputFile + "/TargetsPerSense")
 
-        val sensesPerTargetResults = sensesPerTarget
-            .map({case ((lemma, target), senseCounts) => (lemma, computeMatchingScore(senseCounts))})
-            .reduceByKey({case ((correct1, total1), (correct2, total2)) => (correct1+correct2, total1+total2)})
+            val targetsPerSenseResults = targetsPerSense
+                .map({ case ((lemma, sense), targetCounts) => (lemma, computeMatchingScore(targetCounts))})
+                .reduceByKey({ case ((correct1, total1), (correct2, total2)) => (correct1 + correct2, total1 + total2)})
 
-        sensesPerTargetResults
-            .map({case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
-            .saveAsTextFile(outputFile + "/SensesPerTarget__Results")
+            targetsPerSenseResults
+                .map({ case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
+                .saveAsTextFile(outputFile + "/TargetsPerSense__Results")
 
-        sensesPerTargetResults
-            .map({case (lemma, (correct, total)) => ("TOTAL", (correct, total))})
-            .reduceByKey({case ((correct1, total1), (correct2, total2)) => (correct1+correct2, total1+total2)})
-            .map({case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
-            .saveAsTextFile(outputFile + "/SensesPerTarget__ResultsAggregated")
+            targetsPerSenseResults
+                .map({ case (lemma, (correct, total)) => ("TOTAL", (correct, total))})
+                .reduceByKey({ case ((correct1, total1), (correct2, total2)) => (correct1 + correct2, total1 + total2)})
+                .map({ case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
+                .saveAsTextFile(outputFile + "/TargetsPerSense__ResultsAggregated")
+
+
+
+            // TARGET -> MOST FREQ. SENSE
+            val sensesPerTarget = senseTargetCounts
+                .map({ case ((lemma, target, sense), count) => ((lemma, target), (sense, count))})
+                .groupByKey()
+                .map({ case ((lemma, target), senseCounts) => ((lemma, target), senseCounts.toArray.sortBy(_._2).reverse)})
+
+            sensesPerTarget
+                .map({ case ((lemma, target), senseCounts) => lemma + "\t" + target + "\t" + senseCounts.map(senseCount => senseCount._1 + ":" + senseCount._2).mkString("  ")})
+                .saveAsTextFile(outputFile + "/SensesPerTarget")
+
+            val sensesPerTargetResults = sensesPerTarget
+                .map({ case ((lemma, target), senseCounts) => (lemma, computeMatchingScore(senseCounts))})
+                .reduceByKey({ case ((correct1, total1), (correct2, total2)) => (correct1 + correct2, total1 + total2)})
+
+            sensesPerTargetResults
+                .map({ case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
+                .saveAsTextFile(outputFile + "/SensesPerTarget__Results")
+
+            sensesPerTargetResults
+                .map({ case (lemma, (correct, total)) => ("TOTAL", (correct, total))})
+                .reduceByKey({ case ((correct1, total1), (correct2, total2)) => (correct1 + correct2, total1 + total2)})
+                .map({ case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
+                .saveAsTextFile(outputFile + "/SensesPerTarget__ResultsAggregated")
+        }
     }
 }
