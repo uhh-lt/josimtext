@@ -48,13 +48,13 @@ object WSDEvaluationBaseline {
                 .cache()
 
             val goldClustering = sentLinkedTokenizedContextualized
-                .map({ case (lemma, sentId, target, sense) => ("NMI", (sentId, target))})
+                .map({ case (lemma, sentId, target, sense) => ("NMI", (sentId, (lemma, target)))})
                 .groupByKey()
                 .mapValues(WSDEvaluation.mappingToClusters)
 
 
             val baselineClustering = sentLinkedTokenizedContextualized
-                .map({ case (lemma, sentId, target, sense) => ("NMI", (sentId, sense))})
+                .map({ case (lemma, sentId, target, sense) => ("NMI", (sentId, (lemma, sense)))})
                 .groupByKey()
                 .mapValues(WSDEvaluation.mappingToClusters)
 
