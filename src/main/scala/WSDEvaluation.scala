@@ -49,16 +49,22 @@ object WSDEvaluation {
     def nmi[D](clustering1:Seq[Set[D]], clustering2:Seq[Set[D]], N:Int): Double = {
         var H1 = 0.0
         var H2 = 0.0
+        var sum1 = 0
+        var sum2 = 0
         for (docIDs <- clustering1) {
             val n = docIDs.size
+            sum1 += n
             val p = n.toDouble / N.toDouble
             H1 -= p * math.log(p)
         }
-        for (docIDs <- clustering2  ) {
+        for (docIDs <- clustering2) {
             val n = docIDs.size
+            sum2 += n
             val p = n.toDouble / N.toDouble
             H2 -= p * math.log(p)
         }
+        if (sum1 != N || sum2 != N)
+            return -1.0
 
         var I = 0.0
         for (docIDs1 <- clustering1; docIDs2 <- clustering2) {
@@ -220,7 +226,7 @@ object WSDEvaluation {
             .mapValues(mappingToClusters)
 
         val nmiScores = goldClustering.join(testClustering)
-            .mapValues(clusterings => nmi(clusterings._1, clusterings._2, 100))
+            .mapValues(clusterings => nmi(clusterings._1, clusterings._2, 100000))
 
         nmiScores.map({case (_, nmiScore) => nmiScore})
                  .saveAsTextFile(outputFile + "/NMI")
