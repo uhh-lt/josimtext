@@ -33,7 +33,7 @@ object WSDEvaluationBaseline {
         //val minPMI = args(4).toDouble
         //val multiplyScores = args(5).toBoolean
 
-        for (numSenses <- List(2,3,4,5,6,7,8,9,10,15,20,50,100)) {
+        for (numSenses <- List(1,2,3,4,5,6,7,8,9,10,15,20,50,100)) {
             val outputFile = args(1) + "__s" + numSenses
 
             val sentLinkedTokenizedContextualized = sents
@@ -48,26 +48,21 @@ object WSDEvaluationBaseline {
                 .cache()
 
             val goldClustering = sentLinkedTokenizedContextualized
-                .map({ case (lemma, sentId, target, sense) => (lemma, (sentId, target))})
+                .map({ case (lemma, sentId, target, sense) => ("NMI", (sentId, target))})
                 .groupByKey()
                 .mapValues(WSDEvaluation.mappingToClusters)
 
 
             val baselineClustering = sentLinkedTokenizedContextualized
-                .map({ case (lemma, sentId, target, sense) => (lemma, (sentId, sense))})
+                .map({ case (lemma, sentId, target, sense) => ("NMI", (sentId, sense))})
                 .groupByKey()
                 .mapValues(WSDEvaluation.mappingToClusters)
 
             val nmiScoresBaseline = goldClustering.join(baselineClustering)
                 .mapValues(clusterings => WSDEvaluation.nmi(clusterings._1, clusterings._2, 100))
 
-            nmiScoresBaseline.map({ case (lemma, nmiScore) => lemma + "\t" + nmiScore})
-                .saveAsTextFile(outputFile + "/NMIPerLemma")
-
-            nmiScoresBaseline.map({ case (lemma, nmiScore) => ("FOO", (nmiScore, 1))})
-                .reduceByKey({ case ((a1, b1), (a2, b2)) => (a1 + a2, b1 + b2)})
-                .map({ case (_, (avgNmiScore, numLemmas)) => "AVG_NMI\t" + avgNmiScore / numLemmas})
-                .saveAsTextFile(outputFile + "/NMIPerLemma__Total")
+            nmiScoresBaseline.map({ case (_, nmiScore) => nmiScore})
+                .saveAsTextFile(outputFile + "/NMI")
 
 
 

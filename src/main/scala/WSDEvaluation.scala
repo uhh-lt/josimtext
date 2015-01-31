@@ -210,25 +210,20 @@ object WSDEvaluation {
             .cache()
 
         val goldClustering = sentLinkedTokenizedContextualized
-            .map({case (lemma, sentId, target, sense, tokens) => (lemma, (sentId, target))})
+            .map({case (lemma, sentId, target, sense, tokens) => ("NMI", (sentId, target))})
             .groupByKey()
             .mapValues(mappingToClusters)
 
         val testClustering = sentLinkedTokenizedContextualized
-            .map({case (lemma, sentId, target, sense, tokens) => (lemma, (sentId, sense))})
+            .map({case (lemma, sentId, target, sense, tokens) => ("NMI", (sentId, sense))})
             .groupByKey()
             .mapValues(mappingToClusters)
 
         val nmiScores = goldClustering.join(testClustering)
             .mapValues(clusterings => nmi(clusterings._1, clusterings._2, 100))
 
-        nmiScores.map({case (lemma, nmiScore) => lemma + "\t" + nmiScore})
-                 .saveAsTextFile(outputFile + "/NMIPerLemma")
-
-        nmiScores.map({case (lemma, nmiScore) => ("FOO", (nmiScore, 1))})
-                 .reduceByKey({case ((a1,b1), (a2,b2)) => (a1+a2,b1+b2)})
-                 .map({case (_, (avgNmiScore, numLemmas)) => "AVG_NMI\t" + avgNmiScore / numLemmas})
-                 .saveAsTextFile(outputFile + "/NMIPerLemma__Total")
+        nmiScores.map({case (_, nmiScore) => nmiScore})
+                 .saveAsTextFile(outputFile + "/NMI")
 
         sentLinkedTokenizedContextualized
             .map({case (lemma, sentId, target, sense, tokens) => lemma + "\t" + target + "\t" + sense + "\t" + tokens.mkString(" ")})
