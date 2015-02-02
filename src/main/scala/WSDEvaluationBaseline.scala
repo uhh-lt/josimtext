@@ -10,7 +10,7 @@ object WSDEvaluationBaseline {
     }
 
     def computeMatchingScore[T](matchingCountsSorted:Array[(T, Int)]):(Int, Int) = {
-        val countSum = matchingCountsSorted.map(matchCount => matchCount._2).fold(0)(_+_)
+        val countSum = matchingCountsSorted.map(matchCount => matchCount._2).sum
         // return "highest count" / "sum of all counts"
         (matchingCountsSorted.head._2, countSum)
     }

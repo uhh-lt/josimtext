@@ -81,7 +81,7 @@ object WSDEvaluation {
     }
 
     def computeFeatureValues(word:String, featureValues:String, clusterSize:Int): (String, (Double, Double)) = {
-        val featureArr = Util.splitLastN(featureValues, ":", 3)
+        val featureArr = Util.splitLastN(featureValues, ':', 3)
         val feature = featureArr(0)
         if (featureArr.length != 3)
             return null

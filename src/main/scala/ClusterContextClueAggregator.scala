@@ -28,7 +28,7 @@ object ClusterContextClueAggregator {
             .map(cols => ((cols(0),
                            cols(1) + "\t" + cols(2)),
                            cols(3).split("  ")
-                                  .map(wordWithSim => Util.splitLastN(wordWithSim, ":", 2))
+                                  .map(wordWithSim => Util.splitLastN(wordWithSim, ':', 2))
                                   .map({case Array(word, sim) => (word, sim.toDouble)})))
             .filter({case ((word, sense), simWords) => words == null || words.contains(word)})
 
