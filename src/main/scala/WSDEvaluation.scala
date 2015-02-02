@@ -80,33 +80,21 @@ object WSDEvaluation {
         2*I / (H1 + H2)
     }
 
-    def splitLastN(text:String, del:String, n:Int):Array[String] = {
-        val featureArr = new Array[String](3)
-        var lastPos = text.length
-        for (i <- (0 to n-1).reverse) {
-            // for the first element we position an imaginary delimeter at position -1
-            val nextPos = if (i == 0) -1 else text.lastIndexOf(del, lastPos-1)
-            featureArr(i) = text.substring(nextPos+1, lastPos)
-            lastPos = nextPos
-        }
-        featureArr
-    }
-
     def computeFeatureValues(word:String, featureValues:String, clusterSize:Int): (String, (Double, Double)) = {
-        val featureArr = splitLastN(featureValues, ":", 3)
+        val featureArr = Util.splitLastN(featureValues, ":", 3)
         val feature = featureArr(0)
         if (featureArr.length != 3)
-            return (feature, (0, 1))
+            return null
         //val lmi     = featureArr(1).toFloat
         //val avgProb = featureArr(2).toFloat // (p(w1|f) + .. + p(wn|f)) / n
         //val avgCov  = featureArr(3).toFloat // (p(f|w1) + .. + p(f|wn)) / n
         //val sc      = featureArr(1).toLong  // c(w1) + .. + c(wn) = c(s)
         //val fc      = featureArr(5).toLong  // c(f)
         //val avgWc   = wc.toFloat / clusterSize // c(s) / n = (c(w1) + .. + c(wn)) / n
-        var sfc     = featureArr(1).toDouble / clusterSize // c(s,f)
+        val sfc     = featureArr(1).toDouble / clusterSize // c(s,f)
         val fc      = featureArr(2).toDouble // c(f)
         if (feature.equals(word))
-            sfc = 0
+            return null
         //val totalNumObservations = featureArr(7).toLong
         //val normalizedAvgWfc = avgCov * avgWc // (p(f|w1) + .. + p(f|wn))/n * c(s)/n = (c(w1,f) + .. + c(wn,f))/n = c(s,f)/n
         //val score = (normalizedAvgWfc * normalizedAvgWfc) / (avgWc * fc)
@@ -114,13 +102,14 @@ object WSDEvaluation {
         (feature, (sfc, fc))
     }
 
-    def computeFeatureProbs(word:String, featuresWithValues:Array[String], clusterSize:Int): Map[String, (Double, Double)] = {
-        featuresWithValues
+    def computeFeatureProbs(word:String, featuresWithValues:Array[String], clusterSize:Int, senseCount:Int): Map[String, (Double, Double)] = {
+        val res = featuresWithValues
             .map(featureValues => computeFeatureValues(word, featureValues, clusterSize))
-            //.sortBy({case (feature, (sfc, fc)) => (sfc * sfc)/fc.toDouble})
-            //.reverse
-            //.take(10000)
-            .toMap
+            .filter(_ != null)
+            .sortBy({case (feature, (sfc, fc)) => (sfc * sfc)/(fc * senseCount)})
+            .reverse
+            .take(1000)
+        res.toMap
     }
 
     def chooseSense(contextFeatures:Set[String], senseInfo:Map[Int, (Int, Int, Map[String, (Double, Double)])], alpha:Double, wsdMode:WSDMode.WSDMode):Int = {
@@ -189,7 +178,7 @@ object WSDEvaluation {
             return
         }
 
-        val conf = new SparkConf().setAppName("ClusterContextClueAggregator")
+        val conf = new SparkConf().setAppName("WSDEvaluation")
         val sc = new SparkContext(conf)
 
         val clusterFile = sc.textFile(args(0))
@@ -207,13 +196,14 @@ object WSDEvaluation {
             .map(line => line.split("\t"))
             .zipWithIndex()
             .map({case (Array(lemma, target, tokens), sentId) => (lemma, (sentId, target, tokens.split(" ")))})
+            .cache()
 
         // (lemma, (sense -> (feature -> prob)))
         val clustersWithClues:RDD[(String, Map[Int, (Int, Int, Map[String, (Double, Double)])])] = clusterFile
             .map(line => line.split("\t"))
             .map({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, sense.toInt, senseCount.toInt, simWords.split("  "), featuresWithValues.split("  "))})
             .filter({case (lemma, sense, senseCount, simWords, featuresWithValues) => simWords.size >= minClusterSize})
-            .map({case (lemma, sense, senseCount, simWords, featuresWithValues) => (lemma, (sense, (senseCount, simWords.size, computeFeatureProbs(lemma, featuresWithValues, simWords.size))))})
+            .map({case (lemma, sense, senseCount, simWords, featuresWithValues) => (lemma, (sense, (senseCount, simWords.size, computeFeatureProbs(lemma, featuresWithValues, simWords.size, senseCount))))})
             .groupByKey()
             .mapValues(clusters => pruneClusters(clusters, maxNumClusters).toMap)
 
@@ -254,6 +244,7 @@ object WSDEvaluation {
             .map({case ((lemma, target, sense), count) => ((lemma, sense), (target, count))})
             .groupByKey()
             .map({case ((lemma, sense), targetCounts) => ((lemma, sense), targetCounts.toArray.sortBy(_._2).reverse)})
+            .cache()
 
         targetsPerSense
             .map({case ((lemma, sense), targetCounts) => lemma + "\t" + sense + "\t" + targetCounts.map(targetCount => targetCount._1 + ":" + targetCount._2).mkString("  ")})
@@ -262,6 +253,7 @@ object WSDEvaluation {
         val targetsPerSenseResults = targetsPerSense
             .map({case ((lemma, sense), targetCounts) => (lemma, computeMatchingScore(targetCounts))})
             .reduceByKey({case ((correct1, total1), (correct2, total2)) => (correct1+correct2, total1+total2)})
+            .cache()
 
         targetsPerSenseResults
             .map({case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})
@@ -280,6 +272,7 @@ object WSDEvaluation {
             .map({case ((lemma, target, sense), count) => ((lemma, target), (sense, count))})
             .groupByKey()
             .map({case ((lemma, target), senseCounts) => ((lemma, target), senseCounts.toArray.sortBy(_._2).reverse)})
+            .cache()
 
         sensesPerTarget
             .map({case ((lemma, target), senseCounts) => lemma + "\t" + target + "\t" + senseCounts.map(senseCount => senseCount._1 + ":" + senseCount._2).mkString("  ")})
@@ -288,6 +281,7 @@ object WSDEvaluation {
         val sensesPerTargetResults = sensesPerTarget
             .map({case ((lemma, target), senseCounts) => (lemma, computeMatchingScore(senseCounts))})
             .reduceByKey({case ((correct1, total1), (correct2, total2)) => (correct1+correct2, total1+total2)})
+            .cache()
 
         sensesPerTargetResults
             .map({case (lemma, (correct, total)) => lemma + "\t" + correct.toDouble / total + "\t" + correct + "/" + total})

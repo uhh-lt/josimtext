@@ -23,9 +23,13 @@ object ClusterContextClueAggregator {
         val wordFeatureCountFile = sc.textFile(args(3))
         val outputFile = args(4)
 
-        val clusterSimWords:RDD[((String, String), Array[String])] = clusterFile
+        val clusterSimWords:RDD[((String, String), Array[(String, Double)])] = clusterFile
             .map(line => line.split("\t"))
-            .map(cols => ((cols(0), cols(1) + "\t" + cols(2)), cols(3).split("  ")))
+            .map(cols => ((cols(0),
+                           cols(1) + "\t" + cols(2)),
+                           cols(3).split("  ")
+                                  .map(wordWithSim => Util.splitLastN(wordWithSim, ":", 2))
+                                  .map({case Array(word, sim) => (word, sim.toDouble)})))
             .filter({case ((word, sense), simWords) => words == null || words.contains(word)})
 
         val wordCounts:RDD[(String, Long)] = wordCountFile
@@ -37,7 +41,7 @@ object ClusterContextClueAggregator {
             .map(cols => (cols(0), cols(1).toLong))
 
         val clusterWords:RDD[(String, (String, String, Int))] = clusterSimWords
-            .flatMap({case ((word, sense), simWords) => for(simWord <- simWords) yield (simWord, (word, sense, simWords.size))})
+            .flatMap({case ((word, sense), simWordsWithSim) => for((simWord, sim) <- simWordsWithSim) yield (simWord, (word, sense, simWordsWithSim.size))})
 
         val wordFeatures = wordFeatureCountFile
             .map(line => line.split("\t"))
@@ -62,7 +66,7 @@ object ClusterContextClueAggregator {
             .map({case ((word, sense), (senseFeatureCounts, senseCount)) => ((word, sense), (senseCount, senseFeatureCounts))})
             .join(clusterSimWords)
             .sortByKey()
-            .map({case ((word, sense), ((senseCount, senseFeatureCounts), simWords)) => word + "\t" + sense + "\t" + senseCount + "\t" + simWords.mkString("  ") + "\t" + senseFeatureCounts.map(tuple => tuple._1 + ":" + tuple._2 + ":" + tuple._3).mkString("  ")})
+            .map({case ((word, sense), ((senseCount, senseFeatureCounts), simWordsWithSim)) => word + "\t" + sense + "\t" + senseCount + "\t" + simWordsWithSim.map({case (simWord, sim) => simWord + ":" + sim}).mkString("  ") + "\t" + senseFeatureCounts.map(tuple => tuple._1 + ":" + tuple._2 + ":" + tuple._3).mkString("  ")})
             .saveAsTextFile(outputFile)
     }
 }
