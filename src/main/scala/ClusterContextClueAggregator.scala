@@ -63,10 +63,15 @@ object ClusterContextClueAggregator {
             .map({case ((word, sense, feature), (wfc, fc, numSimWords)) => ((word, sense), (feature, wfc, fc))})
             .groupByKey()
             .join(wordSenseCounts)
-            .map({case ((word, sense), (senseFeatureCounts, senseCount)) => ((word, sense), (senseCount, senseFeatureCounts))})
+            .map({case ((word, sense), (senseFeatureCounts, senseCount)) => ((word, sense), (senseCount, senseFeatureCounts.toList.sortBy(tuple => tuple._2*tuple._2 / tuple._3.toDouble).reverse))})
             .join(clusterSimWords)
             .sortByKey()
-            .map({case ((word, sense), ((senseCount, senseFeatureCounts), simWordsWithSim)) => word + "\t" + sense + "\t" + senseCount + "\t" + simWordsWithSim.map({case (simWord, sim) => simWord + ":" + sim}).mkString("  ") + "\t" + senseFeatureCounts.map(tuple => tuple._1 + ":" + tuple._2 + ":" + tuple._3).mkString("  ")})
+            .map({case ((word, sense), ((senseCount, senseFeatureCounts), simWordsWithSim)) =>
+                word + "\t" +
+                sense + "\t" +
+                senseCount + "\t" +
+                simWordsWithSim.map({case (simWord, sim) => simWord + ":" + sim}).mkString("  ") + "\t" +
+                senseFeatureCounts.map(tuple => tuple._1 + ":" + tuple._2 + ":" + tuple._3).mkString("  ")})
             .saveAsTextFile(outputFile)
     }
 }
