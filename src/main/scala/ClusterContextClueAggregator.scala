@@ -40,8 +40,8 @@ object ClusterContextClueAggregator {
             .map(line => line.split("\t"))
             .map(cols => (cols(0), cols(1).toLong))
 
-        val clusterWords:RDD[(String, (String, String, Int))] = clusterSimWords
-            .flatMap({case ((word, sense), simWordsWithSim) => for((simWord, sim) <- simWordsWithSim) yield (simWord, (word, sense, simWordsWithSim.size))})
+        val clusterWords:RDD[(String, (String, Double, String, Int))] = clusterSimWords
+            .flatMap({case ((word, sense), simWordsWithSim) => for((simWord, sim) <- simWordsWithSim) yield (simWord, (word, sim, sense, simWordsWithSim.size))})
 
         val wordFeatures = wordFeatureCountFile
             .map(line => line.split("\t"))
@@ -49,29 +49,31 @@ object ClusterContextClueAggregator {
             .join(featureCounts)
             .map({case (feature, ((word, wfc), fc)) => (word, (feature, wfc, fc))})
             .filter({case (word, (feature, wfc, fc)) => wfc >= t_wfc})
+            .join(wordCounts)
+            .map({case (word, ((feature, wfc, fc), wc)) => (word, (feature, wc, fc, wfc))})
 
         val wordSenseCounts = clusterWords
             .join(wordCounts)
-            .map({case (simWord, ((word, sense, numSimWords), wc)) => ((word, sense), wc)})
+            .map({case (simWord, ((word, sim, sense, numSimWords), wc)) => ((word, sense), wc)})
             .reduceByKey(_+_)
 
         clusterWords
             .join(wordFeatures)
-            .map({case (simWord, ((word, sense, numSimWords), (feature, wfc, fc))) => ((word, sense, feature), (wfc, fc, numSimWords))})
+            .map({case (simWord, ((word, sim, sense, numSimWords), (feature, wc, fc, wfc))) => ((word, sense, feature), (sim*(wfc/wc.toDouble), sim, numSimWords))})
             // Pretend cluster words are replaced with the same placeholder word and combine their word-feature counts:
-            .reduceByKey({case ((wfc1, fc, numSimWords), (wfc2, _, _)) => (wfc1+wfc2, fc, numSimWords)})
-            .map({case ((word, sense, feature), (wfc, fc, numSimWords)) => ((word, sense), (feature, wfc, fc))})
+            .reduceByKey({case ((p1, sim1, numSimWords), (p2, sim2, _)) => (p1+p2, sim1+sim2, numSimWords)})
+            .map({case ((word, sense, feature), (p, simSum, numSimWords)) => ((word, sense), (feature, p / simSum))})
             .groupByKey()
             .join(wordSenseCounts)
-            .map({case ((word, sense), (senseFeatureCounts, senseCount)) => ((word, sense), (senseCount, senseFeatureCounts.toList.sortBy(tuple => tuple._2*tuple._2 / tuple._3.toDouble).reverse))})
+            .map({case ((word, sense), (senseFeatureProbs, senseCount)) => ((word, sense), (senseCount, senseFeatureProbs.toList.sortBy(_._2).reverse))})
             .join(clusterSimWords)
             .sortByKey()
-            .map({case ((word, sense), ((senseCount, senseFeatureCounts), simWordsWithSim)) =>
+            .map({case ((word, sense), ((senseCount, senseFeatureProbs), simWordsWithSim)) =>
                 word + "\t" +
                 sense + "\t" +
                 senseCount + "\t" +
                 simWordsWithSim.map({case (simWord, sim) => simWord + ":" + sim}).mkString("  ") + "\t" +
-                senseFeatureCounts.map(tuple => tuple._1 + ":" + tuple._2 + ":" + tuple._3).mkString("  ")})
+                    senseFeatureProbs.map(tuple => tuple._1 + ":" + tuple._2).mkString("  ")})
             .saveAsTextFile(outputFile)
     }
 }
