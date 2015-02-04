@@ -54,8 +54,9 @@ object ClusterContextClueAggregator {
 
         val wordSenseCounts = clusterWords
             .join(wordCounts)
-            .map({case (simWord, ((word, sim, sense, numSimWords), wc)) => ((word, sense), wc)})
-            .reduceByKey(_+_)
+            .map({case (simWord, ((word, sim, sense, numSimWords), wc)) => ((word, sense), (wc*sim, sim))})
+            .reduceByKey({case ((wcSum1, simSum1),(wcSum2, simSum2)) => (wcSum1+wcSum2, simSum1+simSum2)})
+            .mapValues({case (wcSum, simSum) => wcSum/simSum})
 
         clusterWords
             .join(wordFeatures)
