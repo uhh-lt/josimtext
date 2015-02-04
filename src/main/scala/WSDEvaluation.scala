@@ -91,7 +91,7 @@ object WSDEvaluation {
         (feature, prob)
     }
 
-    def computeFeatureProbs(word:String, featuresWithValues:Array[String], clusterSize:Int, senseCount:Int): Map[String, Double] = {
+    def computeFeatureProbs(word:String, featuresWithValues:Array[String], clusterSize:Int, senseCount:Double): Map[String, Double] = {
         val res = featuresWithValues
             .map(featureValues => computeFeatureValues(word, featureValues, clusterSize))
             .filter(_ != null)
@@ -101,12 +101,12 @@ object WSDEvaluation {
         res.toMap
     }
 
-    def chooseSense(contextFeatures:Set[String], senseInfo:Map[Int, (Int, Int, Map[String, Double])], alpha:Double, wsdMode:WSDMode.WSDMode):Int = {
+    def chooseSense(contextFeatures:Set[String], senseInfo:Map[Int, (Double, Int, Map[String, Double])], alpha:Double, wsdMode:WSDMode.WSDMode):Int = {
         val senseProbs = collection.mutable.Map[Int, Double]() // Probabilities to compute
 
         for (sense <- senseInfo.keys) {
             // we simply ignore the (1/N_w) factor here, as it is constant for all senses
-            val senseCount = senseInfo(sense)._1.toDouble // * (1/N_w)
+            val senseCount = senseInfo(sense)._1 // * (1/N_w)
             //val clusterSize = senseInfo(sense)._2
             if (wsdMode == WSDMode.Product) {
                 senseProbs(sense) = math.log(senseCount)
@@ -155,7 +155,7 @@ object WSDEvaluation {
                .map({case (b,aAndBs) => aAndBs.map(_._1).toSet})
     }
 
-    def pruneClusters[C](clusters:Iterable[(Int, (Int, Int, C))], maxNumClusters:Int):Iterable[(Int, (Int, Int, C))] = {
+    def pruneClusters[C](clusters:Iterable[(Int, (Double, Int, C))], maxNumClusters:Int):Iterable[(Int, (Double, Int, C))] = {
         clusters.toList.sortBy({case (sense, (senseCount, clusterSize, _)) => clusterSize}).reverse.take(maxNumClusters)
     }
 
@@ -186,9 +186,9 @@ object WSDEvaluation {
             .cache()
 
         // (lemma, (sense -> (feature -> prob)))
-        val clustersWithClues:RDD[(String, Map[Int, (Int, Int, Map[String, Double])])] = clusterFile
+        val clustersWithClues:RDD[(String, Map[Int, (Double, Int, Map[String, Double])])] = clusterFile
             .map(line => line.split("\t"))
-            .map({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, sense.toInt, senseCount.toInt, simWords.split("  "), featuresWithValues.split("  "))})
+            .map({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, sense.toInt, senseCount.toDouble, simWords.split("  "), featuresWithValues.split("  "))})
             .filter({case (lemma, sense, senseCount, simWords, featuresWithValues) => simWords.size >= minClusterSize})
             .map({case (lemma, sense, senseCount, simWords, featuresWithValues) => (lemma, (sense, (senseCount, simWords.size, computeFeatureProbs(lemma, featuresWithValues, simWords.size, senseCount))))})
             .groupByKey()
