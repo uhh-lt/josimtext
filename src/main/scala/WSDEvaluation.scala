@@ -106,9 +106,9 @@ object WSDEvaluation {
         val res = featuresWithValues
             .map(featureValues => computeFeatureValues(word, featureValues, clusterSize))
             .filter(_ != null)
-            .sortBy({case (feature, (sfc, fc)) => (sfc * sfc)/(fc * senseCount)})
-            .reverse
-            .take(1000)
+            //.sortBy({case (feature, (sfc, fc)) => (sfc * sfc)/(fc * senseCount)})
+            //.reverse
+            //.take(1000)
         res.toMap
     }
 
