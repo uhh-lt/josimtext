@@ -81,9 +81,9 @@ object WSDEvaluation {
     }
 
     def computeFeatureValues(word:String, featureValues:String, clusterSize:Int): (String, Double) = {
-        val featureArr = Util.splitLastN(featureValues, ':', 3)
+        val featureArr = Util.splitLastN(featureValues, ':', 2)
         val feature = featureArr(0)
-        if (featureArr.length != 3)
+        if (featureArr.length != 2)
             return null
         val prob     = featureArr(1).toDouble // P(c|s_k*)
         if (feature.equals(word))
