@@ -6,7 +6,7 @@ import org.apache.spark.rdd._
 object ClusterContextClueAggregator {
     def main(args: Array[String]) {
         if (args.size < 5) {
-            println("Usage: ClusterContextClueAggregator cluster-file word-counts feature-counts word-feature-counts output [min. wfc] [wordlist]")
+            println("Usage: ClusterContextClueAggregator cluster-file word-counts feature-counts word-feature-counts output_suffix [min. wfc] [wordlist]")
             return
         }
 
@@ -21,7 +21,8 @@ object ClusterContextClueAggregator {
         val wordCountFile = sc.textFile(args(1))
         val featureCountFile = sc.textFile(args(2))
         val wordFeatureCountFile = sc.textFile(args(3))
-        val outputFile = args(4)
+        val outputSuffix = args(4)
+        val outputFile = args(0) + "__" + outputSuffix
 
         val clusterSimWords:RDD[((String, String), Array[(String, Double)])] = clusterFile
             .map(line => line.split("\t"))
@@ -46,9 +47,9 @@ object ClusterContextClueAggregator {
         val wordFeatures = wordFeatureCountFile
             .map(line => line.split("\t"))
             .map(cols => (cols(1), (cols(0), cols(2).toLong))) // (feature, (word, wfc))
+            .filter({case (feature, (word, wfc)) => wfc >= t_wfc})
             .join(featureCounts)
             .map({case (feature, ((word, wfc), fc)) => (word, (feature, wfc, fc))})
-            .filter({case (word, (feature, wfc, fc)) => wfc >= t_wfc})
             .join(wordCounts)
             .map({case (word, ((feature, wfc, fc), wc)) => (word, (feature, wc, fc, wfc))})
 
