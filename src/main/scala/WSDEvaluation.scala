@@ -80,29 +80,18 @@ object WSDEvaluation {
         2*I / (H1 + H2)
     }
 
-    def computeFeatureValues(word:String, featureValues:String, clusterSize:Int): (String, (Double, Double)) = {
+    def computeFeatureValues(word:String, featureValues:String, clusterSize:Int): (String, Double) = {
         val featureArr = Util.splitLastN(featureValues, ':', 3)
         val feature = featureArr(0)
         if (featureArr.length != 3)
             return null
-        //val lmi     = featureArr(1).toFloat
-        //val avgProb = featureArr(2).toFloat // (p(w1|f) + .. + p(wn|f)) / n
-        //val avgCov  = featureArr(3).toFloat // (p(f|w1) + .. + p(f|wn)) / n
-        //val sc      = featureArr(1).toLong  // c(w1) + .. + c(wn) = c(s)
-        //val fc      = featureArr(5).toLong  // c(f)
-        //val avgWc   = wc.toFloat / clusterSize // c(s) / n = (c(w1) + .. + c(wn)) / n
-        val sfc     = featureArr(1).toDouble / clusterSize // c(s,f)
-        val fc      = featureArr(2).toDouble // c(f)
+        val prob     = featureArr(1).toDouble // P(c|s_k*)
         if (feature.equals(word))
             return null
-        //val totalNumObservations = featureArr(7).toLong
-        //val normalizedAvgWfc = avgCov * avgWc // (p(f|w1) + .. + p(f|wn))/n * c(s)/n = (c(w1,f) + .. + c(wn,f))/n = c(s,f)/n
-        //val score = (normalizedAvgWfc * normalizedAvgWfc) / (avgWc * fc)
-        //val pmi = (avgProb * totalNumObservations) / wc; // p(w|f)*n / c(w) = c(w|f) / c(w) = pmi(w,f)
-        (feature, (sfc, fc))
+        (feature, prob)
     }
 
-    def computeFeatureProbs(word:String, featuresWithValues:Array[String], clusterSize:Int, senseCount:Int): Map[String, (Double, Double)] = {
+    def computeFeatureProbs(word:String, featuresWithValues:Array[String], clusterSize:Int, senseCount:Int): Map[String, Double] = {
         val res = featuresWithValues
             .map(featureValues => computeFeatureValues(word, featureValues, clusterSize))
             .filter(_ != null)
@@ -112,48 +101,46 @@ object WSDEvaluation {
         res.toMap
     }
 
-    def chooseSense(contextFeatures:Set[String], senseInfo:Map[Int, (Int, Int, Map[String, (Double, Double)])], alpha:Double, wsdMode:WSDMode.WSDMode):Int = {
-        val senseProbs = collection.mutable.Map[Int, Double]()
-        val J = senseInfo.size
+    def chooseSense(contextFeatures:Set[String], senseInfo:Map[Int, (Int, Int, Map[String, Double])], alpha:Double, wsdMode:WSDMode.WSDMode):Int = {
+        val senseProbs = collection.mutable.Map[Int, Double]() // Probabilities to compute
+
         for (sense <- senseInfo.keys) {
-            val senseCountSum = senseInfo(sense)._1
-            val clusterSize = senseInfo(sense)._2
-            val senseCount = senseCountSum.toDouble / clusterSize
+            // we simply ignore the (1/N_w) factor here, as it is constant for all senses
+            val senseCount = senseInfo(sense)._1.toDouble // * (1/N_w)
+            //val clusterSize = senseInfo(sense)._2
             if (wsdMode == WSDMode.Product) {
-                senseProbs(sense) = (J - 1) * math.log(senseCount)
+                senseProbs(sense) = math.log(senseCount)
             } else {
                 senseProbs(sense) = 0
             }
         }
-        var atLeastOneFeatureFound = false
+        //var atLeastOneFeatureFound = false
         // p(s|f1..fn) = 1/p(f1..fn) * p(s) * p(f1|s) * .. * p(fn|s)
         // where 1/p(f1..fn) is ignored as it is equal for all senses
         for (sense <- senseInfo.keys) {
             val featureSenseCounts = senseInfo(sense)._3
             for (feature <- contextFeatures) {
                 // Smoothing for previously unseen context features
-                var featureSenseCount = if (wsdMode == WSDMode.Product) alpha else 0
-                var featureCount = 1.0 // arbitrary default value != 0 if feature is not present (0/X is 0)
+                var featureProb = if (wsdMode == WSDMode.Product) alpha else 0
                 if (featureSenseCounts.contains(feature)) {
-                    atLeastOneFeatureFound = true
-                    featureSenseCount += featureSenseCounts(feature)._1
-                    featureCount = featureSenseCounts(feature)._2
+                    //atLeastOneFeatureFound = true
+                    featureProb += featureSenseCounts(feature)
                 }
                 if (wsdMode == WSDMode.Product) {
-                    senseProbs(sense) += math.log(featureSenseCount)
+                    senseProbs(sense) += math.log(featureProb)
                 } else if (wsdMode == WSDMode.Average) {
-                    senseProbs(sense) += featureSenseCount / featureCount
+                    //senseProbs(sense) += featureSenseCount / featureCount
                 } else if (wsdMode == WSDMode.Maximum) {
-                    senseProbs(sense) = math.max(senseProbs(sense), featureSenseCount / featureCount)
+                    //senseProbs(sense) = math.max(senseProbs(sense), featureSenseCount / featureCount)
                 }
             }
         }
 
-        // return index of most probable sense
-        if (atLeastOneFeatureFound)
+        // return index of most probable sense (if no feature overlap, equals sense with highest prior prob)
+        //if (atLeastOneFeatureFound)
             senseProbs.toList.sortBy(_._2).last._1
-        else
-            -1
+        //else
+        //    -1
     }
 
     def computeMatchingScore[T](matchingCountsSorted:Array[(T, Int)]):(Int, Int) = {
@@ -168,8 +155,8 @@ object WSDEvaluation {
                .map({case (b,aAndBs) => aAndBs.map(_._1).toSet})
     }
 
-    def pruneClusters(clusters:Iterable[(Int, (Int, Int, Map[String, (Double, Double)]))], maxNumClusters:Int):Iterable[(Int, (Int, Int, Map[String, (Double, Double)]))] = {
-        clusters.toList.sortBy(_._2._2).reverse.take(maxNumClusters)
+    def pruneClusters[C](clusters:Iterable[(Int, (Int, Int, C))], maxNumClusters:Int):Iterable[(Int, (Int, Int, C))] = {
+        clusters.toList.sortBy({case (sense, (senseCount, clusterSize, _)) => clusterSize}).reverse.take(maxNumClusters)
     }
 
     def main(args: Array[String]) {
@@ -199,7 +186,7 @@ object WSDEvaluation {
             .cache()
 
         // (lemma, (sense -> (feature -> prob)))
-        val clustersWithClues:RDD[(String, Map[Int, (Int, Int, Map[String, (Double, Double)])])] = clusterFile
+        val clustersWithClues:RDD[(String, Map[Int, (Int, Int, Map[String, Double])])] = clusterFile
             .map(line => line.split("\t"))
             .map({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, sense.toInt, senseCount.toInt, simWords.split("  "), featuresWithValues.split("  "))})
             .filter({case (lemma, sense, senseCount, simWords, featuresWithValues) => simWords.size >= minClusterSize})
