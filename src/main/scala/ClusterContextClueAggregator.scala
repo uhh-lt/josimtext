@@ -24,7 +24,7 @@ object ClusterContextClueAggregator {
         val outputSuffix = args(4)
         val outputFile = args(0) + "__" + outputSuffix
 
-        val clusterSimWords:RDD[((String, String), Array[(String, Double)])] = clusterFile
+        val clusterSimWords:RDD[((String, String), (Array[(String, Double)], Double))] = clusterFile
             .map(line => line.split("\t"))
             .map(cols => ((cols(0),
                            cols(1) + "\t" + cols(2)),
@@ -32,6 +32,12 @@ object ClusterContextClueAggregator {
                                   .map(wordWithSim => Util.splitLastN(wordWithSim, ':', 2))
                                   .map({case Array(word, sim) => (word, sim.toDouble)})))
             .filter({case ((word, sense), simWords) => words == null || words.contains(word)})
+            .map({case ((word, sense), simWords) => ((word, sense), (simWords, simWords.map(_._2).sum))})
+            .cache()
+
+        val clusterSimSums:RDD[((String, String), Double)] = clusterSimWords
+            .map({case ((word, sense), (simWords, simSum)) => ((word, sense), simSum)})
+            .cache()
 
         val wordCounts:RDD[(String, Long)] = wordCountFile
             .map(line => line.split("\t"))
@@ -41,8 +47,8 @@ object ClusterContextClueAggregator {
             .map(line => line.split("\t"))
             .map(cols => (cols(0), cols(1).toLong))
 
-        val clusterWords:RDD[(String, (String, Double, String, Int))] = clusterSimWords
-            .flatMap({case ((word, sense), simWordsWithSim) => for((simWord, sim) <- simWordsWithSim) yield (simWord, (word, sim, sense, simWordsWithSim.size))})
+        val clusterWords:RDD[(String, (String, Double, String, Double))] = clusterSimWords
+            .flatMap({case ((word, sense), (simWordsWithSim, simSum)) => for((simWord, sim) <- simWordsWithSim) yield (simWord, (word, sim, sense, simSum))})
 
         val wordFeatures = wordFeatureCountFile
             .map(line => line.split("\t"))
@@ -55,22 +61,25 @@ object ClusterContextClueAggregator {
 
         val wordSenseCounts = clusterWords
             .join(wordCounts)
-            .map({case (simWord, ((word, sim, sense, numSimWords), wc)) => ((word, sense), (wc*sim, sim))})
-            .reduceByKey({case ((wcSum1, simSum1),(wcSum2, simSum2)) => (wcSum1+wcSum2, simSum1+simSum2)})
+            .map({case (simWord, ((word, sim, sense, simSum), wc)) => ((word, sense), wc*sim)})
+            .reduceByKey(_+_)
+            .join(clusterSimSums)
             .mapValues({case (wcSum, simSum) => wcSum/simSum})
 
         clusterWords
             .join(wordFeatures)
-            .map({case (simWord, ((word, sim, sense, numSimWords), (feature, wc, fc, wfc))) => ((word, sense, feature), (sim*(wfc/wc.toDouble), sim, numSimWords))})
+            .map({case (simWord, ((word, sim, sense, numSimWords), (feature, wc, fc, wfc))) => ((word, sense, feature), sim*(wfc/wc.toDouble))})
             // Pretend cluster words are replaced with the same placeholder word and combine their word-feature counts:
-            .reduceByKey({case ((p1, sim1, numSimWords), (p2, sim2, _)) => (p1+p2, sim1+sim2, numSimWords)})
-            .map({case ((word, sense, feature), (p, simSum, numSimWords)) => ((word, sense), (feature, p / simSum))})
+            .reduceByKey(_+_)
+            .map({case ((word, sense, feature), pSum) => ((word, sense), (feature, pSum))})
+            .join(clusterSimSums)
+            .map({case ((word, sense), ((feature, pSum), simSum)) => ((word, sense), (feature, pSum/simSum))})
             .groupByKey()
             .join(wordSenseCounts)
             .map({case ((word, sense), (senseFeatureProbs, senseCount)) => ((word, sense), (senseCount, senseFeatureProbs.toList.sortBy(_._2).reverse))})
             .join(clusterSimWords)
             .sortByKey()
-            .map({case ((word, sense), ((senseCount, senseFeatureProbs), simWordsWithSim)) =>
+            .map({case ((word, sense), ((senseCount, senseFeatureProbs), (simWordsWithSim, simSum))) =>
                 word + "\t" +
                 sense + "\t" +
                 senseCount + "\t" +
