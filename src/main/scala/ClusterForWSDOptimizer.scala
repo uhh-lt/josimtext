@@ -27,7 +27,7 @@ object ClusterForWSDOptimizer {
         res.toMap
     }
 
-    def calcScore(cluster1:(Int, (Double, Seq[String], Map[String, Double])), cluster2:(Int, (Double, Seq[String], Map[String, Double])), p:Int):Double = {
+    def calcScore(cluster1:(String, (Double, Seq[String], Map[String, Double])), cluster2:(String, (Double, Seq[String], Map[String, Double])), p:Int):Double = {
         val features1 = cluster1._2._3.toSeq.sortBy(_._2).takeRight(p).toMap
         val features2 = cluster2._2._3.toSeq.sortBy(_._2).takeRight(p).toMap
         /*val featureUnion = features1.keySet.union(features2.keySet)
@@ -50,8 +50,8 @@ object ClusterForWSDOptimizer {
         featureIntersection / numFeatures.toDouble
     }
 
-    def pruneClusters(clusters:Seq[(Int, (Double, Seq[String], Map[String, Double]))], p:Int, simThreshold:Double):Seq[(Int, (Double, Seq[String], Map[String, Double]))] = {
-        var clustersPruned:Seq[(Int, (Double, Seq[String], Map[String, Double]))] = List()
+    def pruneClusters(clusters:Seq[(String, (Double, Seq[String], Map[String, Double]))], p:Int, simThreshold:Double):Seq[(String, (Double, Seq[String], Map[String, Double]))] = {
+        var clustersPruned:Seq[(String, (Double, Seq[String], Map[String, Double]))] = List()
         for (i <- 0 to clusters.size - 1) {
             val cluster1 = clusters(i)
             var dropCluster = false
@@ -95,11 +95,12 @@ object ClusterForWSDOptimizer {
         // (lemma, (sense -> (feature -> prob)))
         val clustersWithClues = clusterFile
             .map(line => line.split("\t"))
-            .map({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, sense.toInt, senseCount.toDouble, simWords.split("  "), featuresWithValues.split("  "))})
+            .map({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, sense + "\t" + senseLabel, senseCount.toDouble, simWords.split("  "), featuresWithValues.split("  "))})
             .map({case (lemma, sense, senseCount, simWords, featuresWithValues) => (lemma, (sense, (senseCount, simWords.toSeq, computeFeatureProbs(lemma, featuresWithValues, simWords.size, senseCount, p))))})
             .groupByKey()
             .mapValues(clusters => pruneClusters(clusters.toSeq, p, simThreshold))
             .flatMap({case (lemma, clusters) => for (cluster <- clusters) yield (lemma, cluster)})
+            .sortBy({case (lemma, cluster) => (lemma, cluster._1)})
 
         clustersWithClues
             .map({case (word, (sense, (senseCount, simWordsWithSim, senseFeatureProbs))) =>
