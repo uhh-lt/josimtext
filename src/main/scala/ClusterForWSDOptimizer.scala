@@ -54,12 +54,12 @@ object ClusterForWSDOptimizer {
         var clustersPruned:Seq[(String, (Double, Seq[String], Map[String, Double]))] = List()
         for (i <- 0 to clusters.size - 1) {
             val cluster1 = clusters(i)
-            val cluster1AvgSim = cluster1._2._2.map(Util.splitLastN(_, ':', 2)(1).toInt).sum.toDouble / cluster1._2._2.size
+            val cluster1AvgSim = cluster1._2._2.map(Util.splitLastN(_, ':', 2)(1).toDouble).sum / cluster1._2._2.size
             var dropCluster = false
             for (j <- 0 to clusters.size - 1) {
                 //if (i < j) {
                     val cluster2 = clusters(j)
-                    val cluster2AvgSim = cluster2._2._2.map(Util.splitLastN(_, ':', 2)(1).toInt).sum.toDouble / cluster2._2._2.size
+                    val cluster2AvgSim = cluster2._2._2.map(Util.splitLastN(_, ':', 2)(1).toDouble).sum / cluster2._2._2.size
                     val sim = calcScore(cluster1, cluster2, p)
                     // Drop only the cluster with lower similarity
                     if (sim >= simThreshold && cluster1AvgSim < cluster2AvgSim) {
