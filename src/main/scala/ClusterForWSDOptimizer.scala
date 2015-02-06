@@ -61,9 +61,13 @@ object ClusterForWSDOptimizer {
                     val cluster2 = clusters(j)
                     val cluster2AvgSim = cluster2._2._2.map(Util.splitLastN(_, ':', 2)(1).toDouble).sum / cluster2._2._2.size
                     val sim = calcScore(cluster1, cluster2, p)
-                    // Drop only the cluster with lower similarity
-                    if (sim >= simThreshold && cluster1AvgSim < cluster2AvgSim) {
-                        dropCluster = true
+                    if (sim >= simThreshold) {
+                            // Drop only the cluster with lower similarity
+                        if (cluster1AvgSim < cluster2AvgSim ||
+                            // In case of tie, prefer sense with lower index
+                            cluster1AvgSim == cluster2AvgSim && i < j) {
+                            dropCluster = true
+                        }
                     }
                 //}
             }
