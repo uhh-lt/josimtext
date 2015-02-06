@@ -64,8 +64,8 @@ object ClusterForWSDOptimizer {
                     if (sim >= simThreshold) {
                             // Drop only the cluster with lower similarity
                         if (cluster1AvgSim < cluster2AvgSim ||
-                            // In case of tie, prefer sense with lower index
-                            cluster1AvgSim == cluster2AvgSim && i < j) {
+                            // In case of tie, drop sense with higher index
+                            cluster1AvgSim == cluster2AvgSim && i > j) {
                             dropCluster = true
                         }
                     }
