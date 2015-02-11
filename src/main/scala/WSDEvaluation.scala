@@ -119,25 +119,17 @@ object WSDEvaluation {
         // p(s|f1..fn) = 1/p(f1..fn) * p(s) * p(f1|s) * .. * p(fn|s)
         // where 1/p(f1..fn) is ignored as it is equal for all senses
         for (sense <- senses) {
-            val featureSenseCounts = senseInfoCoocs(sense)._3
+            val featureSenseProbsCoocs = senseInfoCoocs(sense)._3
+            val featureSenseProbsDeps = senseInfoCoocs(sense)._3
             for (feature <- contextFeatures) {
                 // Smoothing for previously unseen context features
                 var featureProb = alpha
-                if (featureSenseCounts.contains(feature)) {
+                if (featureSenseProbsCoocs.contains(feature)) {
                     //atLeastOneFeatureFound = true
-                    featureProb += featureSenseCounts(feature)
-                }
-                senseProbs(sense) += math.log(featureProb)
-            }
-        }
-        for (sense <- senses) {
-            val featureSenseCounts = senseInfoDeps(sense)._3
-            for (feature <- contextFeatures) {
-                // Smoothing for previously unseen context features
-                var featureProb = alpha
-                if (featureSenseCounts.contains(feature)) {
+                    featureProb += featureSenseProbsCoocs(feature)
+                } else if (featureSenseProbsDeps.contains(feature)) {
                     //atLeastOneFeatureFound = true
-                    featureProb += featureSenseCounts(feature)
+                    featureProb += featureSenseProbsDeps(feature)
                 }
                 senseProbs(sense) += math.log(featureProb)
             }
