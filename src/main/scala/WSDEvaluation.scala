@@ -161,7 +161,7 @@ object WSDEvaluation {
 
     def main(args: Array[String]) {
         if (args.size < 7) {
-            println("Usage: WSDEvaluation cluster-file-with-clues linked-sentences-tokenized output prob-smoothing-addend wsd-mode min-cluster-size max-num-clusters")
+            println("Usage: WSDEvaluation cluster-file-with-clues linked-sentences-tokenized output prob-smoothing-addend wsd-mode min-cluster-size max-num-clusters [feature-col]")
             return
         }
 
@@ -175,14 +175,15 @@ object WSDEvaluation {
         val wsdMode = WSDMode.withName(args(4))
         val minClusterSize = args(5).toInt
         val maxNumClusters = args(6).toInt
+        val featureCol = if (args.size > 7) args(7).toInt else 0
         //val numFeatures = args(3).toInt
         //val minPMI = args(4).toDouble
         //val multiplyScores = args(5).toBoolean
 
         val sentLinkedTokenized = sentFile
             .map(line => line.split("\t"))
-            .zipWithIndex()
-            .map({case (Array(lemma, target, tokens), sentId) => (lemma, (sentId, target, tokens.split(" ")))})
+            .zipWithIndex()               // (lemma,       (sentId, target,      features))
+            .map({case (sentLine, sentId) => (sentLine(0), (sentId, sentLine(1), sentLine(featureCol).split(" ")))})
             .cache()
 
         // (lemma, (sense -> (feature -> prob)))
