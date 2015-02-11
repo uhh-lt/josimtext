@@ -103,6 +103,7 @@ object WSDEvaluation {
 
     def chooseSense(contextFeatures:Set[String], senseInfoCoocs:Map[Int, (Double, Int, Map[String, Double])], senseInfoDeps:Map[Int, (Double, Int, Map[String, Double])], alpha:Double, wsdMode:WSDMode.WSDMode):Int = {
         val senseProbs = collection.mutable.Map[Int, Double]() // Probabilities to compute
+        val senses = senseInfoCoocs.keys.toSet.intersect(senseInfoDeps.keys.toSet)
 
         for (sense <- senseInfoCoocs.keys) {
             // we simply ignore the (1/N_w) factor here, as it is constant for all senses
@@ -117,7 +118,7 @@ object WSDEvaluation {
         //var atLeastOneFeatureFound = false
         // p(s|f1..fn) = 1/p(f1..fn) * p(s) * p(f1|s) * .. * p(fn|s)
         // where 1/p(f1..fn) is ignored as it is equal for all senses
-        for (sense <- senseInfoCoocs.keys) {
+        for (sense <- senses) {
             val featureSenseCounts = senseInfoCoocs(sense)._3
             for (feature <- contextFeatures) {
                 // Smoothing for previously unseen context features
@@ -129,7 +130,7 @@ object WSDEvaluation {
                 senseProbs(sense) += math.log(featureProb)
             }
         }
-        for (sense <- senseInfoDeps.keys) {
+        for (sense <- senses) {
             val featureSenseCounts = senseInfoDeps(sense)._3
             for (feature <- contextFeatures) {
                 // Smoothing for previously unseen context features
