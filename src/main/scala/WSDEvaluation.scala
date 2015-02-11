@@ -160,8 +160,8 @@ object WSDEvaluation {
     }
 
     def main(args: Array[String]) {
-        if (args.size < 7) {
-            println("Usage: WSDEvaluation cluster-file-with-clues linked-sentences-tokenized output prob-smoothing-addend wsd-mode min-cluster-size max-num-clusters [feature-col]")
+        if (args.size < 6) {
+            println("Usage: WSDEvaluation cluster-file-with-clues linked-sentences-tokenized output prob-smoothing-addend wsd-mode [feature-col]")
             return
         }
 
@@ -173,9 +173,9 @@ object WSDEvaluation {
         val outputFile = args(2)
         val alpha = args(3).toDouble
         val wsdMode = WSDMode.withName(args(4))
-        val minClusterSize = args(5).toInt
-        val maxNumClusters = args(6).toInt
-        val featureCol = if (args.size > 7) args(7).toInt else 0
+        //val minClusterSize = args(5).toInt
+        //val maxNumClusters = args(6).toInt
+        val featureCol = args(5).toInt
         //val numFeatures = args(3).toInt
         //val minPMI = args(4).toDouble
         //val multiplyScores = args(5).toBoolean
@@ -190,10 +190,10 @@ object WSDEvaluation {
         val clustersWithClues:RDD[(String, Map[Int, (Double, Int, Map[String, Double])])] = clusterFile
             .map(line => line.split("\t"))
             .map({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, sense.toInt, senseCount.toDouble, simWords.split("  "), featuresWithValues.split("  "))})
-            .filter({case (lemma, sense, senseCount, simWords, featuresWithValues) => simWords.size >= minClusterSize})
+            //.filter({case (lemma, sense, senseCount, simWords, featuresWithValues) => simWords.size >= minClusterSize})
             .map({case (lemma, sense, senseCount, simWords, featuresWithValues) => (lemma, (sense, (senseCount, simWords.size, computeFeatureProbs(lemma, featuresWithValues, simWords.size, senseCount))))})
             .groupByKey()
-            .mapValues(clusters => pruneClusters(clusters, maxNumClusters).toMap)
+            .mapValues(clusters => /*pruneClusters(clusters, maxNumClusters)*/clusters.toMap)
 
         val sentLinkedTokenizedContextualized = sentLinkedTokenized
             .join(clustersWithClues)
