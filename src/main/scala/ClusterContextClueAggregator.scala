@@ -5,14 +5,14 @@ import org.apache.spark.rdd._
 
 object ClusterContextClueAggregator {
     def main(args: Array[String]) {
-        if (args.size < 5) {
-            println("Usage: ClusterContextClueAggregator cluster-file word-counts feature-counts word-feature-counts output_suffix [min. wfc] [wordlist]")
+        if (args.size < 6) {
+            println("Usage: ClusterContextClueAggregator cluster-file word-counts feature-counts word-feature-counts output_suffix num_sim_words [min. wfc] [wordlist]")
             return
         }
 
-        val t_wfc = if (args.length > 5) args(5).toDouble else 0.0
+        val t_wfc = if (args.length > 6) args(6).toDouble else 0.0
 
-        val words:Set[String] = if (args.length > 6) args(6).split(",").toSet else null
+        val words:Set[String] = if (args.length > 7) args(7).split(",").toSet else null
 
         val conf = new SparkConf().setAppName("ClusterContextClueAggregator")
         val sc = new SparkContext(conf)
@@ -22,6 +22,7 @@ object ClusterContextClueAggregator {
         val featureCountFile = sc.textFile(args(2))
         val wordFeatureCountFile = sc.textFile(args(3))
         val outputSuffix = args(4)
+        val numSimWords = args(5).toInt
         val outputFile = args(0) + "__" + outputSuffix
 
         val clusterSimWords:RDD[((String, String), (Array[(String, Double)], Double))] = clusterFile
@@ -29,15 +30,16 @@ object ClusterContextClueAggregator {
             .map(cols => ((cols(0),
                            cols(1) + "\t" + cols(2)),
                            cols(3).split("  ")
+                                  .take(numSimWords)
                                   .map(wordWithSim => Util.splitLastN(wordWithSim, ':', 2))
                                   .map({case Array(word, sim) => (word, sim.toDouble)})))
             .filter({case ((word, sense), simWords) => words == null || words.contains(word)})
             .map({case ((word, sense), simWords) => ((word, sense), (simWords, simWords.map(_._2).sum))})
             .cache()
 
-        val clusterSimSums:RDD[((String, String), Double)] = clusterSimWords
+        /*val clusterSimSums:RDD[((String, String), Double)] = clusterSimWords
             .map({case ((word, sense), (simWords, simSum)) => ((word, sense), simSum)})
-            .cache()
+            .cache()*/
 
         val wordCounts:RDD[(String, Long)] = wordCountFile
             .map(line => line.split("\t"))
@@ -61,19 +63,19 @@ object ClusterContextClueAggregator {
 
         val wordSenseCounts = clusterWords
             .join(wordCounts)
-            .map({case (simWord, ((word, sim, sense, simSum), wc)) => ((word, sense), wc*sim)})
+            .map({case (simWord, ((word, sim, sense, simSum), wc)) => ((word, sense), wc)})
             .reduceByKey(_+_)
-            .join(clusterSimSums)
-            .mapValues({case (wcSum, simSum) => wcSum/simSum})
+            //.join(clusterSimSums)
+            //.mapValues({case (wcSum, simSum) => wcSum/simSum})
 
         clusterWords
             .join(wordFeatures)
-            .map({case (simWord, ((word, sim, sense, numSimWords), (feature, wc, fc, wfc))) => ((word, sense, feature), sim*(wfc/wc.toDouble))})
+            .map({case (simWord, ((word, sim, sense, simSum), (feature, wc, fc, wfc))) => ((word, sense, feature), (wfc, wc))})
             // Pretend cluster words are replaced with the same placeholder word and combine their word-feature counts:
-            .reduceByKey(_+_)
-            .map({case ((word, sense, feature), pSum) => ((word, sense), (feature, pSum))})
-            .join(clusterSimSums)
-            .map({case ((word, sense), ((feature, pSum), simSum)) => ((word, sense), (feature, pSum/simSum))})
+            .reduceByKey({case ((a1, a2), (b1, b2)) => (a1+a2,b1+b2)})
+            //.map({case ((word, sense, feature), pSum) => ((word, sense), (feature, pSum))})
+            //.join(clusterSimSums)
+            .map({case ((word, sense, feature), (wfcSum, wcSum)) => ((word, sense), (feature, wfcSum/wcSum.toDouble))})
             .groupByKey()
             .join(wordSenseCounts)
             .map({case ((word, sense), (senseFeatureProbs, senseCount)) => ((word, sense), (senseCount, senseFeatureProbs.toList.sortBy(_._2).reverse))})
