@@ -120,7 +120,7 @@ object WSDEvaluation {
         // where 1/p(f1..fn) is ignored as it is equal for all senses
         for (sense <- senses) {
             val featureSenseProbsCoocs = senseInfoCoocs(sense)._3
-            val featureSenseProbsDeps = senseInfoCoocs(sense)._3
+            val featureSenseProbsDeps = senseInfoDeps(sense)._3
             for (feature <- contextFeatures) {
                 // Smoothing for previously unseen context features
                 var featureProb = alpha
