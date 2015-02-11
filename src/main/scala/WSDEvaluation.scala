@@ -181,7 +181,7 @@ object WSDEvaluation {
         //val multiplyScores = args(5).toBoolean
 
         val sentLinkedTokenized = sentFile
-            .map(line => line.split("\t"))
+            .map(line => line.split("\t", -1)) // -1 means "do not drop empty entries"
             .zipWithIndex()               // (lemma,       (sentId, target,      features))
             .map({case (sentLine, sentId) => (sentLine(0), (sentId, sentLine(1), sentLine(2+featureCol).split(" ")))})
             .cache()
