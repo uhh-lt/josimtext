@@ -183,7 +183,7 @@ object WSDEvaluation {
         val sentLinkedTokenized = sentFile
             .map(line => line.split("\t"))
             .zipWithIndex()               // (lemma,       (sentId, target,      features))
-            .map({case (sentLine, sentId) => (sentLine(0), (sentId, sentLine(1), sentLine(featureCol).split(" ")))})
+            .map({case (sentLine, sentId) => (sentLine(0), (sentId, sentLine(1), sentLine(2+featureCol).split(" ")))})
             .cache()
 
         // (lemma, (sense -> (feature -> prob)))
