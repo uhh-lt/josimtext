@@ -37,9 +37,9 @@ object ClusterContextClueAggregator {
             .map({case ((word, sense), simWords) => ((word, sense), (simWords, simWords.map(_._2).sum))})
             .cache()
 
-        /*val clusterSimSums:RDD[((String, String), Double)] = clusterSimWords
+        val clusterSimSums:RDD[((String, String), Double)] = clusterSimWords
             .map({case ((word, sense), (simWords, simSum)) => ((word, sense), simSum)})
-            .cache()*/
+            .cache()
 
         val wordCounts:RDD[(String, Long)] = wordCountFile
             .map(line => line.split("\t"))
@@ -63,19 +63,19 @@ object ClusterContextClueAggregator {
 
         val wordSenseCounts = clusterWords
             .join(wordCounts)
-            .map({case (simWord, ((word, sim, sense, simSum), wc)) => ((word, sense), wc)})
+            .map({case (simWord, ((word, sim, sense, simSum), wc)) => ((word, sense), wc*sim)})
             .reduceByKey(_+_)
-            //.join(clusterSimSums)
-            //.mapValues({case (wcSum, simSum) => wcSum/simSum})
+            .join(clusterSimSums)
+            .mapValues({case (wcSum, simSum) => wcSum/simSum})
 
         clusterWords
             .join(wordFeatures)
-            .map({case (simWord, ((word, sim, sense, simSum), (feature, wc, fc, wfc))) => ((word, sense, feature), wfc)})
+            .map({case (simWord, ((word, sim, sense, simSum), (feature, wc, fc, wfc))) => ((word, sense, feature), wfc.toDouble/wc*sim)})
             // Pretend cluster words are replaced with the same placeholder word and combine their word-feature counts:
             .reduceByKey(_+_)
-            //.map({case ((word, sense, feature), pSum) => ((word, sense), (feature, pSum))})
-            //.join(clusterSimSums)
-            .map({case ((word, sense, feature), wfcSum) => ((word, sense), (feature, wfcSum))})
+            .map({case ((word, sense, feature), pSum) => ((word, sense), (feature, pSum))})
+            .join(clusterSimSums)
+            .map({case ((word, sense), ((feature, pSum), simSum)) => ((word, sense), (feature, pSum/simSum))})
             .join(wordSenseCounts)
             .map({case ((word, sense), ((feature, wfcSum), senseCount)) => ((word, sense), (feature, wfcSum / senseCount.toDouble))})
             .groupByKey()
