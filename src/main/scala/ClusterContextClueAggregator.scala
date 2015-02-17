@@ -70,14 +70,12 @@ object ClusterContextClueAggregator {
 
         clusterWords
             .join(wordFeatures)
-            .map({case (simWord, ((word, sim, sense, simSum), (feature, wc, fc, wfc))) => ((word, sense, feature), wfc.toDouble/wc*sim)})
+            .map({case (simWord, ((word, sim, sense, simSum), (feature, wc, fc, wfc))) => ((word, sense, feature), sim*(wfc/wc.toDouble))})
             // Pretend cluster words are replaced with the same placeholder word and combine their word-feature counts:
             .reduceByKey(_+_)
             .map({case ((word, sense, feature), pSum) => ((word, sense), (feature, pSum))})
             .join(clusterSimSums)
             .map({case ((word, sense), ((feature, pSum), simSum)) => ((word, sense), (feature, pSum/simSum))})
-            .join(wordSenseCounts)
-            .map({case ((word, sense), ((feature, wfcSum), senseCount)) => ((word, sense), (feature, wfcSum / senseCount.toDouble))})
             .groupByKey()
             .join(wordSenseCounts)
             .map({case ((word, sense), (senseFeatureProbs, senseCount)) => ((word, sense), (senseCount, senseFeatureProbs.toList.sortBy(_._2).reverse))})
