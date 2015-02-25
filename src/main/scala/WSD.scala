@@ -34,7 +34,7 @@ object WSD {
             // we simply ignore the (1/N_w) factor here, as it is constant for all senses
             val senseCount = senseInfoCoocs(sense)._1 // * (1/N_w)
             //val clusterSize = senseInfo(sense)._2
-            if (wsdMode == WSDMode.Product) {
+            if (wsdMode == WSDMode.Product && usePriorProbs) {
                 senseProbs(sense) = math.log(senseCount)
             } else {
                 senseProbs(sense) = 0
