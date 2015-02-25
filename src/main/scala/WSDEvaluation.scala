@@ -80,86 +80,8 @@ object WSDEvaluation {
         2*I / (H1 + H2)
     }
 
-    def computeFeatureValues(word:String, featureValues:String, clusterSize:Int): (String, Double) = {
-        val featureArr = Util.splitLastN(featureValues, ':', 2)
-        val feature = featureArr(0)
-        if (featureArr.length != 2)
-            return null
-        val prob     = featureArr(1).toDouble // P(c|s_k*)
-        if (feature.equals(word))
-            return null
-        (feature, prob)
-    }
-
-    def computeFeatureProbs(word:String, featuresWithValues:Array[String], clusterSize:Int, senseCount:Double): Map[String, Double] = {
-        val res = featuresWithValues
-            .map(featureValues => computeFeatureValues(word, featureValues, clusterSize))
-            .filter(_ != null)
-            //.sortBy({case (feature, (sfc, fc)) => (sfc * sfc)/(fc * senseCount)})
-            //.reverse
-            //.take(1000)
-        res.toMap
-    }
-
-    def chooseSense(contextFeatures:Set[String], senseInfoCoocs:Map[Int, (Double, Int, Map[String, Double])], senseInfoDeps:Map[Int, (Double, Int, Map[String, Double])], alpha:Double, wsdMode:WSDMode.WSDMode):Int = {
-        val senseProbs = collection.mutable.Map[Int, Double]() // Probabilities to compute
-        val senses = if (senseInfoDeps != null) senseInfoCoocs.keys.toSet.intersect(senseInfoDeps.keys.toSet) else senseInfoCoocs.keys
-
-        for (sense <- senseInfoCoocs.keys) {
-            // we simply ignore the (1/N_w) factor here, as it is constant for all senses
-            val senseCount = senseInfoCoocs(sense)._1 // * (1/N_w)
-            //val clusterSize = senseInfo(sense)._2
-            if (wsdMode == WSDMode.Product) {
-                senseProbs(sense) = math.log(senseCount)
-            } else {
-                senseProbs(sense) = 0
-            }
-        }
-        //var atLeastOneFeatureFound = false
-        // p(s|f1..fn) = 1/p(f1..fn) * p(s) * p(f1|s) * .. * p(fn|s)
-        // where 1/p(f1..fn) is ignored as it is equal for all senses
-        for (sense <- senses) {
-            val featureSenseProbsCoocs = senseInfoCoocs(sense)._3
-            val featureSenseProbsDeps = if (senseInfoDeps != null) senseInfoDeps(sense)._3 else Map[String, Double]()
-            for (feature <- contextFeatures) {
-                // Smoothing for previously unseen context features
-                var featureProb = alpha
-                if (featureSenseProbsCoocs.contains(feature)) {
-                    //atLeastOneFeatureFound = true
-                    featureProb += featureSenseProbsCoocs(feature)
-                } else if (featureSenseProbsDeps.contains(feature)) {
-                    //atLeastOneFeatureFound = true
-                    featureProb += featureSenseProbsDeps(feature)
-                }
-                senseProbs(sense) += math.log(featureProb)
-            }
-        }
-
-        // return index of most probable sense (if no feature overlap, equals sense with highest prior prob)
-        //if (atLeastOneFeatureFound)
-            senseProbs.toList.sortBy(_._2).last._1
-        //else
-        //    -1
-    }
-
-    def computeMatchingScore[T](matchingCountsSorted:Array[(T, Int)]):(Int, Int) = {
-        val countSum = matchingCountsSorted.map(matchCount => matchCount._2).sum
-        // return "highest count" / "sum of all counts"
-        (matchingCountsSorted.head._2, countSum)
-    }
-
-    def mappingToClusters[A, B](mapping:Iterable[(A, B)]):Seq[Set[A]] = {
-        mapping.groupBy(_._2)
-               .toSeq
-               .map({case (b,aAndBs) => aAndBs.map(_._1).toSet})
-    }
-
-    def pruneClusters[C](clusters:Iterable[(Int, (Double, Int, C))], maxNumClusters:Int):Iterable[(Int, (Double, Int, C))] = {
-        clusters.toList.sortBy({case (sense, (senseCount, clusterSize, _)) => clusterSize}).reverse.take(maxNumClusters)
-    }
-
     def main(args: Array[String]) {
-        if (args.size < 5) {
+        if (args.size < 6) {
             println("Usage: WSDEvaluation clusters-with-coocs clusters-with-deps linked-sentences-tokenized output prob-smoothing-addend wsd-mode")
             return
         }
@@ -168,11 +90,12 @@ object WSDEvaluation {
         val sc = new SparkContext(conf)
 
         val clusterFileCoocs = sc.textFile(args(0))
-        val clusterFileDeps = if (args.size == 6) sc.textFile(args(1)) else null
-        val sentFile = sc.textFile(args(args.size - 4))
-        val outputFile = args(args.size - 3)
-        val alpha = args(args.size - 2).toDouble
-        val wsdMode = WSDMode.withName(args(args.size - 1))
+        val clusterFileDeps = if (args.size == 7) sc.textFile(args(1)) else null
+        val sentFile = sc.textFile(args(args.size - 5))
+        val outputFile = args(args.size - 4)
+        val alpha = args(args.size - 3).toDouble
+        val wsdMode = WSDMode.withName(args(args.size - 2))
+        val usePriorProbs:Boolean = args(args.size - 1).equals("y")
         //val minClusterSize = args(5).toInt
         //val maxNumClusters = args(6).toInt
         //val featureCol = args(5).toInt
@@ -191,7 +114,7 @@ object WSDEvaluation {
             .map(line => line.split("\t"))
             .map({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, sense.toInt, senseCount.toDouble, simWords.split("  "), featuresWithValues.split("  "))})
             //.filter({case (lemma, sense, senseCount, simWords, featuresWithValues) => simWords.size >= minClusterSize})
-            .map({case (lemma, sense, senseCount, simWords, featuresWithValues) => (lemma, (sense, (senseCount, simWords.size, computeFeatureProbs(lemma, featuresWithValues, simWords.size, senseCount))))})
+            .map({case (lemma, sense, senseCount, simWords, featuresWithValues) => (lemma, (sense, (senseCount, simWords.size, WSD.computeFeatureProbs(lemma, featuresWithValues, simWords.size, senseCount))))})
             .groupByKey()
             .mapValues(clusters => /*pruneClusters(clusters, maxNumClusters)*/clusters.toMap)
 
@@ -202,7 +125,7 @@ object WSDEvaluation {
                 .map(line => line.split("\t"))
                 .map({ case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, sense.toInt, senseCount.toDouble, simWords.split("  "), featuresWithValues.split("  "))})
                 //.filter({case (lemma, sense, senseCount, simWords, featuresWithValues) => simWords.size >= minClusterSize})
-                .map({ case (lemma, sense, senseCount, simWords, featuresWithValues) => (lemma, (sense, (senseCount, simWords.size, computeFeatureProbs(lemma, featuresWithValues, simWords.size, senseCount))))})
+                .map({ case (lemma, sense, senseCount, simWords, featuresWithValues) => (lemma, (sense, (senseCount, simWords.size, WSD.computeFeatureProbs(lemma, featuresWithValues, simWords.size, senseCount))))})
                 .groupByKey()
                 .mapValues(clusters => /*pruneClusters(clusters, maxNumClusters)*/ clusters.toMap)
         }
@@ -212,24 +135,24 @@ object WSDEvaluation {
             sentLinkedTokenizedContextualized = sentLinkedTokenized
                 .join(clustersWithCoocs)
                 .join(clustersWithDeps)
-                .map({case (lemma, (((sentId, target, tokens), senseInfoCoocs), senseInfoDeps)) => (lemma, sentId, target, chooseSense(tokens.toSet, senseInfoCoocs, senseInfoDeps, alpha, wsdMode), tokens)})
+                .map({case (lemma, (((sentId, target, tokens), senseInfoCoocs), senseInfoDeps)) => (lemma, sentId, target, WSD.chooseSense(tokens.toSet, senseInfoCoocs, senseInfoDeps, alpha, wsdMode, usePriorProbs), tokens)})
                 .cache()
         } else {
             sentLinkedTokenizedContextualized = sentLinkedTokenized
                 .join(clustersWithCoocs)
-                .map({case (lemma, ((sentId, target, tokens), senseInfoCoocs)) => (lemma, sentId, target, chooseSense(tokens.toSet, senseInfoCoocs, null, alpha, wsdMode), tokens)})
+                .map({case (lemma, ((sentId, target, tokens), senseInfoCoocs)) => (lemma, sentId, target, WSD.chooseSense(tokens.toSet, senseInfoCoocs, null, alpha, wsdMode, usePriorProbs), tokens)})
                 .cache()
         }
 
         val goldClustering = sentLinkedTokenizedContextualized
             .map({case (lemma, sentId, target, sense, tokens) => ("NMI", (sentId, (lemma, target)))})
             .groupByKey()
-            .mapValues(mappingToClusters)
+            .mapValues(WSD.mappingToClusters)
 
         val testClustering = sentLinkedTokenizedContextualized
             .map({case (lemma, sentId, target, sense, tokens) => ("NMI", (sentId, (lemma, sense)))})
             .groupByKey()
-            .mapValues(mappingToClusters)
+            .mapValues(WSD.mappingToClusters)
 
         val nmiScores = goldClustering.join(testClustering)
             .mapValues(clusterings => nmi(clusterings._1, clusterings._2, 100000))
@@ -260,7 +183,7 @@ object WSDEvaluation {
             .saveAsTextFile(outputFile + "/TargetsPerSense")
 
         val targetsPerSenseResults = targetsPerSense
-            .map({case ((lemma, sense), targetCounts) => (lemma, computeMatchingScore(targetCounts))})
+            .map({case ((lemma, sense), targetCounts) => (lemma, WSD.computeMatchingScore(targetCounts))})
             .reduceByKey({case ((correct1, total1), (correct2, total2)) => (correct1+correct2, total1+total2)})
             .cache()
 
@@ -288,7 +211,7 @@ object WSDEvaluation {
             .saveAsTextFile(outputFile + "/SensesPerTarget")
 
         val sensesPerTargetResults = sensesPerTarget
-            .map({case ((lemma, target), senseCounts) => (lemma, computeMatchingScore(senseCounts))})
+            .map({case ((lemma, target), senseCounts) => (lemma, WSD.computeMatchingScore(senseCounts))})
             .reduceByKey({case ((correct1, total1), (correct2, total2)) => (correct1+correct2, total1+total2)})
             .cache()
 

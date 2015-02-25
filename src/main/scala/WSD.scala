@@ -26,7 +26,7 @@ object WSD {
         res.toMap
     }
 
-    def chooseSense(contextFeatures:Set[String], senseInfoCoocs:Map[Int, (Double, Int, Map[String, Double])], senseInfoDeps:Map[Int, (Double, Int, Map[String, Double])], alpha:Double, wsdMode:WSDMode.WSDMode):Int = {
+    def chooseSense(contextFeatures:Set[String], senseInfoCoocs:Map[Int, (Double, Int, Map[String, Double])], senseInfoDeps:Map[Int, (Double, Int, Map[String, Double])], alpha:Double, wsdMode:WSDMode.WSDMode, usePriorProbs:Boolean):Int = {
         val senseProbs = collection.mutable.Map[Int, Double]() // Probabilities to compute
         val senses = if (senseInfoDeps != null) senseInfoCoocs.keys.toSet.intersect(senseInfoDeps.keys.toSet) else senseInfoCoocs.keys
 
@@ -84,24 +84,23 @@ object WSD {
     }
 
     def main(args: Array[String]) {
-        if (args.size < 5) {
+        if (args.size < 6) {
             println("Usage: WSDEvaluation clusters-with-coocs clusters-with-deps linked-sentences-tokenized output prob-smoothing-addend wsd-mode")
             return
         }
-
-        // TODO: Options for
-        // TODO: - whether to take into account the prior probability
-        // TODO: - weighting of similar words (e.g.: depending on rank, depending on similarity; both of these to the power of X)
 
         val conf = new SparkConf().setAppName("WSDEvaluation")
         val sc = new SparkContext(conf)
 
         val clusterFileCoocs = sc.textFile(args(0))
-        val clusterFileDeps = if (args.size == 6) sc.textFile(args(1)) else null
-        val sentFile = sc.textFile(args(args.size - 4))
-        val outputFile = args(args.size - 3)
-        val alpha = args(args.size - 2).toDouble
-        val wsdMode = WSDMode.withName(args(args.size - 1))
+        val clusterFileDeps = if (args.size == 7) sc.textFile(args(1)) else null
+        val sentFile = sc.textFile(args(args.size - 5))
+        val outputFile = args(args.size - 4)
+        val alpha = args(args.size - 3).toDouble
+        val wsdMode = WSDMode.withName(args(args.size - 2))
+        val usePriorProbs:Boolean = args(args.size - 1).equals("y")
+        //val useRankWeight:Boolean = args(args.size - 2).equals("rank")
+        //val weightExponent:Float = args(args.size - 1).toFloat
         //val minClusterSize = args(5).toInt
         //val maxNumClusters = args(6).toInt
         //val featureCol = args(5).toInt
@@ -141,12 +140,12 @@ object WSD {
             sentLinkedTokenizedContextualized = sentLinkedTokenized
                 .join(clustersWithCoocs)
                 .join(clustersWithDeps)
-                .map({case (lemma, (((sentId, target, tokens), senseInfoCoocs), senseInfoDeps)) => (lemma, sentId, target, chooseSense(tokens.toSet, senseInfoCoocs, senseInfoDeps, alpha, wsdMode), tokens)})
+                .map({case (lemma, (((sentId, target, tokens), senseInfoCoocs), senseInfoDeps)) => (lemma, sentId, target, chooseSense(tokens.toSet, senseInfoCoocs, senseInfoDeps, alpha, wsdMode, usePriorProbs), tokens)})
                 .cache()
         } else {
             sentLinkedTokenizedContextualized = sentLinkedTokenized
                 .join(clustersWithCoocs)
-                .map({case (lemma, ((sentId, target, tokens), senseInfoCoocs)) => (lemma, sentId, target, chooseSense(tokens.toSet, senseInfoCoocs, null, alpha, wsdMode), tokens)})
+                .map({case (lemma, ((sentId, target, tokens), senseInfoCoocs)) => (lemma, sentId, target, chooseSense(tokens.toSet, senseInfoCoocs, null, alpha, wsdMode, usePriorProbs), tokens)})
                 .cache()
         }
 
