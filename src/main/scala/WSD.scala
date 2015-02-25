@@ -89,6 +89,10 @@ object WSD {
             return
         }
 
+        // TODO: Options for
+        // TODO: - whether to take into account the prior probability
+        // TODO: - weighting of similar words (e.g.: depending on rank, depending on similarity; both of these to the power of X)
+
         val conf = new SparkConf().setAppName("WSDEvaluation")
         val sc = new SparkContext(conf)
 
