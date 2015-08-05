@@ -72,11 +72,24 @@ TEXT_PATH WSI_OUT/sentences-deps-coocs
 - holing.coocs --> whether to write out coocs (counts)
 - mapred.max.split.size=1000000 --> one split is 1MB
 
+Alternatively use the script: https://github.com/tudarmstadt-lt/joint/blob/master/run-nsi-hadoop.sh
+
 Compute DT (noun-sense-induction-scala)
 -----------
 
 ```
-spark-submit --num-executors 260 --master yarn-cluster --queue shortrunning --driver-memory 7g --executor-memory 1g --class WordSimFromCounts WSI_OUT/sentences-deps-coocs/DepWF-* WSI_OUT/sentences-deps-coocs/W-* WSI_OUT/sentences-deps-coocs/DepF-* WSI_OUT/wordsim 100 0.0 2 10 2 LMI 3 100 100
+spark-submit 
+--num-executors 260
+--master yarn-cluster
+--queue shortrunning
+--driver-memory 7g
+--executor-memory 1g
+--class WordSimFromCounts
+WSI_OUT/sentences-deps-coocs/DepWF-*
+WSI_OUT/sentences-deps-coocs/W-*
+WSI_OUT/sentences-deps-coocs/DepF-*
+WSI_OUT/wordsim
+100 0.0 2 10 2 LMI 3 100 100
 ```
 
 - 100 --> compute 100 similar words per word
@@ -88,6 +101,8 @@ spark-submit --num-executors 260 --master yarn-cluster --queue shortrunning --dr
 - 3 --> round all similarities to 3 decimal places
 - 100 --> use only 100 most significant features per word
 - 100 --> compute only 100 most similar words per word
+
+Alternatively use: https://github.com/tudarmstadt-lt/joint/blob/master/run-nsi-spark.sh
 
 Sense Clustering (chinese-whispers)
 -------
