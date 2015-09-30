@@ -2,15 +2,13 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.rdd._
 import org.apache.spark.{SparkConf, SparkContext}
 
-
 object ClusterForWSDOptimizer {
-
     def computeFeatureValues(word:String, featureValues:String, clusterSize:Int): (String, Double) = {
         val featureArr = Util.splitLastN(featureValues, ':', 2)
         val feature = featureArr(0)
         if (featureArr.length != 2)
             return null
-        val prob     = featureArr(1).toDouble // P(c|s_k*)
+        val prob = featureArr(1).toDouble // P(c|s_k*)
         if (feature.equals(word))
             return null
         (feature, prob)
@@ -91,13 +89,6 @@ object ClusterForWSDOptimizer {
         val p = args(1).toInt
         val simThreshold = args(2).toDouble
         val outputFile = args(0) + "__p" + p + "__s" + simThreshold
-
-        /*val featureCounts = featureFile
-            .map(line => line.split("\t"))
-            .map({case Array(word, count) => (word, count.toInt)})
-            .filter({case (word, count) => count >= 2})
-            .collect()
-            .toMap*/
 
         // (lemma, (sense -> (feature -> prob)))
         val clustersWithClues = clusterFile

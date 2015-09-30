@@ -85,7 +85,7 @@ object WSD {
 
     def main(args: Array[String]) {
         if (args.size < 6) {
-            println("Usage: WSDEvaluation clusters-with-coocs clusters-with-deps linked-sentences-tokenized output prob-smoothing-addend wsd-mode")
+            println("Usage: WSDEvaluation clusters-with-coocs clusters-with-deps linked-sentences-tokenized output prob-smoothing-addend wsd-mode use-prior-probs")
             return
         }
 
@@ -108,10 +108,12 @@ object WSD {
         //val minPMI = args(4).toDouble
         //val multiplyScores = args(5).toBoolean
 
+        Util.delete(outputFile)
+
         val sentLinkedTokenized = sentFile
             .map(line => line.split("\t", -1)) // -1 means "do not drop empty entries"
-            .zipWithIndex()               // (lemma,       (sentId, target,      features))
-            .map({case (sentLine, sentId) => (sentLine(0), (sentId, sentLine(1), sentLine(2).split(" ") ++ sentLine(3).split(" ")))})
+            .zipWithIndex()
+            .map({case (sentLine, sentId) => (sentLine(0), (sentId, sentLine(1), sentLine(2).split(" ") ++ sentLine(3).split(" ")))})  // (lemma, (sentId, target, features))
             .cache()
 
         // (lemma, (sense -> (feature -> prob)))
