@@ -1,7 +1,54 @@
+import java.io.{IOException, File}
+
 /**
  * Utility functions
  */
 object Util {
+
+  def listFilesSafely(file: File): Seq[File] = {
+    if (file.exists()) {
+      val files = file.listFiles()
+      if (files == null) {
+        throw new IOException("Failed to list files for dir: " + file)
+      }
+      files
+    } else {
+      List()
+    }
+  }
+
+  def delete(filePath: String) {
+    deleteRecursively(new File(filePath))
+  }
+
+  def deleteRecursively(file: File) {
+    if (file != null) {
+      try {
+        if (file.isDirectory ) {
+          var savedIOException: IOException = null
+          for (child <- listFilesSafely(file)) {
+            try {
+              deleteRecursively(child)
+            } catch {
+              case ioe: IOException => savedIOException = ioe
+            }
+          }
+          if (savedIOException != null) {
+            throw savedIOException
+          }
+
+        }
+      } finally {
+        if (!file.delete()) {
+          if (file.exists()) {
+            throw new IOException("Failed to delete: " + file.getAbsolutePath)
+          }
+        }
+      }
+    }
+  }
+
+
     /**
      * Splits a string into at most n parts, given del as delimitor. Occurences of del are handled from right to left,
      * leaving out remaining occurrences if n splits have already been found.

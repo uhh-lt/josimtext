@@ -68,7 +68,7 @@ object WordSimUtil {
         val wordFeaturesOccurrences = file
             .map(line => line.split("\t"))
             .map({case Array(word, feature, dataset, wordPos, featurePos) => (word, feature, dataset.hashCode, wordPos, featurePos)
-        case _ => ("BROKEN_LINE", "BROKEN_LINE", "BROKEN_LINE", "BROKEN_LINE", "BROKEN_LINE")})
+                  case _ => ("BROKEN_LINE", "BROKEN_LINE", "BROKEN_LINE", "BROKEN_LINE", "BROKEN_LINE")})
         //wordFeaturesOccurrences.cache()
 
         val wordFeatureCounts = wordFeaturesOccurrences
