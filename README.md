@@ -1,4 +1,4 @@
-xyzSense
+JoBimSense
 ========
 
 A system for noun sense induction and disambiguation. The system consist of several modules:
