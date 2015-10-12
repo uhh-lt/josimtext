@@ -27,9 +27,9 @@ Requirements
 Download Code & Prepare Data
 ----------------------------
 
-- https://github.com/johannessimon/noun-sense-induction
-- https://github.com/johannessimon/noun-sense-induction-scala
-- https://github.com/johannessimon/chinese-whispers
+- https://github.com/tudarmstadt-lt/noun-sense-induction
+- https://github.com/tudarmstadt-lt/noun-sense-induction-scala
+- https://github.com/tudarmstadt-lt/chinese-whispers
 - https://github.com/johannessimon/wiki-wsd-task
 - Place your raw text (one sentence per line) on HDFS. We will reference this file/folder in the following as TEXT_PATH. The HDFS output folder will be referenced as WSI_OUT
 
