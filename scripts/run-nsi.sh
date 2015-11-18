@@ -1,42 +1,53 @@
 #!/bin/bash
 
-if [ -z "$1" ] || [ -z "$2" ] ; then
+if [ -z "$1" ] || [ -z "$4" ] ; then
     echo "Run noun sense induction"
-    echo "parameters: <corpus-directory> <output-directory>"
+    echo "parameters: <corpus-directory> <output-directory> <do-calc-features> <do-calc-sims> <queue>"
+    echo "<queue>  shortrunning, longrunning"
     exit
 fi
 
+# Meta-paramters of feature extraction
+holing_type="dependency"
+lemmatize=true
+coocs=false
+maxlen=110
+nouns_only=false
+noun_noun_only=false
+semantify=true
 
-# Meta-parameters
+# Meta-parameters of similarity
 param_w=10000 # words per feature
 param_s=0.0
 param_t_wf=2
 param_t_w=10
 param_t_f=2
 param_sig=LMI
-param_r=6
-param_p=10000 # features per word
+param_r=9
+param_p=1000 # features per word
 param_l=200 # number of nearest neighbors
-maxlen=110
-all_words=false
-semantify=true
 
 # Process input params
-calc_features=true
-calc_sims=true
 corpus=$1
 output=$2
-features="$output/features-mln$maxlen-alw$all_words-sem$semantify" 
+calc_features=$3
+calc_sims=$4
+queue=$5
+features="$output/Holing-${holing_type}_Lemmatize-${lemmatize}_Coocs-${coocs}_MaxLen-${maxlen}_NounsOnly-${nouns_only}_NounNounOnly-${noun_noun_only}_Semantify-${semantify}" 
 wordsim="$output/wordsim-fpw$param_p-wpf$param_w-sig$param_sig-nnn$param_l"
-wordFeatureCountsFile=$features/DepWF-* 
+wordFeatureCountsFile=$features/WF-* 
 wordCountsFile=$features/W-* 
-featureCountsFile=$features/DepF-* 
+featureCountsFile=$features/F-* 
 
 echo "Corpus: $corpus"
 echo "Output: $output"
 echo "Features: $features"
 echo "WordSim: $wordsim"
+echo "Calc features: $calc_features"
+echo "Calc similarities: $calc_sims"
 
+echo "To start press any key, to stop press Ctrl+C"
+read -n 2
 
 # Generate word-feature matrix
 if $calc_features; then  
@@ -50,16 +61,18 @@ if $calc_features; then
         -libjars $jars \
         -Dmapreduce.reduce.failures.maxpercent=10 \
         -Dmapreduce.map.failures.maxpercent=10 \
-        -Dmapreduce.job.queuename=shortrunning \
+        -Dmapreduce.job.queuename=$queue\
         -Dmapreduce.map.java.opts=-Xmx4g \
         -Dmapreduce.map.memory.mp=4096 \
         -Dmapreduce.task.io.sort.mb=1028 \
         -Dmapred.max.split.size=1000000 \
-        -Dholing.dependencies=true \
-        -Dholing.coocs=true \
-        -Dholing.all_words=$all_words \
+        -Dholing.type=$holing_type \
+        -Dholing.coocs=$coocs \
+        -Dholing.nouns_only=$nouns_only \
         -Dholing.dependencies.semantify=$semantify \
         -Dholing.sentences.maxlength=$maxlen \
+        -Dholing.lemmatize=$lemmatize \
+        -Dholing.dependencies.noun_noun_dependencies_only=$noun_noun_only \
         $corpus \
         $features 
 fi 
@@ -71,7 +84,7 @@ if $calc_sims; then
     export HADOOP_CONF_DIR=/etc/hadoop/conf/
     export YARN_CONF_DIR=/etc/hadoop/conf.cloudera.yarn/
 
-    /home/panchenko/spark-1.2.1-bin-hadoop2.4/bin/spark-submit \
+    /usr/bin/spark-submit \
         --class=WordSimFromCounts \
         --master=yarn-cluster \
         --queue=shortrunning \
