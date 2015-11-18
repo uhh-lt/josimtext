@@ -17,15 +17,15 @@ noun_noun_only=false
 semantify=true
 
 # Meta-parameters of similarity
-param_w=10000 # words per feature
-param_s=0.0
-param_t_wf=2
-param_t_w=10
-param_t_f=2
-param_sig=LMI
-param_r=9
-param_p=1000 # features per word
-param_l=200 # number of nearest neighbors
+Significance=LMI
+WordsPerFeature=1000 
+MinFeatureSignif=0.0
+MinWordFeatureFreq=2
+MinWordFreq=5
+MinFeatureFreq=5
+SimPrecision=5
+FeaturesPerWord=1000 
+NearestNeighboursNum=200 
 
 # Process input params
 corpus=$1
@@ -33,18 +33,18 @@ output=$2
 calc_features=$3
 calc_sims=$4
 queue=$5
-features="$output/Holing-${holing_type}_Lemmatize-${lemmatize}_Coocs-${coocs}_MaxLen-${maxlen}_NounsOnly-${nouns_only}_NounNounOnly-${noun_noun_only}_Semantify-${semantify}" 
-wordsim="$output/wordsim-fpw$param_p-wpf$param_w-sig$param_sig-nnn$param_l"
+features="$output/Features__Holing-${holing_type}_Lemmatize-${lemmatize}_Coocs-${coocs}_MaxLen-${maxlen}_NounsOnly-${nouns_only}_NounNounOnly-${noun_noun_only}_Semantify-${semantify}" 
 wordFeatureCountsFile=$features/WF-* 
 wordCountsFile=$features/W-* 
 featureCountsFile=$features/F-* 
+wordsim="$output/Similarities__Significance-${Significance}_WordsPerFeature-${WordsPerFeature}_FeaturesPerWord-${FeaturesPerWord}_MinWordFreq-${MinWordFreq}_MinFeatureFreq-${MinFeatureFreq}_MinWordFeatureFreq-${MinWordFeatureFreq}_MinFeatureSignif-${MinFeatureSignif}_SimPrecision-${SimPrecision}_NearestNeighboursNum-${NearestNeighboursNum}"
 
 echo "Corpus: $corpus"
 echo "Output: $output"
-echo "Features: $features"
-echo "WordSim: $wordsim"
-echo "Calc features: $calc_features"
-echo "Calc similarities: $calc_sims"
+echo "Output features: $features"
+echo "Output similarities: $wordsim"
+echo "Calculate features: $calc_features"
+echo "Calculate similarities: $calc_sims"
 
 echo "To start press any key, to stop press Ctrl+C"
 read -n 2
@@ -96,13 +96,13 @@ if $calc_sims; then
         $wordCountsFile \
         $featureCountsFile \
         $wordsim \
-        $param_w \
-        $param_s \
-        $param_t_wf \
-        $param_t_w \
-        $param_t_f \
-        $param_sig \
-        $param_r \
-        $param_p \
-        $param_l
+        $WordsPerFeature \
+        $MinFeatureSignif \
+        $MinWordFeatureFreq \
+        $MinWordFreq \
+        $MinFeatureFreq \
+        $Significance \
+        $SimPrecision \
+        $FeaturesPerWord \
+        $NearestNeighboursNum
 fi
