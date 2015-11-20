@@ -6,8 +6,8 @@ if [ -z "$1" ] || [ -z "$4" ] ; then
 fi
 
 # Meta-paramters of feature extraction
-holing_type="dependency"
-lemmatize=true
+holing_type="trigram"
+lemmatize=false
 coocs=false
 maxlen=110
 nouns_only=false
