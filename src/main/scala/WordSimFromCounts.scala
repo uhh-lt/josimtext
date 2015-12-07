@@ -19,7 +19,7 @@ object WordSimFromCounts {
         val param_t_w = if (args.size > 7) args(7).toInt else 2
         val param_t_f = if (args.size > 8) args(8).toInt else 2
         val param_sig = if (args.size > 9) args(9) else "LMI"
-        val param_r = if (args.size > 10) args(10).toInt else 3
+        val param_r = if (args.size > 10) args(10).toInt else 5
         val param_p = if (args.size > 11) args(11).toInt else 1000
         val param_l = if (args.size > 12) args(12).toInt else 200
 
