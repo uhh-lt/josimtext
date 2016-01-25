@@ -18,17 +18,17 @@ object Util {
   }
 
   def delete(filePath: String) {
-    deleteRecursively(new File(filePath))
+    deleteFile(new File(filePath))
   }
 
-  def deleteRecursively(file: File) {
+  def deleteFile(file: File) {
     if (file != null) {
       try {
         if (file.isDirectory ) {
           var savedIOException: IOException = null
           for (child <- listFilesSafely(file)) {
             try {
-              deleteRecursively(child)
+              deleteFile(child)
             } catch {
               case ioe: IOException => savedIOException = ioe
             }
