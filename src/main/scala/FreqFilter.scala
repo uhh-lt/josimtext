@@ -2,14 +2,16 @@ import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
 import org.apache.spark.rdd.RDD
 
+
 object FreqFilter {
   def main(args: Array[String]) {
     if (args.size < 4) {
-      println("Usage: FreqFilter <freq-csv> <mwe-vocabulary-csv> <output-freq-csv> <keep-single-words>")
-      println("<freq-csv>\tpath to a csv with n-gram word counts 'word<TAB>freq'")
-      println("<mwe-vocabulary-csv>\tpath to a list of words that will be keept in the output (word must be in the list)")
+      println("Usage: FreqFilter <freq-csv> <vocabulary-csv> <output-freq-csv> <keep-single-words>")
+      println("<freq-csv>\tpath to a csv with word counts 'word<TAB>freq'")
+      println("<vocabulary-csv>\tpath to a list of words that will be kept in the output (word must be in the list). " +
+      "words in all registers will be kept if present in the vocabulary.")
       println("<output-freq-csv>\tpath to output with the filtered word counts")
-      println("<keep-single-words>\tif 'true' then all single words are kept even if they are not in the <vocabulary.csv>. default -- 'true'.")
+      println("<keep-single-words>\tif 'true' then all single words are kept even if they are not in the <vocabulary-csv>. default -- 'true'.")
       return
     }
 
@@ -27,32 +29,31 @@ object FreqFilter {
     // Set Spark configuration
     val conf = new SparkConf().setAppName("FreqFilter")
     conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    conf.set("spark.dynamicAllocation.enabled", "true")
-    conf.set("spark.shuffle.service.enabled", "true") // required to enable dynamicAllocation
+    //conf.set("spark.dynamicAllocation.enabled", "true")
+    //conf.set("spark.shuffle.service.enabled", "true") // required to enable dynamicAllocation
     val sc = new SparkContext(conf)
 
-    // Load target vocabulary in node's memory
-    val voc = sc.textFile(vocPath)
-      .map(line => line.split("\t"))
-      .map({case Array(word) => (word.toLowerCase())})
-      .collect()
-      .toSet
-
-    // Filter the freq
-    val freq = sc.textFile(freqPath)
-      .map(line => line.split("\t"))
-      .map({case Array(word, freq) => (word, freq) case _ => ("?", "?") })
-
-    val freqFiltered =
-      if(keepSingleWords){
-        freq.filter({case (word, freq) => (!word.contains(" ") || voc.contains(word.toLowerCase()) )})
-      } else {
-        freq.filter({case (word, freq) => (voc.contains(word.toLowerCase()) )})
-      }
+    // Filter
+    val voc = Util.loadVocabulary(sc, vocPath)
+    val freqFiltered = run(freqPath, voc, keepSingleWords, sc)
 
     // Save the result
     freqFiltered
       .map({case (word, freq) => word + "\t" + freq})
       .saveAsTextFile(outPath)
+  }
+
+  def run(freqPath: String, voc: Set[String], keepSingleWords: Boolean, sc: SparkContext): RDD[(String, String)] = {
+    val freq = sc.textFile(freqPath)
+      .map(line => line.split("\t"))
+      .map({ case Array(word, freq) => (word, freq) case _ => ("?", "?") })
+
+    val freqFiltered =
+      if (keepSingleWords) {
+        freq.filter({ case (word, freq) => (!word.contains(" ") || voc.contains(word.toLowerCase())) })
+      } else {
+        freq.filter({ case (word, freq) => (voc.contains(word.toLowerCase())) })
+      }
+    freqFiltered
   }
 }
