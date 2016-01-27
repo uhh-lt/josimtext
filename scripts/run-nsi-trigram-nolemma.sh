@@ -37,26 +37,47 @@ wordCountsFile=$features/W-*
 featureCountsFile=$features/F-* 
 wordsim="${features}__Significance-${Significance}_WordsPerFeature-${WordsPerFeature}_FeaturesPerWord-${FeaturesPerWord}_MinWordFreq-${MinWordFreq}_MinFeatureFreq-${MinFeatureFreq}_MinWordFeatureFreq-${MinWordFeatureFreq}_MinFeatureSignif-${MinFeatureSignif}_SimPrecision-${SimPrecision}_NearestNeighboursNum-${NearestNeighboursNum}"
 
+
+# Display job parameters to the user
 echo "Corpus: $corpus"
+if  hadoop fs -test -e $corpus  ; then
+    echo "Corpus exists: true"
+else
+    echo "Corpus exists: false"
+fi
+echo ""
+
 echo "Output: $output"
+echo ""
+
 echo "Features: $features"
-echo "Similarities: $wordsim"
 echo "Calculate features: $calc_features"
 if  hadoop fs -test -e $features ; then
     echo "Features exist: true"
 else
     echo "Features exist: false"
 fi
+echo ""
+
+echo "Similarities: $wordsim"
 echo "Calculate similarities: $calc_sims"
+wordsim=${wordsim:0:254} # to meet 255 limit of HDFS filename
 if  hadoop fs -test -e $wordsim  ; then
     echo "Similarity exist: true"
 else
     echo "Similarity exist: false"
 fi
+echo ""
+
 echo "To start press any key, to stop press Ctrl+C"
 read -n 2
 
-wordsim=${wordsim:0:254} # to meet 255 limit of HDFS filename
+# Create output directory
+if ! hadoop fs -test -e $output  ; then
+    hadoop fs -mkdir $output
+    echo "Created output: '$output'"
+fi
+
 
 # Generate word-feature matrix
 if $calc_features; then  
@@ -66,6 +87,7 @@ if $calc_features; then
             hadoop fs -rm -r $features
         fi
     fi
+    echo "Calculating features ..."
     bin=/home/panchenko/bin-hadoop
 
     jars=`echo $bin/*.jar | tr " " ","`
@@ -77,9 +99,11 @@ if $calc_features; then
         -Dmapreduce.reduce.failures.maxpercent=10 \
         -Dmapreduce.map.failures.maxpercent=10 \
         -Dmapreduce.job.queuename=$queue\
-        -Dmapreduce.map.java.opts=-Xmx4g \
-        -Dmapreduce.map.memory.mp=4096 \
-        -Dmapreduce.task.io.sort.mb=1028 \
+        -Dmapreduce.map.java.opts=-Xmx8192m \
+        -Dmapreduce.reduce.java.opts=-Xmx8192m \
+        -Dmapreduce.map.memory.mp=8192 \
+        -Dmapreduce.task.io.sort.mb=2028 \
+        -Dmapreduce.reduce.memory.mb=8192 \
         -Dmapred.max.split.size=1000000 \
         -Dholing.type=$holing_type \
         -Dholing.coocs=$coocs \
@@ -100,7 +124,7 @@ if $calc_sims; then
             hadoop fs -rmr $wordsim
         fi
     fi
-    
+    echo "Calculating similarities..." 
     bin=/home/panchenko/bin-spark
 
     export HADOOP_CONF_DIR=/etc/hadoop/conf/
@@ -109,7 +133,7 @@ if $calc_sims; then
     /usr/bin/spark-submit \
         --class=WordSimFromCounts \
         --master=yarn-cluster \
-        --queue=shortrunning \
+        --queue=$queue \
         --num-executors 50 \
         --driver-memory 8g \
         --executor-memory 8g \
