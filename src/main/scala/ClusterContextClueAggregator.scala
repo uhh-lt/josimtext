@@ -4,10 +4,16 @@ import org.apache.spark.SparkConf
 import org.apache.spark.rdd._
 
 object ClusterContextClueAggregator {
+    val MAX_SIM_WORDS_NUM = 20
+    val MAX_FEATURE_NUM = 10000
+    val MIN_WORD_FEATURE_COUNT = 0.0
+    val FEATURE_TYPE = "words"  // "deps" or "words-from-deps"
+    val LOWERCASE_WORDS_FROM_DEPS = true
+
     val stopwords = Util.getStopwords()
 
-    def keepFeature(feature:String, dependencyFeature:Boolean) = {
-        if (dependencyFeature){
+    def keepFeature(feature:String, featureType:String) = {
+        if (featureType == "deps" || featureType == "words-from-deps"){
             val (depType, srcWord, dstWord) = Util.parseDep(feature)
             if (Const.Resources.STOP_DEPENDENCIES.contains(depType) || stopwords.contains(srcWord) || stopwords.contains(dstWord)) {
                 false
@@ -19,27 +25,65 @@ object ClusterContextClueAggregator {
         }
     }
 
+    def transformFeature(feature:String, featureType:String, lowercase:Boolean=LOWERCASE_WORDS_FROM_DEPS) = {
+        var res: String = ""
+        if (featureType == "words-from-deps"){
+            val (depType, srcWord, dstWord) = Util.parseDep(feature)
+            if (srcWord == Const.HOLE || srcWord == Const.HOLE_DEPRECATED) {
+                res = dstWord
+            } else{
+                res = srcWord
+            }
+        } else {
+            res = feature
+        }
+
+        res = if (lowercase) res.trim().toLowerCase() else res.trim()
+        res
+    }
+
+    def formatFeatures(featureList: List[(String, Double)], maxFeatureNum:Int, featureType:String, target:String) = {
+        val filteredFeatureList = featureList
+          .filter({ case (feature, prob) => keepFeature(feature, featureType) })
+          .map({ case (feature, prob) => (transformFeature(feature, featureType), prob) })
+
+        if (featureType == "words-from-deps") {
+            filteredFeatureList
+              .groupBy(_._1)
+              .map({case (feature, probList) => (feature, probList.map({case (feature, prob) => prob}).sum)})
+              .filterKeys(_ != target)
+              .toList
+              .sortBy(-_._2)
+              .take(maxFeatureNum)
+        } else{
+            filteredFeatureList
+              .take(maxFeatureNum)
+        }
+   }
+
     def main(args: Array[String]) {
-        if (args.size < 6) {
-            println("Usage: ClusterContextClueAggregator cluster-file word-counts feature-counts word-feature-counts output_suffix num_sim_words dep-features [min. wfc] [wordlist]")
+        if (args.length < 5) {
+            println("Aggregates clues of word sense cluster.")
+            println("Usage: ClusterContextClueAggregator <senses> <word-counts> <feature-counts> <word-feature-counts> <output> [cluser-words-num] [dependency-features] [max-feature-num] [min-word-feature-count] [list-of-target-words]")
+            println("Example: ")
             return
         }
 
         // Initialization
-        val conf = new SparkConf().setAppName("ClusterContextClueAggregator")
-        val sc = new SparkContext(conf)
-
         val sensesPath = args(0)
         val wordsPath = args(1)
         val featuresPath = args(2)
         val wordFeaturesPath = args(3)
         val outputPath = args(4)
-        val numSimWords = args(5).toInt
-        val depFeatures = args(6).toBoolean
-        val minWordFeatureCount = if (args.length > 7) args(7).toDouble else 0.0
-        val targetWords:Set[String] = if (args.length > 8) args(8).split(",").toSet else null
-
-        Util.delete(outputPath)
+        val numSimWords = if (args.length > 5) args(5).toInt else MAX_SIM_WORDS_NUM
+        var featureType = if (args.length > 6) args(6) else FEATURE_TYPE
+        if (!Set("words", "deps", "words-from-deps").contains(featureType)) {
+            println("Warning: wrong feature type. Using 'words' feature type.")
+            featureType = "words"
+        }
+        val maxFeatureNum = if (args.length > 7) args(7).toInt else MAX_FEATURE_NUM
+        val minWordFeatureCount = if (args.length > 8) args(8).toDouble else MIN_WORD_FEATURE_COUNT
+        val targetWords:Set[String] = if (args.length > 9) args(9).split(",").toSet else null
 
         println("Senses: " + sensesPath)
         println("Words: " + wordsPath)
@@ -47,21 +91,27 @@ object ClusterContextClueAggregator {
         println("Features: " + featuresPath)
         println("Output: " + outputPath)
         println("Number of similar words from cluster: " + numSimWords)
-        println("Dependency features: " + depFeatures)
+        println("Feature type: " + featureType)
+        println("Maximum number of features: " + maxFeatureNum)
         println("Minimum word feature count: " + minWordFeatureCount)
-        println("Target words:" + targetWords)
-        // Action
+        println("Target words: " + targetWords)
 
-        val clusterSimWords = sc
+        Util.delete(outputPath)
+        val conf = new SparkConf().setAppName("ClusterContextClueAggregator")
+        val sc = new SparkContext(conf)
+
+        // Action
+        val clusterSimWords: RDD[((String, String), (Array[(String, Double)], Double))] = sc
             .textFile(sensesPath)
             .map(line => line.split("\t"))
-            .map({case Array(target, sense_id, keyword, cluster) => (target, sense_id, keyword, cluster)})
+            .map({case Array(target, sense_id, keyword, cluster) => (target, sense_id, keyword, cluster) case _ => ("?", "-1", "?", "") })
+            .filter({case (target, sense_id, keyword, cluster) => target != "?"})
             .map({case (target, sense_id, keyword, cluster) => (
                 (target, sense_id + "\t" + keyword),
                 cluster.split(Const.LIST_SEP)
                   .take(numSimWords)
                   .map(wordWithSim => Util.splitLastN(wordWithSim, Const.SCORE_SEP, 2))
-                  .map({case Array(word, sim) => (word, sim.toDouble)})
+                  .map({case Array(word, sim) => (word.trim(), sim.toDouble) case _ => ("?", 0.0)})
                   .filter({ case (word, sim) => !stopwords.contains(word) })   )})
             .filter({case ((word, sense), simWords) => targetWords == null || targetWords.contains(word)})
             .map({case ((word, sense), simWords) => ((word, sense), (simWords, simWords.map(_._2).sum))})
@@ -84,7 +134,7 @@ object ClusterContextClueAggregator {
         val clusterWords:RDD[(String, (String, Double, String, Double))] = clusterSimWords
             .flatMap({case ((word, sense), (simWordsWithSim, simSum)) => for((simWord, sim) <- simWordsWithSim) yield (simWord, (word, sim, sense, simSum))})
 
-        val wordFeatures = sc
+        val wordFeatures: RDD[(String, (String, Long, Long, Long))] = sc
             .textFile(wordFeaturesPath)
             .map(line => line.split("\t"))
             .map(cols => (cols(1), (cols(0), cols(2).toLong))) // (feature, (word, wfc))
@@ -94,15 +144,14 @@ object ClusterContextClueAggregator {
             .join(wordCounts)
             .map({case (word, ((feature, wfc, fc), wc)) => (word, (feature, wc, fc, wfc))})
 
-        val wordSenseCounts = clusterWords
+        val wordSenseCounts: RDD[((String, String), Double)] = clusterWords
             .join(wordCounts)
             .map({case (simWord, ((word, sim, sense, simSum), wc)) => ((word, sense), wc*sim)})
             .reduceByKey(_+_)
             .join(clusterSimSums)
             .mapValues({case (wcSum, simSum) => wcSum/simSum})
 
-      // Pretend cluster words are replaced with the same placeholder word and combine their word-feature counts
-      clusterWords
+        clusterWords
             .join(wordFeatures)
             .map({case (simWord, ((word, sim, sense, simSum), (feature, wc, fc, wfc))) => ((word, sense, feature), sim*(wfc/wc.toDouble))})
             .reduceByKey(_+_)
@@ -114,17 +163,18 @@ object ClusterContextClueAggregator {
             .map({case ((word, sense), (senseFeatureProbs, senseCount)) => ((word, sense), (senseCount, senseFeatureProbs.toList.sortBy(_._2).reverse))})
             .join(clusterSimWords)
             .sortByKey()
+            .cache()
             .map({case ((word, sense), ((senseCount, senseFeatureProbs), (simWordSim, simSum))) =>
                 word + "\t" +
                 sense + "\t" +
-                senseCount + "\t" +
+                "%.0f".format(senseCount) + "\t" +
                 simWordSim
                     .map({case (simWord, sim) => "%s%s%.6f".format(simWord, Const.SCORE_SEP, sim)})
                     .mkString(Const.LIST_SEP) + "\t" +
-                senseFeatureProbs
-                    .filter({case (feature, prob) => keepFeature(feature, depFeatures)})
+                formatFeatures(senseFeatureProbs, maxFeatureNum, featureType, word)
                     .map({case (feature, prob) => "%s%s%.6f".format(feature, Const.SCORE_SEP, prob)})
                     .mkString(Const.LIST_SEP)})
             .saveAsTextFile(outputPath)
+
     }
 }
