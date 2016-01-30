@@ -3,6 +3,8 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
 import org.apache.spark.rdd._
 
+import scala.util.Try
+
 object ClusterContextClueAggregator {
     val MAX_SIM_WORDS_NUM = 20
     val MAX_FEATURE_NUM = 10000
@@ -64,12 +66,15 @@ object ClusterContextClueAggregator {
     def main(args: Array[String]) {
         if (args.length < 5) {
             println("Aggregates clues of word sense cluster.")
-            println("Usage: ClusterContextClueAggregator <senses> <word-counts> <feature-counts> <word-feature-counts> <output> [cluser-words-num] [dependency-features] [max-feature-num] [min-word-feature-count] [list-of-target-words]")
-            println("Example: ")
+            println("Usage: ClusterContextClueAggregator <senses> <word-counts> <feature-counts> <word-feature-counts> <output> [cluser-words-num] [dependency-features] [max-feature-num] [min-word-feature-count] [target-words]")
+            println("Example: /Users/alex/Desktop/debug/ruby-java/senses-1k.csv-voc /Users/alex/Desktop/debug/ruby-java/W-voc /Users/alex/Desktop/debug/ruby-java/F-voc /Users/alex/Desktop/debug/ruby-java/WF-voc /Users/alex/Desktop/debug/ruby-java/senses-1k.csv-voc-clues-new3 200 words-from-deps 20 2 /")
             return
         }
 
         // Initialization
+        val conf = new SparkConf().setAppName("ClusterContextClueAggregator")
+        val sc = new SparkContext(conf)
+
         val sensesPath = args(0)
         val wordsPath = args(1)
         val featuresPath = args(2)
@@ -83,7 +88,7 @@ object ClusterContextClueAggregator {
         }
         val maxFeatureNum = if (args.length > 7) args(7).toInt else MAX_FEATURE_NUM
         val minWordFeatureCount = if (args.length > 8) args(8).toDouble else MIN_WORD_FEATURE_COUNT
-        val targetWords:Set[String] = if (args.length > 9) args(9).split(",").toSet else null
+        val targetWords:Set[String] = if (args.length > 9) Util.loadVocabulary(sc, args(9)) else Set()
 
         println("Senses: " + sensesPath)
         println("Words: " + wordsPath)
@@ -97,11 +102,9 @@ object ClusterContextClueAggregator {
         println("Target words: " + targetWords)
 
         Util.delete(outputPath)
-        val conf = new SparkConf().setAppName("ClusterContextClueAggregator")
-        val sc = new SparkContext(conf)
 
         // Action
-        val clusterSimWords: RDD[((String, String), (Array[(String, Double)], Double))] = sc
+        val clusterSimWords: RDD[((String, String), (Array[(String, Double)], Double))] = sc  // (target, sense_id), [((word, sim), sum_sum)]
             .textFile(sensesPath)
             .map(line => line.split("\t"))
             .map({case Array(target, sense_id, keyword, cluster) => (target, sense_id, keyword, cluster) case _ => ("?", "-1", "?", "") })
@@ -111,30 +114,30 @@ object ClusterContextClueAggregator {
                 cluster.split(Const.LIST_SEP)
                   .take(numSimWords)
                   .map(wordWithSim => Util.splitLastN(wordWithSim, Const.SCORE_SEP, 2))
-                  .map({case Array(word, sim) => (word.trim(), sim.toDouble) case _ => ("?", 0.0)})
+                  .map({case Array(word, sim) =>  if (Try(sim.toDouble).isSuccess) (word.trim(), sim.toDouble) else (word.trim(), 0.0) case _ => ("?", 0.0)})
                   .filter({ case (word, sim) => !stopwords.contains(word) })   )})
-            .filter({case ((word, sense), simWords) => targetWords == null || targetWords.contains(word)})
+            .filter({case ((word, sense), simWords) => targetWords.size == 0 || targetWords.contains(word)})
             .map({case ((word, sense), simWords) => ((word, sense), (simWords, simWords.map(_._2).sum))})
             .cache()
 
-        val clusterSimSums:RDD[((String, String), Double)] = clusterSimWords
+        val clusterSimSums:RDD[((String, String), Double)] = clusterSimWords  // (target, sense_id), sum_sum
             .map({case ((word, sense), (simWords, simSum)) => ((word, sense), simSum)})
             .cache()
 
-        val wordCounts:RDD[(String, Long)] = sc
+        val wordCounts:RDD[(String, Long)] = sc  // word, freq
             .textFile(wordsPath)
             .map(line => line.split("\t"))
             .map({case Array(word, freq) => (word, freq.toLong)})
 
-        val featureCounts:RDD[(String, Long)] = sc
+        val featureCounts:RDD[(String, Long)] = sc  // feature, freq
             .textFile(featuresPath)
             .map(line => line.split("\t"))
             .map({case Array(word, freq) => (word, freq.toLong)})
 
-        val clusterWords:RDD[(String, (String, Double, String, Double))] = clusterSimWords
+        val clusterWords:RDD[(String, (String, Double, String, Double))] = clusterSimWords  // word, (target, sim, sense_id, sim_sum)
             .flatMap({case ((word, sense), (simWordsWithSim, simSum)) => for((simWord, sim) <- simWordsWithSim) yield (simWord, (word, sim, sense, simSum))})
 
-        val wordFeatures: RDD[(String, (String, Long, Long, Long))] = sc
+        val wordFeatures: RDD[(String, (String, Long, Long, Long))] = sc  // word, (feature, wc, fc, wfc)
             .textFile(wordFeaturesPath)
             .map(line => line.split("\t"))
             .map(cols => (cols(1), (cols(0), cols(2).toLong))) // (feature, (word, wfc))
@@ -144,14 +147,14 @@ object ClusterContextClueAggregator {
             .join(wordCounts)
             .map({case (word, ((feature, wfc, fc), wc)) => (word, (feature, wc, fc, wfc))})
 
-        val wordSenseCounts: RDD[((String, String), Double)] = clusterWords
+        val wordSenseCounts: RDD[((String, String), Double)] = clusterWords  // (target, sense_id), count
             .join(wordCounts)
             .map({case (simWord, ((word, sim, sense, simSum), wc)) => ((word, sense), wc*sim)})
             .reduceByKey(_+_)
             .join(clusterSimSums)
             .mapValues({case (wcSum, simSum) => wcSum/simSum})
 
-        clusterWords
+        val result: RDD[((String, String), ((Double, List[(String, Double)]), (Array[(String, Double)], Double)))] = clusterWords
             .join(wordFeatures)
             .map({case (simWord, ((word, sim, sense, simSum), (feature, wc, fc, wfc))) => ((word, sense, feature), sim*(wfc/wc.toDouble))})
             .reduceByKey(_+_)
@@ -162,8 +165,8 @@ object ClusterContextClueAggregator {
             .join(wordSenseCounts)
             .map({case ((word, sense), (senseFeatureProbs, senseCount)) => ((word, sense), (senseCount, senseFeatureProbs.toList.sortBy(_._2).reverse))})
             .join(clusterSimWords)
-            .sortByKey()
-            .cache()
+
+        result
             .map({case ((word, sense), ((senseCount, senseFeatureProbs), (simWordSim, simSum))) =>
                 word + "\t" +
                 sense + "\t" +

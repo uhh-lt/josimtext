@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/noun-sense-induction-scala.iml" filepath="$PROJECT_DIR$/.idea/modules/noun-sense-induction-scala.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/noun-sense-induction-scala-build.iml" filepath="$PROJECT_DIR$/.idea/modules/noun-sense-induction-scala-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nsi-scala.iml" filepath="$PROJECT_DIR$/.idea/modules/nsi-scala.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nsi-scala-build.iml" filepath="$PROJECT_DIR$/.idea/modules/nsi-scala-build.iml" />
     </modules>
   </component>
 </project>
