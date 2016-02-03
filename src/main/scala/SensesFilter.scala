@@ -53,7 +53,6 @@ object SensesFilter {
       .map(line => line.split("\t"))
       .map({ case Array(target, sense_id, keyword, cluster) => (target, sense_id, keyword, cluster) case _ => ("?", "0", "?", "") })
       .filter({ case (target, sense_id, keyword, cluster) => (voc.contains(target.toLowerCase())) })
-      .cache()
 
     val clusterVoc = senses
       .map({ case (target, sense_id, keyword, cluster) => (cluster) })
@@ -61,7 +60,7 @@ object SensesFilter {
       .map({ case cluster => cluster.split(":")(0) })
       .distinct()
       .sortBy({ case cluster => cluster })
-      .cache()
+
     (senses, clusterVoc)
   }
 }

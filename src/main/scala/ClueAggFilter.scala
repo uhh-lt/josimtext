@@ -38,7 +38,7 @@ object ClueAggFilter {
     Util.delete(featuresOutPath)
 
     // Set Spark configuration
-    val conf = new SparkConf().setAppName("FreqFilter")
+    val conf = new SparkConf().setAppName("ClueAggFilter")
     conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
     val sc: SparkContext = new SparkContext(conf)
 
@@ -60,7 +60,7 @@ object ClueAggFilter {
       .map({case (word, feature, freq) => word + "\t" + feature + "\t" + freq})
       .saveAsTextFile(wordFeaturesOutPath)
 
-    val features = FreqFilter.run(featuresPath, featureVoc, false, sc)
+      val features = FreqFilter.run(featuresPath, featureVoc, false, sc)
     features
       .map({case (feature, freq) => feature + "\t" + freq})
       .saveAsTextFile(featuresOutPath)

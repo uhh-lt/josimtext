@@ -12,18 +12,19 @@ object ClusterContextClueAggregator {
     val FEATURE_TYPE = "words"  // "deps" or "words-from-deps"
     val LOWERCASE_WORDS_FROM_DEPS = true
 
-    val stopwords = Util.getStopwords()
+    val _stopwords = Util.getStopwords()
 
     def keepFeature(feature:String, featureType:String) = {
-        if (featureType == "deps" || featureType == "words-from-deps"){
+        if (featureType == "deps" || featureType == "words-from-deps"){  // dependency features
             val (depType, srcWord, dstWord) = Util.parseDep(feature)
-            if (Const.Resources.STOP_DEPENDENCIES.contains(depType) || stopwords.contains(srcWord) || stopwords.contains(dstWord)) {
+            if (Const.Resources.STOP_DEPENDENCIES.contains(depType) || _stopwords.contains(srcWord) || _stopwords.contains(dstWord)) {
                 false
             } else {
                 true
             }
-        } else{
-            true
+        } else { // word features, in constast to dependency features
+            val featureTrim = feature.trim()
+            !_stopwords.contains(featureTrim) && !_stopwords.contains(featureTrim.toLowerCase())
         }
     }
 
@@ -46,8 +47,8 @@ object ClusterContextClueAggregator {
 
     def formatFeatures(featureList: List[(String, Double)], maxFeatureNum:Int, featureType:String, target:String) = {
         val filteredFeatureList = featureList
-          .filter({ case (feature, prob) => keepFeature(feature, featureType) })
-          .map({ case (feature, prob) => (transformFeature(feature, featureType), prob) })
+          .filter{ case (feature, prob) => keepFeature(feature, featureType) }
+          .map{ case (feature, prob) => (transformFeature(feature, featureType), prob) }
 
         if (featureType == "words-from-deps") {
             filteredFeatureList
@@ -115,7 +116,7 @@ object ClusterContextClueAggregator {
                   .take(numSimWords)
                   .map(wordWithSim => Util.splitLastN(wordWithSim, Const.SCORE_SEP, 2))
                   .map({case Array(word, sim) =>  if (Try(sim.toDouble).isSuccess) (word.trim(), sim.toDouble) else (word.trim(), 0.0) case _ => ("?", 0.0)})
-                  .filter({ case (word, sim) => !stopwords.contains(word) })   )})
+                  .filter({ case (word, sim) => !_stopwords.contains(word) })   )})
             .filter({case ((word, sense), simWords) => targetWords.size == 0 || targetWords.contains(word)})
             .map({case ((word, sense), simWords) => ((word, sense), (simWords, simWords.map(_._2).sum))})
             .cache()
@@ -157,7 +158,7 @@ object ClusterContextClueAggregator {
         val result: RDD[((String, String), ((Double, List[(String, Double)]), (Array[(String, Double)], Double)))] = clusterWords
             .join(wordFeatures)
             .map({case (simWord, ((word, sim, sense, simSum), (feature, wc, fc, wfc))) => ((word, sense, feature), sim*(wfc/wc.toDouble))})
-            .reduceByKey(_+_)
+            .reduceByKey(_ + _)
             .map({case ((word, sense, feature), pSum) => ((word, sense), (feature, pSum))})
             .join(clusterSimSums)
             .map({case ((word, sense), ((feature, pSum), simSum)) => ((word, sense), (feature, pSum/simSum))})
@@ -165,6 +166,7 @@ object ClusterContextClueAggregator {
             .join(wordSenseCounts)
             .map({case ((word, sense), (senseFeatureProbs, senseCount)) => ((word, sense), (senseCount, senseFeatureProbs.toList.sortBy(_._2).reverse))})
             .join(clusterSimWords)
+            .sortByKey()
 
         result
             .map({case ((word, sense), ((senseCount, senseFeatureProbs), (simWordSim, simSum))) =>

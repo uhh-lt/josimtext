@@ -1,6 +1,7 @@
 import java.io.{IOException, File}
 import scala.io.{BufferedSource, Source}
 import org.apache.spark.SparkContext
+import java.nio.file.{Paths, Files}
 
 /**
  * Utility functions
@@ -8,6 +9,9 @@ import org.apache.spark.SparkContext
 object Util {
 
 
+  def exists(Path:String) = {
+      Files.exists(Paths.get(Path))
+  }
 
   /**
     * Parses dependency line "subj(@,dog)" into the tuple of strings (subj, @, dog)
