@@ -174,3 +174,32 @@ WSI_OUT/sentences-deps-coocs/W-*
 WSI_OUT/sentences-deps-coocs/DepF-*
 WSI_OUT/sentences-deps-coocs/DepWF-*
 WithDeps 10 2```
+```
+
+
+Word Sense Disambiguation
+----------------
+
+```
+spark-submit
+
+--num-executors 20 --queue shortrunning --master yarn-cluster --class WSD --driver-memory 7g --executor-memory 7g --driver-java-options "-Dspark.storage.memoryFraction=0.1 -Dspark.shuffle.memoryFraction=0.1 -Dspark.core.connection.auth.wait.timeout=3600 -Dspark.core.connection.ack.wait.timeout=3600 -Dspark.akka.timeout=3600 -Dspark.storage.blockManagerSlaveTimeoutMs=360000 -Dspark.worker.timeout=360000 -Dspark.akka.retry.wait=360000 -Dspark.task.maxFailures=1 -Dspark.serializer=org.apache.spark.serializer.KryoSerializer"
+
+target/scala-2.10/noun-sense-induction_2.10-0.0.1.jar
+<SCORED-COOC-CLUES>
+<SCORED-DEPENDENCY-CLUES>
+<INSTANCES>
+<OUTPUT>
+0.00001 Product y
+```
+
+where <SCORED-COOC-CLUES> is a path on HDFS to the first file (...WithCoocs__twf2) and <SCORED-DEPENDENCY-CLUES> a path to the second file (...WithDeps__twf2). <OUTPUT> is the output path to write the result to (also on HDFS). "0.00001" is the smoothing, "Product" indicates that scores must be multiplicated, and the "y" for yes tells the classifier to take the "prior" score into account, i.e. the average cluster word frequency.
+
+<INSTANCES> is the path of a file on HDFS containing the instances (to be sense-tagged) in the following format:
+
+```
+word <TAB> instance-id <TAB> coocs <TAB> deps
+```
+
+where instance-id is simply a unique ID for every instance, coocs is the sentence/context as a lemmatized set of words and deps is the comma-separated list of dependency features of the head word (e.g. "amod(@@,wild)").
+

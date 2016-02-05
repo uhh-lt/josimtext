@@ -2,10 +2,9 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd._
 
-object WSDMode extends Enumeration {
-    type WSDMode = Value
-    val Product, Maximum, Average = Value
-}
+import scala.util.Try
+
+
 
 object WSDEvaluation {
 
@@ -40,7 +39,8 @@ object WSDEvaluation {
     /**
      * Computes the NMI (normalized mutual information) of two clustering of the same N documents.
      * A clustering here is an aggregation of documents into multiple sets (clusters).
-     * @tparam D    Type of document representation (e.g. Int or Long as document IDs)
+      *
+      * @tparam D    Type of document representation (e.g. Int or Long as document IDs)
      * @param clustering1 First clustering
      * @param clustering2 Second clustering
      * @param N     Number of documents
@@ -114,7 +114,7 @@ object WSDEvaluation {
             .map(line => line.split("\t"))
             .map({case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, sense.toInt, senseCount.toDouble, simWords.split("  "), featuresWithValues.split("  "))})
             //.filter({case (lemma, sense, senseCount, simWords, featuresWithValues) => simWords.size >= minClusterSize})
-            .map({case (lemma, sense, senseCount, simWords, featuresWithValues) => (lemma, (sense, (senseCount, simWords.size, WSD.computeFeatureProbs(lemma, featuresWithValues, simWords.size, senseCount))))})
+            .map({case (lemma, sense, senseCount, simWords, featuresWithValues) => (lemma, (sense, (senseCount, simWords.size, WSD.loadFeatureProbs(lemma, featuresWithValues, 1000000000))))})
             .groupByKey()
             .mapValues(clusters => /*pruneClusters(clusters, maxNumClusters)*/clusters.toMap)
 
@@ -125,22 +125,22 @@ object WSDEvaluation {
                 .map(line => line.split("\t"))
                 .map({ case Array(lemma, sense, senseLabel, senseCount, simWords, featuresWithValues) => (lemma, sense.toInt, senseCount.toDouble, simWords.split("  "), featuresWithValues.split("  "))})
                 //.filter({case (lemma, sense, senseCount, simWords, featuresWithValues) => simWords.size >= minClusterSize})
-                .map({ case (lemma, sense, senseCount, simWords, featuresWithValues) => (lemma, (sense, (senseCount, simWords.size, WSD.computeFeatureProbs(lemma, featuresWithValues, simWords.size, senseCount))))})
+                .map({ case (lemma, sense, senseCount, simWords, featuresWithValues) => (lemma, (sense, (senseCount, simWords.size, WSD.loadFeatureProbs(lemma, featuresWithValues, 1000000000))))})
                 .groupByKey()
                 .mapValues(clusters => /*pruneClusters(clusters, maxNumClusters)*/ clusters.toMap)
         }
 
-        var sentLinkedTokenizedContextualized: RDD[(String, Long, String, Int, Array[String])] = null
+        var sentLinkedTokenizedContextualized: RDD[(String, Long, String, String, Array[String])] = null
         if (clustersWithDeps != null) {
             sentLinkedTokenizedContextualized = sentLinkedTokenized
                 .join(clustersWithCoocs)
                 .join(clustersWithDeps)
-                .map({case (lemma, (((sentId, target, tokens), senseInfoCoocs), senseInfoDeps)) => (lemma, sentId, target, WSD.chooseSense(tokens.toSet, senseInfoCoocs, senseInfoDeps, alpha, wsdMode, usePriorProbs), tokens)})
+                .map({case (lemma, (((sentId, target, tokens), senseInfoCoocs), senseInfoDeps)) => (lemma, sentId, target, WSD.chooseSense(tokens.toSet, senseInfoCoocs, senseInfoDeps, alpha, wsdMode, usePriorProbs).toString(), tokens)})
                 .cache()
         } else {
             sentLinkedTokenizedContextualized = sentLinkedTokenized
                 .join(clustersWithCoocs)
-                .map({case (lemma, ((sentId, target, tokens), senseInfoCoocs)) => (lemma, sentId, target, WSD.chooseSense(tokens.toSet, senseInfoCoocs, null, alpha, wsdMode, usePriorProbs), tokens)})
+                .map({case (lemma, ((sentId, target, tokens), senseInfoCoocs)) => (lemma, sentId, target, WSD.chooseSense(tokens.toSet, senseInfoCoocs, null, alpha, wsdMode, usePriorProbs).toString(), tokens)})
                 .cache()
         }
 

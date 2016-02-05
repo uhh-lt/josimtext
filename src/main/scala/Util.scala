@@ -1,9 +1,51 @@
 import java.io.{IOException, File}
+import scala.io.{BufferedSource, Source}
+import org.apache.spark.SparkContext
+import java.nio.file.{Paths, Files}
 
 /**
  * Utility functions
  */
 object Util {
+
+
+  def exists(Path:String) = {
+      Files.exists(Paths.get(Path))
+  }
+
+  /**
+    * Parses dependency line "subj(@,dog)" into the tuple of strings (subj, @, dog)
+    * */
+  def parseDep(depFeature: String) = {
+      val depRest = depFeature.split("\\(")
+      if (depRest.size == 2) {
+          val depType = depRest(0)
+          val params = depRest(1).split(",")
+          if (params.size == 2){
+              val left = params(1).substring(0, params(1).length-1)
+              val right = params(0)
+              (depType, right, left)
+          } else {
+              ("?", "?", "?")
+          }
+      } else {
+          ("?", "?", "?")
+      }
+  }
+
+  def getStopwords() = {
+    val source: BufferedSource = Source.fromURL(getClass.getResource(Const.Resources.STOPWORDS))
+    source.getLines.toSet
+  }
+
+  def loadVocabulary(sc: SparkContext, vocPath: String) = {
+    sc.textFile(vocPath)
+      .map(line => line.split("\t"))
+      .map({ case Array(word) => (word.toLowerCase()) })
+      .collect()
+      .toSet
+  }
+
 
   def listFilesSafely(file: File): Seq[File] = {
     if (file.exists()) {
