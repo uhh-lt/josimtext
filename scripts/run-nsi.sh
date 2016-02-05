@@ -5,6 +5,11 @@ if [ -z "$1" ] || [ -z "$4" ] ; then
     exit
 fi
 
+# Paths to the binaries
+bin_hadoop=/home/panchenko/noun-sense-induction-scala/bin/hadoop
+bin_spark=/home/panchenko/noun-sense-induction-scala/bin/spark
+
+
 # Meta-paramters of feature extraction
 holing_type="dependency"
 lemmatize=true
@@ -88,10 +93,9 @@ if $calc_features; then
         fi
     fi
     echo "Calculating features ..."
-    bin=/home/panchenko/bin-hadoop
 
-    jars=`echo $bin/*.jar | tr " " ","`
-    path=`echo $bin/*.jar | tr " " ":"`
+    jars=`echo $bin_hadoop/*.jar | tr " " ","`
+    path=`echo $bin_hadoop/*.jar | tr " " ":"`
 
     HADOOP_CLASSPATH=$path hadoop \
         de.tudarmstadt.lt.wsi.JoBimExtractAndCount \
@@ -125,7 +129,6 @@ if $calc_sims; then
         fi
     fi
     echo "Calculating similarities..." 
-    bin=/home/panchenko/bin-spark
 
     export HADOOP_CONF_DIR=/etc/hadoop/conf/
     export YARN_CONF_DIR=/etc/hadoop/conf.cloudera.yarn/
@@ -137,7 +140,7 @@ if $calc_sims; then
         --num-executors 50 \
         --driver-memory 8g \
         --executor-memory 8g \
-        $bin/noun-sense-induction_2.10-0.0.1.jar \
+        $bin_spark/noun-sense-induction_2.10-0.0.1.jar \
         $wordFeatureCountsFile \
         $wordCountsFile \
         $featureCountsFile \
