@@ -1,13 +1,30 @@
-JoBimSense
+JoSimText
 ========
 
-A system for noun sense induction and disambiguation. The system consist of several modules:
+This system performs [word sense induction](https://en.wikipedia.org/wiki/Word-sense_induction) and disambiguation. This is an implementation of the [JoBimText](http://www.jobimtext.org) approach 
+ in Scala, Spark and tuned for induction of word Senses (hence the "S" in the name). The [original JoBimText implementation](http://maggie.lt.informatik.tu-darmstadt.de/jobimtext/downloads/) is written 
+ in Java/Pig and is more generic as it supposes that "Jo"s (i.e. objects) and "Bims (i.e. features) can be any linguistic objects. This particular implementation is designed for modeling of 
+  words and multiword expressions. 
 
-1. noun-sense-induction
-2. noun-sense-induction-scala
-3. chineese-whispers
-4. wiki-link-preprocessor
-5. wiki-wsd-task
+
+
+
+```
+   ___       _____ _         _____         _   
+  |_  |     /  ___(_)       |_   _|       | |  
+    | | ___ \ `--. _ _ __ ___ | | _____  _| |_ 
+    | |/ _ \ `--. \ | '_ ` _ \| |/ _ \ \/ / __|
+/\__/ / (_) /\__/ / | | | | | | |  __/>  <| |_ 
+\____/ \___/\____/|_|_| |_| |_\_/\___/_/\_\\__|
+                                                                                            
+```
+
+
+The system consist of several modules:
+
+1. [Feature extraction](https://github.com/tudarmstadt-lt/noun-sense-induction)
+2. Word similarity, word sense disambiguation (this reposiroty)
+3. [Word sense induction](https://github.com/tudarmstadt-lt/chinese-whispers)
 
 This repository contains the module **noun-sense-induction-scala** that performs:
 - construction of a distributional thesaurus from word-feature frequencies

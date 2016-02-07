@@ -1,4 +1,3 @@
-import _root_.WSDFeatures.WSDFeatures
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd._
 import org.apache.spark.{HashPartitioner, SparkConf, SparkContext}
@@ -17,7 +16,7 @@ object WSD {
 
     val _stopwords = Util.getStopwords()
 
-    def getContextFeatures(word_features: String, target_holing_features: String, holing_features:String, featuresMode:WSDFeatures): Array[String] = {
+    def getContextFeatures(word_features: String, target_holing_features: String, holing_features:String, featuresMode:WSDFeatures.Value): Array[String] = {
         word_features.split(Const.LIST_SEP) ++ target_holing_features.split(Const.LIST_SEP) ++ symmetrizeDeps(target_holing_features.split(Const.LIST_SEP))
     }
 
