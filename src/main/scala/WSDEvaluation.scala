@@ -94,7 +94,7 @@ object WSDEvaluation {
         val sentFile = sc.textFile(args(args.size - 5))
         val outputFile = args(args.size - 4)
         val alpha = args(args.size - 3).toDouble
-        val wsdMode = WSDMode.withName(args(args.size - 2))
+        val wsdMode = WSDFeatures.withName(args(args.size - 2))
         val usePriorProbs:Boolean = args(args.size - 1).equals("y")
         //val minClusterSize = args(5).toInt
         //val maxNumClusters = args(6).toInt
