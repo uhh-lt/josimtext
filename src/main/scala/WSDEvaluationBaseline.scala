@@ -59,7 +59,7 @@ object WSDEvaluationBaseline {
                 .mapValues(WSD.mappingToClusters)
 
             val nmiScoresBaseline = goldClustering.join(baselineClustering)
-                .mapValues(clusterings => WSDEvaluation.nmi(clusterings._1, clusterings._2, 100000))
+                .mapValues(clusterings => WSDEvaluation_deprecated.nmi(clusterings._1, clusterings._2, 100000))
 
             nmiScoresBaseline.map({ case (_, nmiScore) => nmiScore})
                 .saveAsTextFile(outputFile + "/NMI")

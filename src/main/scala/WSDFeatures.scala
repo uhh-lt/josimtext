@@ -2,9 +2,21 @@ import scala.util.Try
 
 object WSDFeatures extends Enumeration {
   type WSDFeatures = Value
-  val DepsTarget, Coocs, Clusters, Deps, DepsCoocsClusters, DepsAllCoocsClusters = Value
+  val Depstarget, Depsall, Coocs, Clusters, DepstargetCoocsClusters, DepsallCoocsClusters = Value
+  val DEFAULT = WSDFeatures.DepstargetCoocsClusters
 
-  val DEFAULT = WSDFeatures.DepsCoocsClusters
+  def wordsNeeded(wsdFeatures: WSDFeatures): Boolean = {
+      (wsdFeatures == Coocs || wsdFeatures == Clusters || wsdFeatures == DepstargetCoocsClusters || wsdFeatures == DepsallCoocsClusters)
+  }
+
+  def depsallNeeded(wsdFeatures: WSDFeatures): Boolean = {
+      (wsdFeatures == Depsall || wsdFeatures == DepsallCoocsClusters)
+  }
+
+
+  def depstargetNeeded(wsdFeatures: WSDFeatures): Boolean = {
+      (wsdFeatures == Depstarget || wsdFeatures == DepstargetCoocsClusters || wsdFeatures == Depsall || wsdFeatures == DepsallCoocsClusters)
+  }
 
   def fromString(str:String) = {
     val res1 = Try(WSDFeatures.withName(str))

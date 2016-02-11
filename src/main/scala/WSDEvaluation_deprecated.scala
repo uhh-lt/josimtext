@@ -6,7 +6,7 @@ import scala.util.Try
 
 
 
-object WSDEvaluation {
+object WSDEvaluation_deprecated {
 
     /*def computeFeatureProb(featureArr:Array[String], clusterSize:Int): (String, Double, Double) = {
         val feature = featureArr(0)
