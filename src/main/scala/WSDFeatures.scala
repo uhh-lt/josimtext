@@ -13,9 +13,20 @@ object WSDFeatures extends Enumeration {
       (wsdFeatures == Depsall || wsdFeatures == DepsallCoocsClusters)
   }
 
-
   def depstargetNeeded(wsdFeatures: WSDFeatures): Boolean = {
       (wsdFeatures == Depstarget || wsdFeatures == DepstargetCoocsClusters || wsdFeatures == Depsall || wsdFeatures == DepsallCoocsClusters)
+  }
+
+  def depsNeeded(wsdFeatures: WSDFeatures): Boolean = {
+    (wsdFeatures == Depsall || wsdFeatures == DepsallCoocsClusters || wsdFeatures == Depstarget || wsdFeatures == DepstargetCoocsClusters)
+  }
+
+  def coocsNeeded(wsdFeatures: WSDFeatures): Boolean = {
+    (wsdFeatures == Coocs || wsdFeatures == DepsallCoocsClusters || wsdFeatures == DepstargetCoocsClusters)
+  }
+
+  def clustersNeeded(wsdFeatures: WSDFeatures): Boolean = {
+    (wsdFeatures == Clusters || wsdFeatures == DepsallCoocsClusters || wsdFeatures == DepstargetCoocsClusters)
   }
 
   def fromString(str:String) = {

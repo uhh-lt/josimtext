@@ -12,7 +12,9 @@ object WSD {
     val PARTITIONS_NUM = 16
     val DEPS_TARGET_FEATURES_BOOST = 3  // boost for strong sparse features
     val SYMMETRIZE_DEPS = true
-    val DEBUG = false
+    val DEFAULT_SENSE_ID = 1
+    val DEFAULT_LOG_CONF = -1000000000.0
+    val DEBUG = true
 
     val _stopwords = Util.getStopwords()
 
@@ -40,10 +42,12 @@ object WSD {
             else depsallFeaturesStr.split(Const.LIST_SEP)
 
         if (DEBUG) {
-            println("word: " + wordFeatures.mkString(","))
-            println("target: " + depstargetFeatures.mkString(","))
-            println("all: " + depsallFeatures.mkString(","))
+            println("word (%d): %s".format(wordFeatures.size, wordFeatures.mkString(",")))
+            println("target deps (%d): %s".format(depstargetFeatures.size, depstargetFeatures.mkString(",")))
+            println("all deps (%d): %s".format(depsallFeatures.size, depsallFeatures.mkString(",")))
+            println(">>> " + (wordFeatures ++ depstargetFeatures ++ depsallFeatures).size + "\n")
         }
+
         wordFeatures ++ depstargetFeatures ++ depsallFeatures
     }
 
@@ -57,8 +61,9 @@ object WSD {
         (feature, prob)
     }
 
-    def loadFeatureProbs(word:String, features:Array[String], maxFeaturesNum:Int): Map[String, Double] = {
-        val res = features
+    def parseFeatures(word:String, featuresStr:String, maxFeaturesNum:Int): Map[String, Double] = {
+        val res = featuresStr
+            .split(Const.LIST_SEP)
             .map(featureValues => filterFeatureProb(word, featureValues))
             .filter(_ != null)
             .take(maxFeaturesNum)
@@ -72,7 +77,15 @@ object WSD {
             .map(feature => feature.replaceAll("@@","@"))
     }
 
-    def chooseSense(contextFeaturesRaw:Set[String], coocFeatures:Map[Int, (Double, Int, Map[String, Double])], depFeatures:Map[Int, (Double, Int, Map[String, Double])], priorFeatureProb:Double, wsdMode:WSDFeatures.WSDFeatures, usePriorProbs:Boolean) = {
+    def predictSense(contextFeaturesRaw:Set[String], clusterFeatures:Map[Int, Map[String, Double]], coocFeatures:Map[Int, (Double, Int, Map[String, Double])],
+                     depFeatures:Map[Int, (Double, Int, Map[String, Double])], priorFeatureProb:Double, usePriorProbs:Boolean) = {
+
+        if (DEBUG) {
+            println("clusters available: " + (clusterFeatures != null).toString)
+            println("coocs available: " + (coocFeatures != null).toString)
+            println("deps available: " + (depFeatures != null).toString)
+        }
+
         // Initialisation
         val contextFeatures = postprocessContext(contextFeaturesRaw)
         val senseProbs = collection.mutable.Map[Int, Double]()
@@ -108,31 +121,41 @@ object WSD {
         }
 
         // s* = argmax_s p(s|f1..fn) = argmax_s p(s) * p(f1|s) * .. * p(fn|s)
-        var matchedFeatures = new collection.mutable.ListBuffer[String]()
+        var usedFeatures = new collection.mutable.ListBuffer[String]()
+        var allFeatures = new collection.mutable.ListBuffer[String]()
         for (sense <- senses) {
             val coocFeaturesProbs = if (coocFeatures != null) coocFeatures(sense)._3 else Map[String, Double]()
             val depFeaturesProbs = if (depFeatures != null) depFeatures(sense)._3 else Map[String, Double]()
             for (feature <- contextFeatures) {
-                var featureProb = priorFeatureProb // Smoothing for previously unseen features; each feature must have the same number of feature probs for all senses.
-                if (coocFeaturesProbs.contains(feature)) {
-                    featureProb += coocFeaturesProbs(feature)
-                    matchedFeatures += feature
-                } else if (depFeaturesProbs.contains(feature)) {
-                    featureProb += depFeaturesProbs(feature)
-                    matchedFeatures += feature
-                }
+                val featureProb =
+                    if (coocFeaturesProbs.contains(feature)) {
+                        usedFeatures += feature
+                        coocFeaturesProbs(feature) + priorFeatureProb
+                    } else if (depFeaturesProbs.contains(feature)) {
+                        usedFeatures += feature
+
+                        depFeaturesProbs(feature) + priorFeatureProb
+                    } else {
+                        priorFeatureProb // Smoothing for previously unseen features; each feature must have the same number of feature probs for all senses.
+                    }
+                allFeatures += "%d:%s:%.6f".format(sense, feature, featureProb)
                 senseProbs(sense) += math.log(featureProb)
             }
         }
 
         // return the most probable sense
-        val bestSense = senseProbs.toList.sortBy(_._2).last
-        val bestSenseId = bestSense._1
-        val bestSenseConf = bestSense._2
-        val bestSenseConfNorm = if (matchedFeatures.size > 0) bestSense._2/matchedFeatures.size else bestSense._2
-        val usedFeatures = matchedFeatures.toSet.mkString(Const.LIST_SEP)
+        if (senseProbs.size > 0) {
+            val bestSense = senseProbs.toList.sortBy(_._2).last
+            val bestSenseId = bestSense._1
+            val bestSenseConf = bestSense._2
+            val bestSenseConfNorm = if (usedFeatures.size > 0) bestSense._2 / usedFeatures.size else bestSense._2
+            val usedFeaturesStr = usedFeatures.toSet.mkString(Const.LIST_SEP)
+            val allFeaturesStr = allFeatures.mkString(Const.LIST_SEP)
 
-        (bestSenseId, bestSenseConf, bestSenseConfNorm, usedFeatures)
+            (bestSenseId, bestSenseConf, bestSenseConfNorm, usedFeaturesStr + "\t" + allFeaturesStr)
+        } else {
+            (DEFAULT_SENSE_ID, DEFAULT_LOG_CONF, DEFAULT_LOG_CONF, "\t")
+        }
     }
 
     def computeMatchingScore[T](matchingCountsSorted:Array[(T, Int)]):(Int, Int) = {
@@ -174,16 +197,18 @@ object WSD {
         conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         val sc = new SparkContext(conf)
 
-        val clusterCoocsPath = args(0)
-        val clusterDepsPath = args(1)
-        val contextsPath = args(2)
-        val outputPath = args(3)
-        val priorProb = if (args.length > 4) args(4).toDouble else PRIOR_PROB
-        val wsdMode = if (args.length > 5) WSDFeatures.fromString(args(5)) else WSD_MODE
-        val usePriorProb = if (args.length > 6) args(6).toLowerCase().equals("true") else USE_PRIOR_PROB
-        val maxNumFeatures = if (args.length > 7) args(7).toInt else MAX_FEATURE_NUM
-        val partitionsNum = if (args.length > 8) args(8).toInt else PARTITIONS_NUM
+        val clustersPath = args(0)
+        val clusterCoocsPath = args(1)
+        val clusterDepsPath = args(2)
+        val contextsPath = args(3)
+        val outputPath = args(4)
+        val priorProb = if (args.length > 5) args(5).toDouble else PRIOR_PROB
+        val wsdMode = if (args.length > 6) WSDFeatures.fromString(args(6)) else WSD_MODE
+        val usePriorProb = if (args.length > 7) args(7).toLowerCase().equals("true") else USE_PRIOR_PROB
+        val maxNumFeatures = if (args.length > 8) args(8).toInt else MAX_FEATURE_NUM
+        val partitionsNum = if (args.length > 9) args(9).toInt else PARTITIONS_NUM
 
+        println("Senses: " + clustersPath)
         println("Senses with cooc features: " + clusterCoocsPath)
         println("Senses with dependency features: " + clusterDepsPath)
         println("Lexical sample dataset: " + contextsPath)
@@ -209,22 +234,34 @@ object WSD {
         // dataset: context_id	target	target_pos	target_position	gold_sense_ids	predict_sense_ids	golden_related	predict_related	context word_features	holing_features	target_holing_features
         val lexSample: RDD[(String, (Array[String], (String, String, String, String, String, String, String, String, String, String, String, String)))] = sc.textFile(contextsPath)  // target,
           .map(line => line.split("\t", -1))
-          .map{case Array(context_id,	target,	target_pos,	target_position, gold_sense_ids, predict_sense_ids,	golden_related,	predict_related, context, word_features, holing_features,	target_holing_features) =>
+          .map{ case Array(context_id,	target,	target_pos,	target_position, gold_sense_ids, predict_sense_ids,	golden_related,	predict_related, context, word_features, holing_features,	target_holing_features) =>
               (target, (
-                  getContextFeatures(word_features, holing_features, target_holing_features, wsdMode),
+                  getContextFeatures(word_features, target_holing_features, holing_features, wsdMode),
                   (context_id, target,	target_pos,	target_position, gold_sense_ids, predict_sense_ids,	golden_related,	predict_related, context, word_features, holing_features,	target_holing_features)))
-              //case _ => ("", (Array[String](), ("", "", "", "", "", "", "", "", "", "", "", "")))
+              case _ => ("", (Array[String](), ("", "", "", "", "", "", "", "", "", "", "", "")))
           }
           .cache()
 
         // Load features in the format: (lemma, (sense -> (feature -> prob)))
+        var clusterFeatures:RDD[(String, Map[Int, Map[String, Double]])] = null
+        if (WSDFeatures.clustersNeeded(wsdMode) && Util.exists(clustersPath)) {
+            clusterFeatures = sc
+              .textFile(clustersPath)  // (lemma, (sense -> (feature -> prob)))
+              .map{ line => line.split("\t") }
+              .map{ case Array(word, senseId, _, cluster) => (word, (senseId.toInt, (parseFeatures(word, cluster, maxNumFeatures)))) }
+              .groupByKey()
+              .mapValues(clusters => clusters.toMap)
+              .partitionBy(new HashPartitioner(partitionsNum))
+              .persist()
+        }
+
         var coocFeatures:RDD[(String, Map[Int, (Double, Int, Map[String, Double])])] = null
-        if (WSDFeatures.wordsNeeded(wsdMode) && Util.exists(clusterCoocsPath)) {
+        if (WSDFeatures.coocsNeeded(wsdMode) && Util.exists(clusterCoocsPath)) {
             coocFeatures = sc
                 .textFile(clusterCoocsPath)
-                .map(line => line.split("\t"))
-                .map{ case Array(word, senseId, _, senseCount, cluster, features) => (word, senseId.toInt, senseCount.toDouble, cluster.split(Const.LIST_SEP), features.split(Const.LIST_SEP)) }
-                .map{ case (word, senseId, senseCount, cluster, features) => (word, (senseId, (senseCount, cluster.size, loadFeatureProbs(word, features, maxNumFeatures)))) }
+                .map{ line => line.split("\t") }
+                .map{ case Array(word, senseId, _, senseCount, cluster, features) => (word, senseId.toInt, senseCount.toDouble, cluster.split(Const.LIST_SEP), features) }
+                .map{ case (word, senseId, senseCount, cluster, features) => (word, (senseId, (senseCount, cluster.size, parseFeatures(word, features, maxNumFeatures)))) }
                 .groupByKey()
                 .mapValues(clusters => clusters.toMap)
                 .partitionBy(new HashPartitioner(partitionsNum))
@@ -232,54 +269,61 @@ object WSD {
         }
 
         var depFeatures:RDD[(String, Map[Int, (Double, Int, Map[String, Double])])] = null
-        if (WSDFeatures.wordsNeeded(wsdMode) && Util.exists(clusterDepsPath)) {
+        if (WSDFeatures.depsNeeded(wsdMode) && Util.exists(clusterDepsPath)) {
             depFeatures = sc
                 .textFile(clusterDepsPath)  // (lemma, (sense -> (feature -> prob)))
                 .map(line => line.split("\t"))
-                .map{ case Array(word, senseId, _, senseCount, cluster, features) => (word, senseId.toInt, senseCount.toDouble, cluster.split(Const.LIST_SEP), features.split(Const.LIST_SEP))}
-                .map{ case (word, senseId, senseCount, cluster, features) => (word, (senseId, (senseCount, cluster.size, loadFeatureProbs(word, features, maxNumFeatures))))}
+                .map{ case Array(word, senseId, _, senseCount, cluster, features) => (word, senseId.toInt, senseCount.toDouble, cluster.split(Const.LIST_SEP), features) }
+                .map{ case (word, senseId, senseCount, cluster, features) => (word, (senseId, (senseCount, cluster.size, parseFeatures(word, features, maxNumFeatures)))) }
                 .groupByKey()
                 .mapValues(clusters => clusters.toMap)
                 .partitionBy(new HashPartitioner(partitionsNum))
                 .persist()
         }
 
-//        Load clusters
-//        var clusterFeatures:RDD[(String, Map[Int, (Double, Int, Map[String, Double])])] = null
-//        if (WSDFeatures.depstargetNeeded(wsdMode) && Util.exists(clusterDepsPath)) {
-//            clusterFeatures = sc
-//              .textFile(clusterDepsPath)  // (lemma, (sense -> (feature -> prob)))
-//              .map(line => line.split("\t"))
-//              .map{ case Array(word, senseId, _, senseCount, cluster, features) => (word, senseId.toInt, senseCount.toDouble, cluster.split(Const.LIST_SEP), features.split(Const.LIST_SEP))}
-//              .map{ case (word, senseId, senseCount, cluster, features) => (word, (senseId, (senseCount, cluster.size, loadFeatureProbs(word, features, maxNumFeatures))))}
-//              .groupByKey()
-//              .mapValues(clusters => clusters.toMap)
-//              .partitionBy(new HashPartitioner(partitionsNum))
-//              .persist()
-//        }
-
-
         // Classify contexts
         var result: RDD[((String, String, String, String, String, String, String, String, String, String, String, String), (Int, Double, Double, String))] = null
-        if (depFeatures != null && coocFeatures != null) {
+        if (clusterFeatures != null && coocFeatures != null && depFeatures != null) {
+            result = lexSample
+                .join(coocFeatures)
+                .join(depFeatures)
+                .join(clusterFeatures)
+                .map{ case (target, ((((tokens, dataset), coocs), deps),clusters)) => (dataset, predictSense(tokens.toSet, clusters, coocs, deps, priorProb, usePriorProb)) }
+        } else if (clusterFeatures == null && coocFeatures != null && depFeatures != null) {
+            result = lexSample
+                .join(coocFeatures)
+                .join(depFeatures)
+                .map{ case (target, (((tokens, dataset), coocs), deps)) => (dataset, predictSense(tokens.toSet, null, coocs, deps, priorProb, usePriorProb)) }
+        } else if (clusterFeatures != null && coocFeatures != null && depFeatures == null) {
             result = lexSample
               .join(coocFeatures)
-              .join(depFeatures)
-              .map{case (target, (((tokens, dataset), coocFeatures), depFeatures)) => (dataset, chooseSense(tokens.toSet, coocFeatures, depFeatures, priorProb, wsdMode, usePriorProb))}
-        } else if (coocFeatures != null) {
-            result = lexSample
-              .join(coocFeatures)
-              .map{case (target, ((tokens, dataset), coocFeatures)) => (dataset, chooseSense(tokens.toSet, coocFeatures, null, priorProb, wsdMode, usePriorProb))}
-        } else if (depFeatures != null) {
+              .join(clusterFeatures)
+              .map{ case (target, (((tokens, dataset), coocs), clusters)) => (dataset, predictSense(tokens.toSet, clusters, coocs, null, priorProb, usePriorProb)) }
+        } else if (clusterFeatures != null && coocFeatures == null && depFeatures != null) {
             result = lexSample
               .join(depFeatures)
-              .map{case (target, ((tokens, dataset), depsFeatures)) => (dataset, chooseSense(tokens.toSet, null, depsFeatures, priorProb, wsdMode, usePriorProb))}
+              .join(clusterFeatures)
+              .map{ case (target, (((tokens, dataset), deps), clusters)) => (dataset, predictSense(tokens.toSet, clusters, null, deps, priorProb, usePriorProb)) }
+        } else if (clusterFeatures == null && coocFeatures != null && depFeatures == null) {
+            result = lexSample
+                .join(coocFeatures)
+                .map{ case (target, ((tokens, dataset), coocs)) => (dataset, predictSense(tokens.toSet, null, coocs, null, priorProb, usePriorProb)) }
+        } else if (clusterFeatures == null && coocFeatures == null && depFeatures != null) {
+            result = lexSample
+                .join(depFeatures)
+                .map{ case (target, ((tokens, dataset), deps)) => (dataset, predictSense(tokens.toSet, null, null, deps, priorProb, usePriorProb)) }
+        } else if (clusterFeatures != null && coocFeatures == null && depFeatures == null) {
+            result = lexSample
+                .join(clusterFeatures)
+                .map{ case (target, ((tokens, dataset), clusters)) => (dataset, predictSense(tokens.toSet, clusters, null, null, priorProb, usePriorProb)) }
+        } else {
+            // normally shall never happen, prevented by checks above
         }
 
         result
-            .map({case ((context_id,	target,	target_pos,	target_position, gold_sense_ids, predict_sense_ids,	golden_related,	predict_related, context, word_features, holing_features,	target_holing_features),(bestSenseId, bestSenseConf, bestSenseConfNorm, usedFeatures)) =>
+            .map{ case ((context_id,	target,	target_pos,	target_position, gold_sense_ids, predict_sense_ids,	golden_related,	predict_related, context, word_features, holing_features,	target_holing_features),(bestSenseId, bestSenseConf, bestSenseConfNorm, usedFeatures)) =>
                 context_id + "\t" +	target + "\t" +	target_pos + "\t" +	target_position + "\t" +	gold_sense_ids + "\t" +	bestSenseId + "\t" +	golden_related + "\t" +
-                    predict_related + "\t" + context + "\t" +	word_features + "\t" +	holing_features + "\t" + target_holing_features + "\t" + bestSenseConf + "\t" +	bestSenseConfNorm + "\t" + usedFeatures })
+                    predict_related + "\t" + context + "\t" +	word_features + "\t" +	holing_features + "\t" + target_holing_features + "\t" + bestSenseConf + "\t" +	bestSenseConfNorm + "\t" + usedFeatures }
             .saveAsTextFile(outputPath)
     }
 
