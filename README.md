@@ -1,13 +1,30 @@
-JoBimSense
+JoSimText
 ========
 
-A system for noun sense induction and disambiguation. The system consist of several modules:
+This system performs [word sense induction](https://en.wikipedia.org/wiki/Word-sense_induction) and disambiguation. This is an implementation of the [JoBimText](http://www.jobimtext.org) approach 
+ in Scala, Spark and tuned for induction of word Senses (hence the "S" in the name). The [original JoBimText implementation](http://maggie.lt.informatik.tu-darmstadt.de/jobimtext/downloads/) is written 
+ in Java/Pig and is more generic as it supposes that "Jo"s (i.e. objects) and "Bims (i.e. features) can be any linguistic objects. This particular implementation is designed for modeling of 
+  words and multiword expressions. 
 
-1. noun-sense-induction
-2. noun-sense-induction-scala
-3. chineese-whispers
-4. wiki-link-preprocessor
-5. wiki-wsd-task
+
+
+
+```
+   ___       _____ _         _____         _   
+  |_  |     /  ___(_)       |_   _|       | |  
+    | | ___ \ `--. _ _ __ ___ | | _____  _| |_ 
+    | |/ _ \ `--. \ | '_ ` _ \| |/ _ \ \/ / __|
+/\__/ / (_) /\__/ / | | | | | | |  __/>  <| |_ 
+\____/ \___/\____/|_|_| |_| |_\_/\___/_/\_\\__|
+                                                                                            
+```
+
+
+The system consist of several modules:
+
+1. [Feature extraction](https://github.com/tudarmstadt-lt/noun-sense-induction)
+2. Word similarity, word sense disambiguation (this reposiroty)
+3. [Word sense induction](https://github.com/tudarmstadt-lt/chinese-whispers)
 
 This repository contains the module **noun-sense-induction-scala** that performs:
 - construction of a distributional thesaurus from word-feature frequencies
@@ -202,4 +219,79 @@ word <TAB> instance-id <TAB> coocs <TAB> deps
 ```
 
 where instance-id is simply a unique ID for every instance, coocs is the sentence/context as a lemmatized set of words and deps is the comma-separated list of dependency features of the head word (e.g. "amod(@@,wild)").
+
+
+Data Formats
+========
+
+Input Text 
+----------
+
+One text or sentence per line. Lines should not be too long, assume that line should fit in memory of one executor. 
+
+Example:
+
+```
+This is a sample text. 
+```
+
+
+Feature and Word Counts
+--------
+
+```
+word<TAB>freq
+```
+
+Example:
+
+```
+!disgustingly	2
+!identifiable	1
+!looked	1
+!lounge	2
+!past	1
+!resorts	1
+!snap	6
+!stunning	1
+!tells	1
+!uk	2
+```
+
+Word Feature Counts
+---------
+
+```
+word<TAB>feature<TAB>count
+```
+
+Example:
+
+```
+!	amod(dreadful,@)	1
+!	amod(heavy,@)	1
+!	appos(�,@)	1
+!	ccomp(reckon,@)	1
+!	conj(Bells,@)	1
+!	conj(proposal,@)	1
+!	dep(@,meeting)	1
+!	dep(Feck,@)	1
+!	dep(Meet,@)	1
+!	dep(ah,@)	11
+```
+
+Sense Clusters
+--------------
+
+```
+word<TAB>sense-id<TAB>keyword<TAB>cluster
+```
+
+where elements in the cluster are separated by a double space and are in the format ``word:score``
+
+Example:
+```
+acid    0   word    vitamin:0.128  protein:0.126  Acid:0.125  calcium:0.118  glucose:0.104  sodium:0.1  carbohydrate:0.097  nutrient:0.097  mineral:0.097  phosphate:0.092  cholesterol:0.091  potassium:0.09  chloride:0.089  oxygen:0.086  zinc:0.084  salt:0.08  nitrogen:0.079  ammonia:0.079  magnesium:0.078  oils:0.078
+```
+
 

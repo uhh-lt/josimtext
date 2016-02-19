@@ -38,10 +38,10 @@ object Util {
     source.getLines.toSet
   }
 
-  def loadVocabulary(sc: SparkContext, vocPath: String) = {
+  def loadVocabulary(sc: SparkContext, vocPath: String, lowercase:Boolean=true) = {
     sc.textFile(vocPath)
-      .map(line => line.split("\t"))
-      .map({ case Array(word) => (word.toLowerCase()) })
+      .map{ line => line.split("\t")}
+      .map{ case Array(word) => if (lowercase) word.toLowerCase() else word }
       .collect()
       .toSet
   }
