@@ -9,20 +9,26 @@ object ClusterContextClueAggregator {
     val MAX_SIM_WORDS_NUM = 20
     val MAX_FEATURE_NUM = 10000
     val MIN_WORD_FEATURE_COUNT = 0.0
-    val FEATURE_TYPE = "words"  // "deps" or "words-from-deps"
+    val FEATURE_TYPES = List("words", "deps", "words-from-deps", "trigrams")
     val LOWERCASE_WORDS_FROM_DEPS = true
-
     val _stopwords = Util.getStopwords()
+    val _numbersRegex = """\d+""".r
 
     def keepFeature(feature:String, featureType:String) = {
-        if (featureType == "deps" || featureType == "words-from-deps"){  // dependency features
+        if (featureType == "deps" || featureType == "words-from-deps") {
+            // dependency features
             val (depType, srcWord, dstWord) = Util.parseDep(feature)
             if (Const.Resources.STOP_DEPENDENCIES.contains(depType) || _stopwords.contains(srcWord) || _stopwords.contains(dstWord)) {
                 false
             } else {
                 true
             }
-        } else { // word features, in constast to dependency features
+        } else if (featureType == "trigrams") {
+            val (left, right) = Util.parseTrigram(feature)
+            val leftOK = !(_stopwords.contains(left) || left.length == 1 || _numbersRegex.findFirstIn(left).isDefined)
+            val rightOK = !(_stopwords.contains(right) || right.length == 1 || _numbersRegex.findFirstIn(right).isDefined)
+            leftOK || rightOK
+        } else { // word features, in contrast to dependency features
             val featureTrim = feature.trim()
             !_stopwords.contains(featureTrim) && !_stopwords.contains(featureTrim.toLowerCase())
         }
@@ -47,20 +53,21 @@ object ClusterContextClueAggregator {
 
     def formatFeatures(featureList: List[(String, Double)], maxFeatureNum:Int, featureType:String, target:String) = {
         val filteredFeatureList = featureList
-          .filter{ case (feature, prob) => keepFeature(feature, featureType) }
-          .map{ case (feature, prob) => (transformFeature(feature, featureType), prob) }
+            .filter{ case (feature, prob) => keepFeature(feature, featureType) }
+            .map{ case (feature, prob) => (transformFeature(feature, featureType), prob) }
 
         if (featureType == "words-from-deps") {
+            // this feature after transformation will be just a word
             filteredFeatureList
-              .groupBy(_._1)
-              .map({case (feature, probList) => (feature, probList.map({case (feature, prob) => prob}).sum)})
-              .filterKeys(_ != target)
-              .toList
-              .sortBy(-_._2)
-              .take(maxFeatureNum)
+                .groupBy(_._1)
+                .map({case (feature, probList) => (feature, probList.map({case (feature, prob) => prob}).sum)})
+                .filterKeys(_ != target)
+                .toList
+                .sortBy(-_._2)
+                .take(maxFeatureNum)
         } else{
             filteredFeatureList
-              .take(maxFeatureNum)
+                .take(maxFeatureNum)
         }
    }
 
@@ -82,8 +89,8 @@ object ClusterContextClueAggregator {
         val wordFeaturesPath = args(3)
         val outputPath = args(4)
         val numSimWords = if (args.length > 5) args(5).toInt else MAX_SIM_WORDS_NUM
-        var featureType = if (args.length > 6) args(6) else FEATURE_TYPE
-        if (!Set("words", "deps", "words-from-deps").contains(featureType)) {
+        var featureType = if (args.length > 6) args(6) else FEATURE_TYPES(0)
+        if (!FEATURE_TYPES.contains(featureType)) {
             println("Warning: wrong feature type. Using 'words' feature type.")
             featureType = "words"
         }
