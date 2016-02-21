@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="a51058d7-126b-496a-bf60-dbd05776b51f" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/scala/Foo.scala" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/scala/WSDFeatures.scala" />
+    <list default="true" id="a51058d7-126b-496a-bf60-dbd05776b51f" name="Default" comment="trigram feature in clue aggregator">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/scala/WSD.scala" afterPath="$PROJECT_DIR$/src/main/scala/WSD.scala" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/scala/WSDEvaluation.scala" afterPath="$PROJECT_DIR$/src/main/scala/WSDEvaluation.scala" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/test/scala/SenseFeatureAggregatorTest.scala" afterPath="$PROJECT_DIR$/src/test/scala/SenseFeatureAggregatorTest.scala" />
     </list>
     <ignored path="noun-sense-induction.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -22,6 +19,9 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="ChangesViewManager" flattened_view="true" show_ignored="false" />
+  <component name="CoverageDataManager">
+    <SUITE FILE_PATH="coverage/noun-sense-induction$Clue_Aggregation.coverage" NAME="Clue Aggregation Coverage Results" MODIFIED="1455983854293" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+  </component>
   <component name="CreatePatchCommitExecutor">
     <option name="PATCH_PATH" value="" />
   </component>
@@ -34,7 +34,20 @@
   <component name="ExternalProjectsManager">
     <system id="SBT">
       <state>
-        <projects_view />
+        <projects_view>
+          <tree_state>
+            <PATH>
+              <PATH_ELEMENT>
+                <option name="myItemId" value="" />
+                <option name="myItemType" value="com.intellij.openapi.externalSystem.view.ExternalProjectsStructure$RootNode" />
+              </PATH_ELEMENT>
+              <PATH_ELEMENT>
+                <option name="myItemId" value="josimtext" />
+                <option name="myItemType" value="com.intellij.openapi.externalSystem.view.ProjectNode" />
+              </PATH_ELEMENT>
+            </PATH>
+          </tree_state>
+        </projects_view>
       </state>
     </system>
   </component>
@@ -43,23 +56,51 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="WSD.scala" pinned="false" current-in-tab="true">
+      <file leaf-file-name="WSD.scala" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/scala/WSD.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.18970448">
-              <caret line="178" column="9" selection-start-line="178" selection-start-column="9" selection-end-line="178" selection-end-column="9" />
-              <folding>
-                <element signature="e#0#37#0" expanded="true" />
-              </folding>
+            <state vertical-scroll-proportion="0.0">
+              <caret line="206" column="28" selection-start-line="206" selection-start-column="12" selection-end-line="206" selection-end-column="28" />
+              <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="WSDFeatures.scala" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/scala/WSDFeatures.scala">
+      <file leaf-file-name="SenseFeatureAggregator.scala" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/scala/SenseFeatureAggregator.scala">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="-15.0">
+              <caret line="32" column="12" selection-start-line="32" selection-start-column="12" selection-end-line="32" selection-end-column="12" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="UtilTest.scala" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/test/scala/UtilTest.scala">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="3" column="18" selection-start-line="3" selection-start-column="18" selection-end-line="3" selection-end-column="18" />
+              <caret line="4" column="5" selection-start-line="2" selection-start-column="3" selection-end-line="4" selection-end-column="5" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="SenseFeatureAggregatorTest.scala" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/test/scala/SenseFeatureAggregatorTest.scala">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0872093">
+              <caret line="5" column="95" selection-start-line="5" selection-start-column="95" selection-end-line="5" selection-end-column="95" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Util.scala" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/scala/Util.scala">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="17" column="89" selection-start-line="17" selection-start-column="89" selection-end-line="17" selection-end-column="89" />
               <folding />
             </state>
           </provider>
@@ -70,6 +111,11 @@
   <component name="Git.Settings">
     <option name="PUSH_AUTO_UPDATE" value="true" />
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
   </component>
   <component name="GradleLocalSettings">
     <option name="externalProjectsViewState">
@@ -83,25 +129,32 @@
         <option value="$PROJECT_DIR$/src/main/scala/Test.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/DTFilter.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/WordCountFilter.scala" />
-        <option value="$PROJECT_DIR$/noun-sense-induction.sbt" />
         <option value="$PROJECT_DIR$/src/main/scala/FreqFilter.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/WordFeatureFilter.scala" />
         <option value="/Library/Java/JavaVirtualMachines/jdk1.7.0_75.jdk/Contents/Home/src.zip!/java/lang/String.java" />
         <option value="$PROJECT_DIR$/src/main/scala/Const.scala" />
         <option value="$USER_HOME$/.ivy2/cache/org.apache.spark/spark-core_2.10/srcs/spark-core_2.10-1.3.0-sources.jar!/org/apache/spark/rdd/PairRDDFunctions.scala" />
-        <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/src/main/scala/grouping.scala" />
-        <option value="$PROJECT_DIR$/src/main/scala/SensesFilter.scala" />
-        <option value="$PROJECT_DIR$/src/main/scala/ClueAggregator.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/ClueAggFilter.scala" />
-        <option value="$PROJECT_DIR$/src/main/scala/Util.scala" />
-        <option value="$PROJECT_DIR$/src/main/scala/ClusterContextClueAggregator.scala" />
-        <option value="$PROJECT_DIR$/src/main/resources/stoplist_en.csv" />
         <option value="$PROJECT_DIR$/src/main/scala/WSDEvaluation.scala" />
-        <option value="$PROJECT_DIR$/src/main/scala/Foo.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/WSDMode.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/Foo.scala" />
+        <option value="$PROJECT_DIR$/README.md" />
+        <option value="$PROJECT_DIR$/src/main/scala/SensesFilter.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/WSDEvaluation_deprecated.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/WSDEvaluationBaseline.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/WSDFeatures.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/WSD.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/ClueAggregator.scala" />
+        <option value="$PROJECT_DIR$/noun-sense-induction.sbt" />
+        <option value="$PROJECT_DIR$/src/test/scala/UtilTest.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/Util.scala" />
+        <option value="$PROJECT_DIR$/src/main/resources/stoplist_en.csv" />
+        <option value="$PROJECT_DIR$/src/main/scala/ClusterContextClueAggregator.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/IndexModuloPartitioner.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/SenseFeatureFilter.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/SenseFeatureAggregator.scala" />
+        <option value="$PROJECT_DIR$/src/test/scala/SenseFeatureAggregatorTest.scala" />
       </list>
     </option>
   </component>
@@ -120,7 +173,7 @@
   <component name="ProjectFrameBounds">
     <option name="x" value="4" />
     <option name="y" value="23" />
-    <option name="width" value="2556" />
+    <option name="width" value="2553" />
     <option name="height" value="1417" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
@@ -260,9 +313,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches" />
       <pane id="Scope" />
-      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -292,6 +343,32 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="scala" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="noun-sense-induction" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="nsi-scala" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -359,6 +436,8 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="PackagesPane" />
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -379,7 +458,119 @@
     <property name="project.structure.proportion" value="0.0" />
     <property name="project.structure.side.proportion" value="0.0" />
   </component>
-  <component name="RunManager" selected="Application.TEST WSD SemEval: b features, all contexts - deps only ">
+  <component name="RestoreUpdateTree" date="Moments ago" ActionInfo="_Update">
+    <UpdatedFiles>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Updated from server" />
+        <option name="myStatusName" value="Changed on server" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="CHANGED_ON_SERVER" />
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Updated" />
+          <option name="myStatusName" value="Changed" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="false" />
+          <option name="myId" value="UPDATED" />
+          <PATH vcs="Git" revision="">$PROJECT_DIR$/README.md</PATH>
+          <PATH vcs="Git" revision="">$PROJECT_DIR$/scripts/feature-agg.sh</PATH>
+        </FILE-GROUP>
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Created" />
+          <option name="myStatusName" value="Created" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="false" />
+          <option name="myId" value="CREATED" />
+          <PATH vcs="Git" revision="">$PROJECT_DIR$/scripts/features-n-sims-coocs.sh</PATH>
+        </FILE-GROUP>
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Deleted" />
+          <option name="myStatusName" value="Deleted" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="true" />
+          <option name="myId" value="REMOVED_FROM_REPOSITORY" />
+        </FILE-GROUP>
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Restored" />
+          <option name="myStatusName" value="Will be restored" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="false" />
+          <option name="myId" value="RESTORED" />
+        </FILE-GROUP>
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Modified" />
+        <option name="myStatusName" value="Modified" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="MODIFIED" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Skipped" />
+        <option name="myStatusName" value="Skipped" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="SKIPPED" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Merged with conflicts" />
+        <option name="myStatusName" value="Will be merged with conflicts" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="MERGED_WITH_CONFLICTS" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Merged with tree conflicts" />
+        <option name="myStatusName" value="Merged with tree conflicts" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="MERGED_WITH_TREE_CONFLICT" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Merged with property conflicts" />
+        <option name="myStatusName" value="Will be merged with property conflicts" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="MERGED_WITH_PROPERTY_CONFLICT" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Merged" />
+        <option name="myStatusName" value="Will be merged" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="MERGED" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Not in repository" />
+        <option name="myStatusName" value="Not in repository" />
+        <option name="mySupportsDeletion" value="true" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="UNKNOWN" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Locally added" />
+        <option name="myStatusName" value="Locally added" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="LOCALLY_ADDED" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Locally removed" />
+        <option name="myStatusName" value="Locally removed" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="LOCALLY_REMOVED" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Switched" />
+        <option name="myStatusName" value="Switched" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="SWITCHED" />
+      </FILE-GROUP>
+    </UpdatedFiles>
+  </component>
+  <component name="RunManager" selected="Application.PRJ Clue Aggregation ">
     <configuration default="false" name="grouping" type="Application" factoryName="Application" temporary="true">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
       <option name="MAIN_CLASS_NAME" value="grouping" />
@@ -400,6 +591,36 @@
       <setting name="vmparams4" value="-Djline.terminal=NONE" />
       <setting name="workingDirectory" value="$PROJECT_DIR$" />
       <setting name="consoleArgs" value="-usejavacp" />
+      <method />
+    </configuration>
+    <configuration default="false" name="UtilTest" type="ScalaTestRunConfiguration" factoryName="ScalaTest" temporary="true">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <module name="nsi-scala" />
+      <setting name="path" value="UtilTest" />
+      <setting name="package" value="" />
+      <setting name="vmparams" value="" />
+      <setting name="params" value="" />
+      <setting name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <setting name="searchForTest" value="Across module dependencies" />
+      <setting name="testName" value="" />
+      <setting name="testKind" value="Class" />
+      <setting name="showProgressMessages" value="true" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="SenseFeatureAggregatorTest" type="ScalaTestRunConfiguration" factoryName="ScalaTest" temporary="true">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <module name="nsi-scala" />
+      <setting name="path" value="SenseFeatureAggregatorTest" />
+      <setting name="package" value="" />
+      <setting name="vmparams" value="" />
+      <setting name="params" value="" />
+      <setting name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <setting name="searchForTest" value="Across module dependencies" />
+      <setting name="testName" value="" />
+      <setting name="testKind" value="Class" />
+      <setting name="showProgressMessages" value="true" />
+      <envs />
       <method />
     </configuration>
     <configuration default="true" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType" factoryName="Plugin">
@@ -840,6 +1061,19 @@
       <listeners />
       <method />
     </configuration>
+    <configuration default="true" type="executeSpecs" factoryName="Gauge Execution">
+      <setting name="environment" value="" />
+      <setting name="specsToExecute" value="" />
+      <setting name="tags" value="" />
+      <setting name="parallelNodes" value="" />
+      <setting name="execInParallel" value="false" />
+      <setting name="programParameters" value="" />
+      <setting name="workingDirectory" value="" />
+      <setting name="moduleName" value="" />
+      <envMap />
+      <setting name="rowsRange" value="" />
+      <method />
+    </configuration>
     <configuration default="true" type="js.build_tools.gulp" factoryName="Gulp.js">
       <node-options />
       <gulpfile />
@@ -878,7 +1112,7 @@
     </configuration>
     <configuration default="false" name="Test" type="Application" factoryName="Application">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <option name="MAIN_CLASS_NAME" value="Test" />
+      <option name="MAIN_CLASS_NAME" value="UtilTest" />
       <option name="VM_PARAMETERS" value="-Dspark.master=local[4] -Xms3G -Xmx6G -Dspark.executor.memory=6G" />
       <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/dt-filter" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
@@ -938,7 +1172,7 @@
     </configuration>
     <configuration default="false" name="TEST Filter ClueAgg" type="Application" factoryName="Application">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <option name="MAIN_CLASS_NAME" value="ClueAggFilter" />
+      <option name="MAIN_CLASS_NAME" value="SenseFeatureFilter" />
       <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G -Dspark.executor.memory=2G" />
       <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/voc.csv $USER_HOME$/Desktop/debug/senses-1k.csv $USER_HOME$/Desktop/debug/W1 $USER_HOME$/Desktop/debug/WF1 $USER_HOME$/Desktop/debug/F1" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
@@ -981,11 +1215,266 @@
       <envs />
       <method />
     </configuration>
+    <configuration default="false" name="WSD SemEval: prj" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="WSD" />
+      <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G  -Dspark.executor.memory=2G -Dspark.partitions.num=16" />
+      <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/prj/senses.csv $USER_HOME$/Desktop/debug/prj/words-from-deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/dataset-js-features.csv $USER_HOME$/Desktop/debug/prj/output 0.00001 DepstargetCoocsClusters true 20000 16" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="nsi-scala" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="WSD SemEval: prj all" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="WSD" />
+      <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G  -Dspark.executor.memory=2G -Dspark.partitions.num=16" />
+      <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/prj/senses.csv $USER_HOME$/Desktop/debug/prj/words-from-deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/dataset-js-features.csv $USER_HOME$/Desktop/debug/prj/output 0.00001 DepsallCoocsClusters true 20000 16" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="nsi-scala" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="WSD SemEval: prj all 111" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="WSD" />
+      <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G  -Dspark.executor.memory=2G -Dspark.partitions.num=16" />
+      <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/prj/senses.csv $USER_HOME$/Desktop/debug/prj/words-from-deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/dataset-js-features.csv $USER_HOME$/Desktop/debug/prj/output 0.00001 DepsallCoocsClusters true 20000 16" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="nsi-scala" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="PRJ: DepsallCoocsClusters" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="WSD" />
+      <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G  -Dspark.executor.memory=2G -Dspark.partitions.num=16" />
+      <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/prj/senses.csv $USER_HOME$/Desktop/debug/prj/words-from-deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/dataset-js-features.csv $USER_HOME$/Desktop/debug/prj/output 0.00001 DepsallCoocsClusters true 20000 1" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="nsi-scala" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="PRJ: Depstarget" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="WSD" />
+      <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G  -Dspark.executor.memory=2G -Dspark.partitions.num=16" />
+      <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/prj/senses.csv $USER_HOME$/Desktop/debug/prj/words-from-deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/dataset-js-features.csv $USER_HOME$/Desktop/debug/prj/output 0.00001 Depstarget true 20000 1" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="nsi-scala" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="PRJ: Depsall" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="WSD" />
+      <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G  -Dspark.executor.memory=2G -Dspark.partitions.num=16" />
+      <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/prj/senses.csv $USER_HOME$/Desktop/debug/prj/words-from-deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/dataset-js-features.csv $USER_HOME$/Desktop/debug/prj/output 0.00001 Depsall true 20000 1" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="nsi-scala" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="PRJ: Coocs" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="WSD" />
+      <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G  -Dspark.executor.memory=2G -Dspark.partitions.num=16" />
+      <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/prj/senses.csv $USER_HOME$/Desktop/debug/prj/words-from-deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/dataset-js-features.csv $USER_HOME$/Desktop/debug/prj/output 0.00001 Coocs true 20000 1" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="nsi-scala" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="PRJ: Clusters" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="WSD" />
+      <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G  -Dspark.executor.memory=2G -Dspark.partitions.num=16" />
+      <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/prj/senses.csv $USER_HOME$/Desktop/debug/prj/words-from-deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/dataset-js-features.csv $USER_HOME$/Desktop/debug/prj/output 0.00001 Clusters true 20000 1" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="nsi-scala" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="PRJ: DepstargetCoocsClusters" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="WSD" />
+      <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G  -Dspark.executor.memory=2G -Dspark.partitions.num=16" />
+      <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/prj/senses.csv $USER_HOME$/Desktop/debug/prj/words-from-deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/dataset-js-features.csv $USER_HOME$/Desktop/debug/prj/output 0.00001 DepstargetCoocsClusters true 20000 1" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="nsi-scala" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="WSD SemEval: prj all 001" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="WSD" />
+      <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G  -Dspark.executor.memory=2G -Dspark.partitions.num=16" />
+      <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/prj/senses.csv $USER_HOME$/Desktop/debug/prj/words-from-deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/dataset-js-features.csv $USER_HOME$/Desktop/debug/prj/output 0.00001 Depsall true 20000 16" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="nsi-scala" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="WSD SemEval: prj all 010" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="WSD" />
+      <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G  -Dspark.executor.memory=2G -Dspark.partitions.num=16" />
+      <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/prj/senses.csv $USER_HOME$/Desktop/debug/prj/words-from-deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/dataset-js-features.csv $USER_HOME$/Desktop/debug/prj/output 0.00001 Coocs true 20000 16" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="nsi-scala" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="WSD SemEval: prj all 100" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="WSD" />
+      <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G  -Dspark.executor.memory=2G -Dspark.partitions.num=16" />
+      <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/prj/senses.csv $USER_HOME$/Desktop/debug/prj/words-from-deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/dataset-js-features.csv $USER_HOME$/Desktop/debug/prj/output 0.00001 Clusters true 20000 16" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="nsi-scala" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="WSD SemEval: prj all 110 CoocsClusters" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="WSD" />
+      <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G  -Dspark.executor.memory=2G -Dspark.partitions.num=16" />
+      <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/prj/senses.csv $USER_HOME$/Desktop/debug/prj/words-from-deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/deps-50nn-20000.csv-na $USER_HOME$/Desktop/debug/prj/dataset-js-features.csv $USER_HOME$/Desktop/debug/prj/output 0.00001 DepsallCoocsClusters true 20000 16" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="nsi-scala" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="WSD SemEval: prj all 011" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="WSD" />
+      <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G  -Dspark.executor.memory=2G -Dspark.partitions.num=16" />
+      <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/prj/senses.csv-na $USER_HOME$/Desktop/debug/prj/words-from-deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/dataset-js-features.csv $USER_HOME$/Desktop/debug/prj/output 0.00001 DepsallCoocsClusters true 20000 16" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="nsi-scala" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="WSD SemEval: prj all 101" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="WSD" />
+      <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G  -Dspark.executor.memory=2G -Dspark.partitions.num=16" />
+      <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/prj/senses.csv $USER_HOME$/Desktop/debug/prj/words-from-deps-50nn-20000.csv-na $USER_HOME$/Desktop/debug/prj/deps-50nn-20000.csv $USER_HOME$/Desktop/debug/prj/dataset-js-features.csv $USER_HOME$/Desktop/debug/prj/output 0.00001 DepsallCoocsClusters true 20000 16" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="nsi-scala" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="Filter senses" type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="SensesFilter" />
+      <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G  -Dspark.executor.memory=2G -Dspark.partitions.num=16" />
+      <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/wsd/senses-voc $USER_HOME$/Desktop/debug/wsd/voc.csv $USER_HOME$/Desktop/debug/wsd/senses-voc-out false" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="nsi-scala" />
+      <envs />
+      <method />
+    </configuration>
     <configuration default="false" name="TEST WSD SemEval: b features, all contexts - coocs only " type="Application" factoryName="Application">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
       <option name="MAIN_CLASS_NAME" value="WSD" />
       <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G  -Dspark.executor.memory=2G " />
       <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/wsd/words-from-deps-20nn-b $USER_HOME$/Desktop/debug/wsd/deps-20nn-b-na $USER_HOME$/Desktop/debug/wsd/Dataset-SemEval-2013-13-js-features.csv $USER_HOME$/Desktop/debug/wsd/semeval-predict-b 0.00001 Product true 20000 16" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="nsi-scala" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="WSD SemEval: prj features, prj contexts " type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="WSD" />
+      <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G  -Dspark.executor.memory=2G " />
+      <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/prj/words-from-deps-20nn-b $USER_HOME$/Desktop/debug/wsd/deps-20nn-b-na $USER_HOME$/Desktop/debug/wsd/Dataset-SemEval-2013-13-js-features.csv $USER_HOME$/Desktop/debug/wsd/semeval-predict-b 0.00001 DepstargetCoocsClusters true 20000 16" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" />
@@ -1088,7 +1577,7 @@
     </configuration>
     <configuration default="false" name="TEST Filter ClueAgg full" type="Application" factoryName="Application">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <option name="MAIN_CLASS_NAME" value="ClueAggFilter" />
+      <option name="MAIN_CLASS_NAME" value="SenseFeatureFilter" />
       <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G -Dspark.executor.memory=2G" />
       <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/voc.csv $USER_HOME$/Desktop/debug/senses-1k.csv $USER_HOME$/Desktop/debug/W $USER_HOME$/Desktop/debug/WF $USER_HOME$/Desktop/debug/F" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
@@ -1103,7 +1592,7 @@
     </configuration>
     <configuration default="false" name="Clue Aggregation" type="Application" factoryName="Application">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <option name="MAIN_CLASS_NAME" value="ClusterContextClueAggregator" />
+      <option name="MAIN_CLASS_NAME" value="SenseFeatureAggregator" />
       <option name="VM_PARAMETERS" value="-Dspark.master=local[4] -Xms3G -Xmx6G -Dspark.executor.memory=6G" />
       <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/senses-1k.csv-voc $USER_HOME$/Desktop/debug/W $USER_HOME$/Desktop/debug/WF $USER_HOME$/Desktop/debug/F WithDeps 10 2" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
@@ -1116,9 +1605,24 @@
       <envs />
       <method />
     </configuration>
+    <configuration default="false" name="PRJ Clue Aggregation " type="Application" factoryName="Application">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="SenseFeatureAggregator" />
+      <option name="VM_PARAMETERS" value="-Dspark.master=local[4] -Xms3G -Xmx6G -Dspark.executor.memory=6G" />
+      <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/prj/senses.csv $USER_HOME$/Desktop/debug/prj/trigram/W-* $USER_HOME$/Desktop/debug/prj/trigram/F-* $USER_HOME$/Desktop/debug/prj/trigram/WF-* $USER_HOME$/Desktop/debug/prj/agg-trigram 20 trigrams 20000 1 word-freq" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="nsi-scala" />
+      <envs />
+      <method />
+    </configuration>
     <configuration default="false" name="Clue Aggregation voc" type="Application" factoryName="Application">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <option name="MAIN_CLASS_NAME" value="ClusterContextClueAggregator" />
+      <option name="MAIN_CLASS_NAME" value="SenseFeatureAggregator" />
       <option name="VM_PARAMETERS" value="-Dspark.master=local[4] -Xms3G -Xmx6G -Dspark.executor.memory=6G" />
       <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/ruby-java/senses-1k.csv-voc $USER_HOME$/Desktop/debug/ruby-java/W-voc $USER_HOME$/Desktop/debug/ruby-java/F-voc $USER_HOME$/Desktop/debug/ruby-java/WF-voc $USER_HOME$/Desktop/debug/ruby-java/senses-1k.csv-voc-clues-new2 200 deps 20 2" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
@@ -1133,7 +1637,7 @@
     </configuration>
     <configuration default="false" name="Clue Aggregation ----" type="Application" factoryName="Application">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <option name="MAIN_CLASS_NAME" value="ClusterContextClueAggregator" />
+      <option name="MAIN_CLASS_NAME" value="SenseFeatureAggregator" />
       <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G -Dspark.executor.memory=2G" />
       <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/ruby-java/senses-1k.csv-voc $USER_HOME$/Desktop/debug/ruby-java/W-voc $USER_HOME$/Desktop/debug/ruby-java/F-voc $USER_HOME$/Desktop/debug/ruby-java/WF-voc $USER_HOME$/Desktop/debug/ruby-java/clues-deps 200 deps 1000 2" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
@@ -1148,7 +1652,7 @@
     </configuration>
     <configuration default="false" name="Clue Aggregation ---- full" type="Application" factoryName="Application">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <option name="MAIN_CLASS_NAME" value="ClusterContextClueAggregator" />
+      <option name="MAIN_CLASS_NAME" value="SenseFeatureAggregator" />
       <option name="VM_PARAMETERS" value="-Dspark.master=local[8] -Xms3G -Xmx16G -Dspark.executor.memory=2G" />
       <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/ruby-java/senses-1k.csv-voc $USER_HOME$/Desktop/debug/W $USER_HOME$/Desktop/debug/F $USER_HOME$/Desktop/debug/WF $USER_HOME$/Desktop/debug/ruby-java/clues-deps-full 200 deps 1000 2" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
@@ -1178,7 +1682,7 @@
     </configuration>
     <configuration default="false" name="Clue Aggregation voc 1ksenses" type="Application" factoryName="Application">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <option name="MAIN_CLASS_NAME" value="ClusterContextClueAggregator" />
+      <option name="MAIN_CLASS_NAME" value="SenseFeatureAggregator" />
       <option name="VM_PARAMETERS" value="-Dspark.master=local[4] -Xms3G -Xmx6G -Dspark.executor.memory=6G" />
       <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/senses-1k.csv $USER_HOME$/Desktop/debug/ruby-java/W-voc $USER_HOME$/Desktop/debug/ruby-java/F-voc $USER_HOME$/Desktop/debug/ruby-java/WF-voc $USER_HOME$/Desktop/debug/senses-1k.csv-clues 200 deps 20 2" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
@@ -1193,7 +1697,7 @@
     </configuration>
     <configuration default="false" name="Clue Aggregation 1ksenses full features" type="Application" factoryName="Application">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <option name="MAIN_CLASS_NAME" value="ClusterContextClueAggregator" />
+      <option name="MAIN_CLASS_NAME" value="SenseFeatureAggregator" />
       <option name="VM_PARAMETERS" value="-Dspark.master=local[4] -Xms3G -Xmx6G -Dspark.executor.memory=6G" />
       <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/senses-1k.csv $USER_HOME$/Desktop/debug/W $USER_HOME$/Desktop/debug/F $USER_HOME$/Desktop/debug/WF $USER_HOME$/Desktop/debug/senses-1k.csv-clues 200 true 2" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
@@ -1208,7 +1712,7 @@
     </configuration>
     <configuration default="false" name="Clue Aggregation eval full features" type="Application" factoryName="Application">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <option name="MAIN_CLASS_NAME" value="ClusterContextClueAggregator" />
+      <option name="MAIN_CLASS_NAME" value="SenseFeatureAggregator" />
       <option name="VM_PARAMETERS" value="-Dspark.master=local[4] -Xms3G -Xmx6G -Dspark.executor.memory=6G" />
       <option name="PROGRAM_PARAMETERS" value="$USER_HOME$/Desktop/debug/senses-1k.csv $USER_HOME$/Desktop/debug/W $USER_HOME$/Desktop/debug/F $USER_HOME$/Desktop/debug/WF $USER_HOME$/Desktop/debug/eval/test-clues-deps 50 deps 20 2 $USER_HOME$/Desktop/debug/eval/voc-test.csv" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
@@ -1296,7 +1800,7 @@
       <envs />
       <method />
     </configuration>
-    <list size="30">
+    <list size="50">
       <item index="0" class="java.lang.String" itemvalue="Application.Test" />
       <item index="1" class="java.lang.String" itemvalue="Application.Freq filter" />
       <item index="2" class="java.lang.String" itemvalue="Application.Filter W" />
@@ -1304,45 +1808,67 @@
       <item index="4" class="java.lang.String" itemvalue="Application.TEST Filter ClueAgg" />
       <item index="5" class="java.lang.String" itemvalue="Application.TEST WSD" />
       <item index="6" class="java.lang.String" itemvalue="Application.TEST WSD SemEval: b features, all contexts" />
-      <item index="7" class="java.lang.String" itemvalue="Application.TEST WSD SemEval: b features, all contexts - coocs only " />
-      <item index="8" class="java.lang.String" itemvalue="Application.TEST WSD SemEval: b features, all contexts - deps only " />
-      <item index="9" class="java.lang.String" itemvalue="Application.TEST WSD SemEval: all features, b contexts" />
-      <item index="10" class="java.lang.String" itemvalue="Application.Foo" />
-      <item index="11" class="java.lang.String" itemvalue="Application.Foo single" />
-      <item index="12" class="java.lang.String" itemvalue="Application.TEST WSD full" />
-      <item index="13" class="java.lang.String" itemvalue="Application.TEST WSD small" />
-      <item index="14" class="java.lang.String" itemvalue="Application.TEST Filter ClueAgg full" />
-      <item index="15" class="java.lang.String" itemvalue="Application.Clue Aggregation" />
-      <item index="16" class="java.lang.String" itemvalue="Application.Clue Aggregation voc" />
-      <item index="17" class="java.lang.String" itemvalue="Application.Clue Aggregation ----" />
-      <item index="18" class="java.lang.String" itemvalue="Application.Clue Aggregation ---- full" />
-      <item index="19" class="java.lang.String" itemvalue="Application.ClueAggregator ++++" />
-      <item index="20" class="java.lang.String" itemvalue="Application.Clue Aggregation voc 1ksenses" />
-      <item index="21" class="java.lang.String" itemvalue="Application.Clue Aggregation 1ksenses full features" />
-      <item index="22" class="java.lang.String" itemvalue="Application.Clue Aggregation eval full features" />
-      <item index="23" class="java.lang.String" itemvalue="Application.Freq filter wordnet" />
-      <item index="24" class="java.lang.String" itemvalue="Application.Freq filter dela" />
-      <item index="25" class="java.lang.String" itemvalue="Application.Freq filter mwe.csv" />
-      <item index="26" class="java.lang.String" itemvalue="Application.Freq filter with singles" />
-      <item index="27" class="java.lang.String" itemvalue="Application.Senses" />
-      <item index="28" class="java.lang.String" itemvalue="Application.grouping" />
-      <item index="29" class="java.lang.String" itemvalue="Scala Console.Scala Console" />
+      <item index="7" class="java.lang.String" itemvalue="Application.WSD SemEval: prj" />
+      <item index="8" class="java.lang.String" itemvalue="Application.WSD SemEval: prj all" />
+      <item index="9" class="java.lang.String" itemvalue="Application.WSD SemEval: prj all 111" />
+      <item index="10" class="java.lang.String" itemvalue="Application.PRJ: DepsallCoocsClusters" />
+      <item index="11" class="java.lang.String" itemvalue="Application.PRJ: Depstarget" />
+      <item index="12" class="java.lang.String" itemvalue="Application.PRJ: Depsall" />
+      <item index="13" class="java.lang.String" itemvalue="Application.PRJ: Coocs" />
+      <item index="14" class="java.lang.String" itemvalue="Application.PRJ: Clusters" />
+      <item index="15" class="java.lang.String" itemvalue="Application.PRJ: DepstargetCoocsClusters" />
+      <item index="16" class="java.lang.String" itemvalue="Application.WSD SemEval: prj all 001" />
+      <item index="17" class="java.lang.String" itemvalue="Application.WSD SemEval: prj all 010" />
+      <item index="18" class="java.lang.String" itemvalue="Application.WSD SemEval: prj all 100" />
+      <item index="19" class="java.lang.String" itemvalue="Application.WSD SemEval: prj all 110 CoocsClusters" />
+      <item index="20" class="java.lang.String" itemvalue="Application.WSD SemEval: prj all 011" />
+      <item index="21" class="java.lang.String" itemvalue="Application.WSD SemEval: prj all 101" />
+      <item index="22" class="java.lang.String" itemvalue="Application.Filter senses" />
+      <item index="23" class="java.lang.String" itemvalue="Application.TEST WSD SemEval: b features, all contexts - coocs only " />
+      <item index="24" class="java.lang.String" itemvalue="Application.WSD SemEval: prj features, prj contexts " />
+      <item index="25" class="java.lang.String" itemvalue="Application.TEST WSD SemEval: b features, all contexts - deps only " />
+      <item index="26" class="java.lang.String" itemvalue="Application.TEST WSD SemEval: all features, b contexts" />
+      <item index="27" class="java.lang.String" itemvalue="Application.Foo" />
+      <item index="28" class="java.lang.String" itemvalue="Application.Foo single" />
+      <item index="29" class="java.lang.String" itemvalue="Application.TEST WSD full" />
+      <item index="30" class="java.lang.String" itemvalue="Application.TEST WSD small" />
+      <item index="31" class="java.lang.String" itemvalue="Application.TEST Filter ClueAgg full" />
+      <item index="32" class="java.lang.String" itemvalue="Application.Clue Aggregation" />
+      <item index="33" class="java.lang.String" itemvalue="Application.PRJ Clue Aggregation " />
+      <item index="34" class="java.lang.String" itemvalue="Application.Clue Aggregation voc" />
+      <item index="35" class="java.lang.String" itemvalue="Application.Clue Aggregation ----" />
+      <item index="36" class="java.lang.String" itemvalue="Application.Clue Aggregation ---- full" />
+      <item index="37" class="java.lang.String" itemvalue="Application.ClueAggregator ++++" />
+      <item index="38" class="java.lang.String" itemvalue="Application.Clue Aggregation voc 1ksenses" />
+      <item index="39" class="java.lang.String" itemvalue="Application.Clue Aggregation 1ksenses full features" />
+      <item index="40" class="java.lang.String" itemvalue="Application.Clue Aggregation eval full features" />
+      <item index="41" class="java.lang.String" itemvalue="Application.Freq filter wordnet" />
+      <item index="42" class="java.lang.String" itemvalue="Application.Freq filter dela" />
+      <item index="43" class="java.lang.String" itemvalue="Application.Freq filter mwe.csv" />
+      <item index="44" class="java.lang.String" itemvalue="Application.Freq filter with singles" />
+      <item index="45" class="java.lang.String" itemvalue="Application.Senses" />
+      <item index="46" class="java.lang.String" itemvalue="Application.grouping" />
+      <item index="47" class="java.lang.String" itemvalue="Scala Console.Scala Console" />
+      <item index="48" class="java.lang.String" itemvalue="ScalaTest.UtilTest" />
+      <item index="49" class="java.lang.String" itemvalue="ScalaTest.SenseFeatureAggregatorTest" />
     </list>
     <recent_temporary>
-      <list size="2">
-        <item index="0" class="java.lang.String" itemvalue="Scala Console.Scala Console" />
-        <item index="1" class="java.lang.String" itemvalue="Application.grouping" />
+      <list size="4">
+        <item index="0" class="java.lang.String" itemvalue="ScalaTest.SenseFeatureAggregatorTest" />
+        <item index="1" class="java.lang.String" itemvalue="Scala Console.Scala Console" />
+        <item index="2" class="java.lang.String" itemvalue="ScalaTest.UtilTest" />
+        <item index="3" class="java.lang.String" itemvalue="Application.grouping" />
       </list>
     </recent_temporary>
   </component>
   <component name="SbtLocalSettings">
-    <option name="lastUpdateTimestamp" value="1454702099780" />
+    <option name="lastUpdateTimestamp" value="1455983538827" />
     <option name="availableProjects">
       <map>
         <entry>
           <key>
             <ExternalProjectPojo>
-              <option name="name" value="nsi" />
+              <option name="name" value="josimtext" />
               <option name="path" value="$PROJECT_DIR$" />
             </ExternalProjectPojo>
           </key>
@@ -1407,7 +1933,17 @@
       <workItem from="1454669768391" duration="5711000" />
       <workItem from="1454678883096" duration="4522000" />
       <workItem from="1454700466039" duration="1114000" />
-      <workItem from="1454702062792" duration="12927000" />
+      <workItem from="1454702062792" duration="13297000" />
+      <workItem from="1454880852607" duration="1183000" />
+      <workItem from="1454919646269" duration="6272000" />
+      <workItem from="1454958263860" duration="3751000" />
+      <workItem from="1455012342711" duration="1675000" />
+      <workItem from="1455047381419" duration="7255000" />
+      <workItem from="1455267658480" duration="6656000" />
+      <workItem from="1455308920993" duration="5559000" />
+      <workItem from="1455738854585" duration="7012000" />
+      <workItem from="1455873236712" duration="2301000" />
+      <workItem from="1455909210317" duration="18127000" />
     </task>
     <task id="LOCAL-00001" summary="freq filter">
       <created>1449493849090</created>
@@ -1439,31 +1975,106 @@
       <option name="project" value="LOCAL" />
       <updated>1454518811170</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="wsd improvement, refactorings">
+      <created>1454880489084</created>
+      <option name="number" value="00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1454880489084</updated>
+    </task>
+    <task id="LOCAL-00007" summary="beauty">
+      <created>1454881723188</created>
+      <option name="number" value="00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1454881723188</updated>
+    </task>
+    <task id="LOCAL-00008" summary="wsd: working, but cluster features are not introduced yet">
+      <created>1455197561112</created>
+      <option name="number" value="00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1455197561112</updated>
+    </task>
+    <task id="LOCAL-00009" summary="wsd: working, but cluster features are introduced and tested">
+      <created>1455315157710</created>
+      <option name="number" value="00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1455315157710</updated>
+    </task>
+    <task id="LOCAL-00010" summary="wsd minor">
+      <created>1455980511727</created>
+      <option name="number" value="00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1455980511727</updated>
+    </task>
+    <task id="LOCAL-00011" summary="trigram feature in clue aggregator">
+      <created>1455987977435</created>
+      <option name="number" value="00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1455987977436</updated>
+    </task>
+    <task id="LOCAL-00012" summary="lmi feature norm parameter">
+      <created>1456067503352</created>
+      <option name="number" value="00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1456067503352</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
+  <component name="TestHistory">
+    <history-entry file="SenseFeatureAggregatorTest - 2016.02.21 at 16h 03m 32s.xml">
+      <configuration name="SenseFeatureAggregatorTest" configurationId="ScalaTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="SenseFeatureAggregatorTest - 2016.02.21 at 16h 04m 15s.xml">
+      <configuration name="SenseFeatureAggregatorTest" configurationId="ScalaTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="SenseFeatureAggregatorTest - 2016.02.21 at 16h 04m 28s.xml">
+      <configuration name="SenseFeatureAggregatorTest" configurationId="ScalaTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="SenseFeatureAggregatorTest - 2016.02.21 at 16h 06m 48s.xml">
+      <configuration name="SenseFeatureAggregatorTest" configurationId="ScalaTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="SenseFeatureAggregatorTest - 2016.02.21 at 16h 07m 01s.xml">
+      <configuration name="SenseFeatureAggregatorTest" configurationId="ScalaTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="SenseFeatureAggregatorTest - 2016.02.21 at 16h 07m 55s.xml">
+      <configuration name="SenseFeatureAggregatorTest" configurationId="ScalaTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="UtilTest - 2016.02.20 at 17h 31m 11s.xml">
+      <configuration name="UtilTest" configurationId="ScalaTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="UtilTest - 2016.02.20 at 17h 33m 09s.xml">
+      <configuration name="UtilTest" configurationId="ScalaTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="UtilTest - 2016.02.20 at 17h 34m 14s.xml">
+      <configuration name="UtilTest" configurationId="ScalaTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="UtilTest - 2016.02.20 at 17h 38m 19s.xml">
+      <configuration name="UtilTest" configurationId="ScalaTestRunConfiguration" />
+    </history-entry>
+  </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="172474000" />
+    <option name="totallyTimeSpent" value="232635000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="4" y="23" width="2556" height="1417" extended-state="6" />
+    <frame x="4" y="23" width="2553" height="1417" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16679245" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="SBT" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.16528302" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="SBT" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.12664278" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Palette&#9;" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.30691245" sideWeight="0.50533617" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3864151" sideWeight="0.49466383" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32981133" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2264151" sideWeight="0.49466383" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Coverage" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3299462" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3281106" sideWeight="0.49786553" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.11058075" sideWeight="0.3686594" order="0" side_tool="true" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20111509" sideWeight="0.5968468" order="0" side_tool="true" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32754716" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.11058075" sideWeight="0.63134056" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20111509" sideWeight="0.40315315" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.14834578" sideWeight="0.35883906" order="3" side_tool="true" content_ui="tabs" />
@@ -1496,25 +2107,18 @@
     <MESSAGE value="clue aggregation refactoring and filtering" />
     <MESSAGE value="clue aggregation extra params and filtering" />
     <MESSAGE value="wsd working, before refactoring of the input format to the standard lex sample" />
-    <option name="LAST_COMMIT_MESSAGE" value="wsd working, before refactoring of the input format to the standard lex sample" />
+    <MESSAGE value="wsd improvement, refactorings" />
+    <MESSAGE value="beauty" />
+    <MESSAGE value="wsd: working, but cluster features are not introduced yet" />
+    <MESSAGE value="wsd: working, but cluster features are introduced and tested" />
+    <MESSAGE value="wsd minor" />
+    <MESSAGE value="trigram feature in clue aggregator" />
+    <MESSAGE value="lmi feature norm parameter" />
+    <option name="LAST_COMMIT_MESSAGE" value="lmi feature norm parameter" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="scala-line">
-          <url>file://$PROJECT_DIR$/src/main/scala/ClueAggregator.scala</url>
-          <line>155</line>
-          <properties />
-          <option name="timeStamp" value="9" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="scala-line">
-          <url>file://$PROJECT_DIR$/src/main/scala/WSD.scala</url>
-          <line>51</line>
-          <properties />
-          <option name="timeStamp" value="22" />
-        </line-breakpoint>
-      </breakpoints>
-      <option name="time" value="23" />
+      <option name="time" value="33" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -1526,13 +2130,6 @@
     <entry file="file://$PROJECT_DIR$/src/main/scala/SensesFilter.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="54" column="13" selection-start-line="54" selection-start-column="7" selection-end-line="54" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/ClusterContextClueAggregator.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
@@ -1551,35 +2148,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/ClusterContextClueAggregator.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/SensesFilter.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/SensesFilter.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/SensesFilter.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="54" column="13" selection-start-line="54" selection-start-column="7" selection-end-line="54" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/ClusterContextClueAggregator.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/SenseFeatureAggregator.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
@@ -1698,20 +2267,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/noun-sense-induction.sbt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.1465798">
-          <caret line="12" column="0" selection-start-line="12" selection-start-column="0" selection-end-line="12" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.97161776">
-          <caret line="204" column="0" selection-start-line="204" selection-start-column="0" selection-end-line="204" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/grouping.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.2955665">
@@ -1726,34 +2281,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/SensesFilter.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6865672">
-          <caret line="50" column="0" selection-start-line="50" selection-start-column="0" selection-end-line="50" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/WordFeatureFilter.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.04477612">
           <caret line="5" column="7" selection-start-line="5" selection-start-column="7" selection-end-line="5" selection-end-column="7" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/ClueAggFilter.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.74626863">
-          <caret line="56" column="53" selection-start-line="56" selection-start-column="53" selection-end-line="56" selection-end-column="53" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/ClueAggregator.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.37313432">
-          <caret line="75" column="78" selection-start-line="75" selection-start-column="78" selection-end-line="75" selection-end-column="78" />
-          <folding>
-            <element signature="e#0#36#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1792,24 +2323,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/resources/stoplist_en.csv">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="376" column="10" selection-start-line="376" selection-start-column="10" selection-end-line="376" selection-end-column="10" />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.7.0_67.jdk/Contents/Home/src.zip!/java/lang/String.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.33333334">
           <caret line="2263" column="49" selection-start-line="2263" selection-start-column="44" selection-end-line="2263" selection-end-column="49" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/WSDEvaluation.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.011363637">
-          <caret line="6" column="0" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
         </state>
       </provider>
     </entry>
@@ -1848,46 +2365,138 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/ClusterContextClueAggregator.scala">
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;MultiMarkdownPreviewEditor]">
+        <state split_layout="FIRST">
+          <first_editor vertical-scroll-proportion="0.0748503">
+            <caret line="5" column="39" selection-start-line="5" selection-start-column="39" selection-end-line="5" selection-end-column="39" />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+      <provider editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.97224367">
+          <caret line="204" column="0" selection-start-line="204" selection-start-column="0" selection-end-line="204" selection-end-column="0" />
+        </state>
+      </provider>
+      <provider editor-type-id="MultiMarkdownFxPreviewEditor">
+        <state />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/WSDEvaluationBaseline.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.020297699">
-          <caret line="110" column="135" selection-start-line="110" selection-start-column="105" selection-end-line="110" selection-end-column="135" />
+        <state vertical-scroll-proportion="0.8916777">
+          <caret line="65" column="0" selection-start-line="63" selection-start-column="13" selection-end-line="65" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$USER_HOME$/.ivy2/cache/org.apache.spark/spark-core_2.10/srcs/spark-core_2.10-1.3.0-sources.jar!/org/apache/spark/rdd/PairRDDFunctions.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.017401392">
+          <caret line="490" column="6" selection-start-line="490" selection-start-column="6" selection-end-line="490" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/WSDFeatures.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.64784056">
+          <caret line="39" column="6" selection-start-line="39" selection-start-column="6" selection-end-line="39" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/WSD.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="206" column="28" selection-start-line="206" selection-start-column="12" selection-end-line="206" selection-end-column="28" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/noun-sense-induction.sbt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="13" column="0" selection-start-line="13" selection-start-column="0" selection-end-line="13" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/SensesFilter.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.017094018">
+          <caret line="2" column="12" selection-start-line="2" selection-start-column="12" selection-end-line="2" selection-end-column="12" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/feature-agg.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="412" selection-start-line="0" selection-start-column="230" selection-end-line="0" selection-end-column="412" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/IndexModuloPartitioner.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.05782575">
+          <caret line="5" column="74" selection-start-line="5" selection-start-column="74" selection-end-line="5" selection-end-column="74" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/WordFeatureCountsJoin.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.023130301">
+          <caret line="2" column="7" selection-start-line="2" selection-start-column="7" selection-end-line="2" selection-end-column="7" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/SenseFeatureFilter.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.63608325">
+          <caret line="56" column="53" selection-start-line="56" selection-start-column="53" selection-end-line="56" selection-end-column="53" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/resources/stoplist_en.csv">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.08095605">
+          <caret line="7" column="1" selection-start-line="7" selection-start-column="1" selection-end-line="7" selection-end-column="1" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/Util.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="39" column="0" selection-start-line="39" selection-start-column="0" selection-end-line="39" selection-end-column="0" />
+          <caret line="17" column="89" selection-start-line="17" selection-start-column="89" selection-end-line="17" selection-end-column="89" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/Foo.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.9376392">
-          <caret line="73" column="5" selection-start-line="73" selection-start-column="5" selection-end-line="73" selection-end-column="5" />
-          <folding>
-            <element signature="e#0#38#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/WSDFeatures.scala">
+    <entry file="file://$PROJECT_DIR$/src/test/scala/UtilTest.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="3" column="18" selection-start-line="3" selection-start-column="18" selection-end-line="3" selection-end-column="18" />
+          <caret line="4" column="5" selection-start-line="2" selection-start-column="3" selection-end-line="4" selection-end-column="5" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/WSD.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/SenseFeatureAggregator.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.18970448">
-          <caret line="178" column="9" selection-start-line="178" selection-start-column="9" selection-end-line="178" selection-end-column="9" />
-          <folding>
-            <element signature="e#0#37#0" expanded="true" />
-          </folding>
+        <state vertical-scroll-proportion="-15.0">
+          <caret line="32" column="12" selection-start-line="32" selection-start-column="12" selection-end-line="32" selection-end-column="12" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/scala/SenseFeatureAggregatorTest.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0872093">
+          <caret line="5" column="95" selection-start-line="5" selection-start-column="95" selection-end-line="5" selection-end-column="95" />
+          <folding />
         </state>
       </provider>
     </entry>
