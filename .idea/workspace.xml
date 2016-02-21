@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="a51058d7-126b-496a-bf60-dbd05776b51f" name="Default" comment="trigram feature in clue aggregator">
+    <list default="true" id="a51058d7-126b-496a-bf60-dbd05776b51f" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/test/scala/SenseFeatureAggregatorTest.scala" afterPath="$PROJECT_DIR$/src/test/scala/SenseFeatureAggregatorTest.scala" />
     </list>
     <ignored path="noun-sense-induction.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -1943,7 +1942,7 @@
       <workItem from="1455308920993" duration="5559000" />
       <workItem from="1455738854585" duration="7012000" />
       <workItem from="1455873236712" duration="2301000" />
-      <workItem from="1455909210317" duration="18127000" />
+      <workItem from="1455909210317" duration="18153000" />
     </task>
     <task id="LOCAL-00001" summary="freq filter">
       <created>1449493849090</created>
@@ -2017,7 +2016,13 @@
       <option name="project" value="LOCAL" />
       <updated>1456067503352</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="trigram feature in clue aggregator">
+      <created>1456089106865</created>
+      <option name="number" value="00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1456089106865</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -2053,7 +2058,7 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="232635000" />
+    <option name="totallyTimeSpent" value="232661000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="4" y="23" width="2553" height="1417" extended-state="6" />
@@ -2112,9 +2117,9 @@
     <MESSAGE value="wsd: working, but cluster features are not introduced yet" />
     <MESSAGE value="wsd: working, but cluster features are introduced and tested" />
     <MESSAGE value="wsd minor" />
-    <MESSAGE value="trigram feature in clue aggregator" />
     <MESSAGE value="lmi feature norm parameter" />
-    <option name="LAST_COMMIT_MESSAGE" value="lmi feature norm parameter" />
+    <MESSAGE value="trigram feature in clue aggregator" />
+    <option name="LAST_COMMIT_MESSAGE" value="trigram feature in clue aggregator" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
