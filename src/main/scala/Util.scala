@@ -13,82 +13,97 @@ object Util {
       Files.exists(Paths.get(Path))
   }
 
+
   /**
-    * Parses dependency line "subj(@,dog)" into the tuple of strings (subj, @, dog)
+    * Parses a trigram feature e.g. "passenger_@_." into the tuple of strings (passenger, .)
     * */
-  def parseDep(depFeature: String) = {
-      val depRest = depFeature.split("\\(")
-      if (depRest.size == 2) {
-          val depType = depRest(0)
-          val params = depRest(1).split(",")
-          if (params.size == 2){
-              val left = params(1).substring(0, params(1).length-1)
-              val right = params(0)
-              (depType, right, left)
-          } else {
-              ("?", "?", "?")
-          }
+    def parseTrigram(trigramFeature: String) = {
+      val fields = trigramFeature.split("_")
+
+      if (fields.size == 3) {
+          (fields(0), fields(2))
       } else {
-          ("?", "?", "?")
+          ("?", "?")
       }
-  }
-
-  def getStopwords() = {
-    val source: BufferedSource = Source.fromURL(getClass.getResource(Const.Resources.STOPWORDS))
-    source.getLines.toSet
-  }
-
-  def loadVocabulary(sc: SparkContext, vocPath: String, lowercase:Boolean=true) = {
-    sc.textFile(vocPath)
-      .map{ line => line.split("\t")}
-      .map{ case Array(word) => if (lowercase) word.toLowerCase() else word }
-      .collect()
-      .toSet
-  }
-
-
-  def listFilesSafely(file: File): Seq[File] = {
-    if (file.exists()) {
-      val files = file.listFiles()
-      if (files == null) {
-        throw new IOException("Failed to list files for dir: " + file)
-      }
-      files
-    } else {
-      List()
     }
-  }
 
-  def delete(filePath: String) {
-    deleteFile(new File(filePath))
-  }
 
-  def deleteFile(file: File) {
-    if (file != null) {
-      try {
-        if (file.isDirectory ) {
-          var savedIOException: IOException = null
-          for (child <- listFilesSafely(file)) {
-            try {
-              deleteFile(child)
-            } catch {
-              case ioe: IOException => savedIOException = ioe
+    /**
+      * Parses dependency line "subj(@,dog)" into the tuple of strings (subj, @, dog)
+      * */
+    def parseDep(depFeature: String) = {
+        val depRest = depFeature.split("\\(")
+        if (depRest.size == 2) {
+            val depType = depRest(0)
+            val params = depRest(1).split(",")
+            if (params.size == 2){
+                val left = params(1).substring(0, params(1).length-1)
+                val right = params(0)
+                (depType, right, left)
+            } else {
+                ("?", "?", "?")
+            }
+        } else {
+            ("?", "?", "?")
+        }
+    }
+
+    def getStopwords() = {
+      val source: BufferedSource = Source.fromURL(getClass.getResource(Const.Resources.STOPWORDS))
+      source.getLines.toSet
+    }
+
+    def loadVocabulary(sc: SparkContext, vocPath: String, lowercase:Boolean=true) = {
+      sc.textFile(vocPath)
+        .map{ line => line.split("\t")}
+        .map{ case Array(word) => if (lowercase) word.toLowerCase() else word }
+        .collect()
+        .toSet
+    }
+
+
+    def listFilesSafely(file: File): Seq[File] = {
+      if (file.exists()) {
+        val files = file.listFiles()
+        if (files == null) {
+          throw new IOException("Failed to list files for dir: " + file)
+        }
+        files
+      } else {
+        List()
+      }
+    }
+
+    def delete(filePath: String) {
+      deleteFile(new File(filePath))
+    }
+
+    def deleteFile(file: File) {
+      if (file != null) {
+        try {
+          if (file.isDirectory ) {
+            var savedIOException: IOException = null
+            for (child <- listFilesSafely(file)) {
+              try {
+                deleteFile(child)
+              } catch {
+                case ioe: IOException => savedIOException = ioe
+              }
+            }
+            if (savedIOException != null) {
+              throw savedIOException
+            }
+
+          }
+        } finally {
+          if (!file.delete()) {
+            if (file.exists()) {
+              throw new IOException("Failed to delete: " + file.getAbsolutePath)
             }
           }
-          if (savedIOException != null) {
-            throw savedIOException
-          }
-
-        }
-      } finally {
-        if (!file.delete()) {
-          if (file.exists()) {
-            throw new IOException("Failed to delete: " + file.getAbsolutePath)
-          }
         }
       }
     }
-  }
 
 
     /**

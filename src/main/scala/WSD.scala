@@ -13,8 +13,8 @@ object WSD {
     val DEPS_TARGET_FEATURES_BOOST = 3  // boost for strong sparse features
     val SYMMETRIZE_DEPS = true
     val DEFAULT_SENSE_ID = 1
-    val DEFAULT_LOG_CONF = -1000000000.0
-    val DEBUG = true
+    val DEFAULT_FEATURENUM_CONF = "0"
+    val DEBUG = false
 
     val _stopwords = Util.getStopwords()
 
@@ -77,8 +77,9 @@ object WSD {
             .map(feature => feature.replaceAll("@@","@"))
     }
 
-    def predictSense(contextFeaturesRaw:Set[String], clusterFeatures:Map[Int, Map[String, Double]], coocFeatures:Map[Int, (Double, Int, Map[String, Double])],
-                     depFeatures:Map[Int, (Double, Int, Map[String, Double])], priorFeatureProb:Double, usePriorProbs:Boolean) = {
+    def predictSense(contextFeaturesRaw:Set[String], clusterFeatures:Map[Int, Map[String, Double]],
+            coocFeatures:Map[Int, (Double, Int, Map[String, Double])], depFeatures:Map[Int, (Double, Int, Map[String, Double])],
+            priorFeatureProb:Double, usePriorProbs:Boolean) = {
 
         if (DEBUG) {
             println("clusters available: " + (clusterFeatures != null).toString)
@@ -145,16 +146,21 @@ object WSD {
 
         // return the most probable sense
         if (senseProbs.size > 0) {
-            val bestSense = senseProbs.toList.sortBy(_._2).last
+            val senseProbsSorted = senseProbs.toList.sortBy(_._2)
+            val bestSense = senseProbsSorted.last
             val bestSenseId = bestSense._1
-            val bestSenseConf = bestSense._2
-            val bestSenseConfNorm = if (usedFeatures.size > 0) bestSense._2 / usedFeatures.size else bestSense._2
+            val bestSenseConfStr = bestSense._2.toString
+            val bestSenseConfNormStr = if (usedFeatures.size > 0) (bestSense._2 / usedFeatures.size).toString else bestSense._2.toString
             val usedFeaturesStr = usedFeatures.toSet.mkString(Const.LIST_SEP)
             val allFeaturesStr = allFeatures.mkString(Const.LIST_SEP)
 
-            (bestSenseId, bestSenseConf, bestSenseConfNorm, usedFeaturesStr + "\t" + allFeaturesStr)
+            val worstSense = senseProbsSorted(0)
+            val rangeConfStr = "%.3f".format(bestSense._2 - worstSense._2)
+            val featurenumConfStr = usedFeatures.size.toString
+
+            (bestSenseId, rangeConfStr, featurenumConfStr, bestSenseConfStr + "\t" + bestSenseConfNormStr + "\t" + usedFeaturesStr + "\t" + allFeaturesStr)
         } else {
-            (DEFAULT_SENSE_ID, DEFAULT_LOG_CONF, DEFAULT_LOG_CONF, "\t")
+            (DEFAULT_SENSE_ID, DEFAULT_FEATURENUM_CONF, DEFAULT_FEATURENUM_CONF, "\t")
         }
     }
 
@@ -282,7 +288,7 @@ object WSD {
         }
 
         // Classify contexts
-        var result: RDD[((String, String, String, String, String, String, String, String, String, String, String, String), (Int, Double, Double, String))] = null
+        var result: RDD[((String, String, String, String, String, String, String, String, String, String, String, String), (Int, String, String, String))] = null
         if (clusterFeatures != null && coocFeatures != null && depFeatures != null) {
             result = lexSample
                 .join(coocFeatures)
