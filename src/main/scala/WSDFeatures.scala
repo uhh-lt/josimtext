@@ -18,15 +18,15 @@ object WSDFeatures extends Enumeration {
   }
 
   def depsNeeded(wsdFeatures: WSDFeatures): Boolean = {
-    (wsdFeatures == Depsall || wsdFeatures == DepsallCoocsClusters || wsdFeatures == Depstarget || wsdFeatures == DepstargetCoocsClusters)
+      (wsdFeatures == Depsall || wsdFeatures == DepsallCoocsClusters || wsdFeatures == Depstarget || wsdFeatures == DepstargetCoocsClusters)
   }
 
   def coocsNeeded(wsdFeatures: WSDFeatures): Boolean = {
-    (wsdFeatures == Coocs || wsdFeatures == DepsallCoocsClusters || wsdFeatures == DepstargetCoocsClusters)
+      (wsdFeatures == Coocs || wsdFeatures == DepsallCoocsClusters || wsdFeatures == DepstargetCoocsClusters)
   }
 
   def clustersNeeded(wsdFeatures: WSDFeatures): Boolean = {
-    (wsdFeatures == Clusters || wsdFeatures == DepsallCoocsClusters || wsdFeatures == DepstargetCoocsClusters)
+      (wsdFeatures == Clusters || wsdFeatures == DepsallCoocsClusters || wsdFeatures == DepstargetCoocsClusters)
   }
 
   def fromString(str:String) = {
@@ -34,9 +34,9 @@ object WSDFeatures extends Enumeration {
     if (!res1.isSuccess) {
       val res2 = Try(WSDFeatures.withName(str(0).isUpper + str.substring(1).toLowerCase()))
       if (!res2.isSuccess) {
-        DEFAULT
+          DEFAULT
       } else {
-        res2.getOrElse(DEFAULT)
+          res2.getOrElse(DEFAULT)
       }
     } else {
       res1.getOrElse(DEFAULT)

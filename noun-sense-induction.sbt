@@ -1,6 +1,6 @@
-name := "nsi"
+name := "josimtext"
 
-version := "0.0.1"
+version := "0.2"
 
 scalaVersion := "2.10.4"
 
@@ -10,3 +10,4 @@ resolvers += Resolver.mavenLocal
 
 libraryDependencies += "org.apache.spark" %% "spark-core" % "1.3.0"
 
+libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.0" % "test"

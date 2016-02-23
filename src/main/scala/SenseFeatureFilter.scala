@@ -2,7 +2,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
 
 
-object ClueAggFilter {
+object SenseFeatureFilter {
 
   val POSTFIX = "-voc"
 
