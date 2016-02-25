@@ -10,14 +10,14 @@ object SenseFeatureAggregator {
     val MAX_FEATURE_NUM = 10000
     val MIN_WORD_FEATURE_COUNT = 0.0
     val PRIOR_FEATURE_PROB = 0.000001
-    val FEATURE_TYPES = List("words", "deps", "words-from-deps", "trigrams")
+    val FEATURE_TYPES = List("words", "deps", "depwords", "trigrams")
     val LOWERCASE_WORDS_FROM_DEPS = true
-    val FEATURE_SCORE_NORMS = List("word-count", "lmi")
+    val FEATURE_SCORE_NORMS = List("wc", "lmi")
     val _stopwords = Util.getStopwords()
     val _numbersRegex = """\d+""".r
 
     def keepFeature(feature:String, featureType:String) = {
-        if (featureType == "deps" || featureType == "words-from-deps") {
+        if (featureType == "deps" || featureType == "depwords") {
             // dependency features
             val (depType, srcWord, dstWord) = Util.parseDep(feature)
             if (Const.Resources.STOP_DEPENDENCIES.contains(depType) || _stopwords.contains(srcWord) || _stopwords.contains(dstWord)) {
@@ -39,7 +39,7 @@ object SenseFeatureAggregator {
 
     def transformFeature(feature:String, featureType:String, lowercase:Boolean=LOWERCASE_WORDS_FROM_DEPS) = {
         var res: String = ""
-        if (featureType == "words-from-deps"){
+        if (featureType == "depwords"){
             val (depType, srcWord, dstWord) = Util.parseDep(feature)
             if (srcWord == Const.HOLE || srcWord == Const.HOLE_DEPRECATED) {
                 res = dstWord
@@ -61,7 +61,7 @@ object SenseFeatureAggregator {
             .sortBy(_._2)
             .reverse
 
-        if (featureType == "words-from-deps") {
+        if (featureType == "depwords") {
             // this feature after transformation will be just a word
             filteredFeatureList
                 .groupBy(_._1)
@@ -92,7 +92,6 @@ object SenseFeatureAggregator {
         if (args.length < 5) {
             println("Aggregates clues of word sense cluster.")
             println("Usage: ClusterContextClueAggregator <senses> <word-counts> <feature-counts> <word-feature-counts> <output> [cluser-words-num] [dependency-features] [max-feature-num] [min-word-feature-count] [target-words]")
-            println("Example: /Users/alex/Desktop/debug/ruby-java/senses-1k.csv-voc /Users/alex/Desktop/debug/ruby-java/W-voc /Users/alex/Desktop/debug/ruby-java/F-voc /Users/alex/Desktop/debug/ruby-java/WF-voc /Users/alex/Desktop/debug/ruby-java/senses-1k.csv-voc-clues-new3 200 words-from-deps 20 2 /")
             return
         }
 

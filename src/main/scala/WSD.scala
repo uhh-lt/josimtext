@@ -5,13 +5,15 @@ import org.apache.spark.{HashPartitioner, SparkConf, SparkContext}
 import scala.util.Try
 
 object WSD {
+
+    
     val WSD_MODE = WSDFeatures.DEFAULT
     val USE_PRIOR_PROB = true
     val PRIOR_PROB = 0.00001
     val MAX_FEATURE_NUM = 1000000
     val PARTITIONS_NUM = 16
     val DEPS_TARGET_FEATURES_BOOST = 3  // boost for strong sparse features
-    val SYMMETRIZE_DEPS = true
+    val SYMMETRIZE_DEPS = false
     val DEFAULT_SENSE_ID = 1
     val DEFAULT_FEATURENUM_CONF = "0"
     val DEBUG = false
