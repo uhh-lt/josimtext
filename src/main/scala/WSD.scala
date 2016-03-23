@@ -75,7 +75,6 @@ object WSD {
     }
 
 
-
     def predictSense(contextFeaturesRaw:Set[String],
             clusterFeatures:Map[Int, Map[String, Double]],
             coocFeatures:Map[Int, (Double, Int, Map[String, Double])],
