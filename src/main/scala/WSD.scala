@@ -9,7 +9,7 @@ object WSD {
     val MAX_FEATURE_NUM = 1000000
     val PARTITIONS_NUM = 16
     val DEPS_TARGET_FEATURES_BOOST = 3  // boost for strong sparse features
-    val SYMMETRIZE_DEPS = false
+    val SYMMETRIZE_DEPS = true
     val DEFAULT_SENSE_ID = "-1"
     val DEFAULT_FEATURENUM_CONF = "0.0"
     val DEBUG = false
