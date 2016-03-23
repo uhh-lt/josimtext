@@ -6,7 +6,14 @@ object Const {
   val HOLE_DEPRECATED = "@@"
 
   object Resources{
-    val STOPWORDS = "/stoplist_en.csv"
-    val STOP_DEPENDENCIES = Set("dep", "punct", "cc", "possessive")
+      val STOPWORDS = "/stoplist_en.csv"
+      val STOP_DEPENDENCIES = Set("dep", "punct", "cc", "possessive")
+  }
+
+  object PRJ {
+      val FEATURES = "/prj-f.csv"
+      val SENSES = "/prj-senses.csv"
+      val WORDS = "/prj-w.csv"
+      val WORD_FEATURES = "/prj-wf.csv"
   }
 }
