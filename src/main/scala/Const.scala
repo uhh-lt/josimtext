@@ -15,6 +15,6 @@ object Const {
       val SENSES = "/prj-senses.csv"
       val WORDS = "/prj-w.csv"
       val WORD_FEATURES = "/prj-wf.csv"
-      val RES_DIR = "/Users/sasha/Desktop/debug/prj/features"
+      val RES_DIR = "/Users/alex/Desktop/prj/test-res"
   }
 }

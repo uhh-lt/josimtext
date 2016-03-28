@@ -1,45 +1,45 @@
 import scala.util.Try
 
 object WSDFeatures extends Enumeration {
-  type WSDFeatures = Value
-  val Depstarget, Depsall, Coocs, Clusters, DepstargetCoocsClusters, DepsallCoocsClusters = Value
-  val DEFAULT = WSDFeatures.DepstargetCoocsClusters
+    type WSDFeatures = Value
+    val Depstarget, Depsall, Coocs, Clusters, DepsallCoocsClusters, DepstargetCoocsClusters,
+        DepstargetCoocsClustersTrigramstarget, DepsallCoocsClustersTrigramsall, Trigramsall,
+        Trigramstarget, TrigramstargetDepstarget = Value
+    val DEFAULT = WSDFeatures.DepstargetCoocsClusters
 
-  def wordsNeeded(wsdFeatures: WSDFeatures): Boolean = {
-      (wsdFeatures == Coocs || wsdFeatures == Clusters || wsdFeatures == DepstargetCoocsClusters || wsdFeatures == DepsallCoocsClusters)
-  }
 
-  def depsallNeeded(wsdFeatures: WSDFeatures): Boolean = {
-      (wsdFeatures == Depsall || wsdFeatures == DepsallCoocsClusters)
-  }
+    def trigramsNeeded(v: WSDFeatures): Boolean = v.toString.toLowerCase contains "trigram"
 
-  def depstargetNeeded(wsdFeatures: WSDFeatures): Boolean = {
-      (wsdFeatures == Depstarget || wsdFeatures == DepstargetCoocsClusters || wsdFeatures == Depsall || wsdFeatures == DepsallCoocsClusters)
-  }
+    def trigramsallNeeded(v: WSDFeatures): Boolean = v.toString.toLowerCase contains "trigramsall"
 
-  def depsNeeded(wsdFeatures: WSDFeatures): Boolean = {
-      (wsdFeatures == Depsall || wsdFeatures == DepsallCoocsClusters || wsdFeatures == Depstarget || wsdFeatures == DepstargetCoocsClusters)
-  }
+    def trigramstargetNeeded(v: WSDFeatures): Boolean = v.toString.toLowerCase contains "trigram"
 
-  def coocsNeeded(wsdFeatures: WSDFeatures): Boolean = {
-      (wsdFeatures == Coocs || wsdFeatures == DepsallCoocsClusters || wsdFeatures == DepstargetCoocsClusters)
-  }
+    def depsallNeeded(v: WSDFeatures): Boolean = v.toString.toLowerCase contains "depsall"
 
-  def clustersNeeded(wsdFeatures: WSDFeatures): Boolean = {
-      (wsdFeatures == Clusters || wsdFeatures == DepsallCoocsClusters || wsdFeatures == DepstargetCoocsClusters)
-  }
+    def depstargetNeeded(v: WSDFeatures): Boolean = v.toString.toLowerCase contains "deps"
 
-  def fromString(str:String) = {
-    val res1 = Try(WSDFeatures.withName(str))
-    if (!res1.isSuccess) {
-      val res2 = Try(WSDFeatures.withName(str(0).isUpper + str.substring(1).toLowerCase()))
-      if (!res2.isSuccess) {
-          DEFAULT
-      } else {
-          res2.getOrElse(DEFAULT)
-      }
-    } else {
-      res1.getOrElse(DEFAULT)
+    def depsNeeded(v: WSDFeatures): Boolean = depstargetNeeded(v)
+
+    def coocsNeeded(v: WSDFeatures): Boolean = v.toString.toLowerCase contains "coocs"
+
+    def clustersNeeded(v: WSDFeatures): Boolean = v.toString.toLowerCase contains "cluster"
+
+    def wordsNeeded(v: WSDFeatures): Boolean = {
+        val vstr = v.toString.toLowerCase
+        (vstr contains "cooc") || (vstr contains "cluster")
     }
-  }
+
+    def fromString(str:String) = {
+        val res1 = Try(WSDFeatures.withName(str))
+        if (!res1.isSuccess) {
+            val res2 = Try(WSDFeatures.withName(str(0).isUpper + str.substring(1).toLowerCase()))
+            if (!res2.isSuccess) {
+                DEFAULT
+            } else {
+                res2.getOrElse(DEFAULT)
+            }
+        } else {
+            res1.getOrElse(DEFAULT)
+        }
+    }
 }
