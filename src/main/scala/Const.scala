@@ -4,6 +4,9 @@ object Const {
   val SCORE_SEP = ':'
   val HOLE = "@"
   val HOLE_DEPRECATED = "@@"
+  val NO_FEATURE_LABEL = "-1"
+  val NO_FEATURE_CONF = 0.0
+  val PRIOR_PROB = 0.00001
 
   object Resources{
       val STOPWORDS = "/stoplist_en.csv"

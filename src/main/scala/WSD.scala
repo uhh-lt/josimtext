@@ -3,7 +3,16 @@ import org.apache.spark.rdd._
 import org.apache.spark.{HashPartitioner, SparkConf, SparkContext}
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
+import scala.collection.immutable.Iterable
 
+
+case class Prediction(var confs:List[String]=List(Const.NO_FEATURE_LABEL),
+                      var predictConf:Double=Const.NO_FEATURE_CONF,
+                      var usedFeaturesNum:Double=Const.NO_FEATURE_CONF,
+                      var bestConfNorm:Double=Const.NO_FEATURE_CONF,
+                      var usedFeatures:Iterable[String]=List(),
+                      var allFeatures:Iterable[String]=List(),
+                      var sensePriors:Iterable[String]=List())
 
 
 object WSD {
@@ -12,14 +21,10 @@ object WSD {
 
     val WSD_MODE = WSDFeatures.DEFAULT
     val USE_PRIOR_PROB = true
-    val PRIOR_PROB = 0.00001
     val MAX_FEATURE_NUM = 1000000
     val PARTITIONS_NUM = 16
     val DEPS_TARGET_FEATURES_BOOST = 3  // boost for strong sparse features
     val SYMMETRIZE_DEPS = true
-    val DEFAULT_SENSE_ID = "-1"
-    val DEFAULT_SENSE_CONF = "0.0"
-    val DEFAULT_FEATURE = (DEFAULT_SENSE_ID, DEFAULT_SENSE_CONF.toDouble)
     val DEBUG = false
 
     val _stopwords = Util.getStopwords()
@@ -31,7 +36,7 @@ object WSD {
         val featureArr = Util.splitLastN(featureScoreStr, Const.SCORE_SEP, 2)
         val feature = featureArr(0)
         if (featureArr.length != 2 || feature.equals(word))
-            return DEFAULT_FEATURE
+            return (Const.NO_FEATURE_LABEL, Const.NO_FEATURE_CONF)
         val prob = featureArr(1).toDouble
 
         (feature, prob)
@@ -45,7 +50,7 @@ object WSD {
         val res = featuresStr
           .split(Const.LIST_SEP)
           .map(featureValues => parseFeature(word, featureValues))
-          .filter(_ != DEFAULT_FEATURE)
+          .filter(_ != Const.NO_FEATURE_LABEL)
           .take(maxFeaturesNum)
         res.toMap
     }
@@ -93,15 +98,14 @@ object WSD {
     }
 
 
-    def predictSense(contextFeaturesRaw:Array[String],
-                     inventory:Map[Int, Map[String, Double]],
-                     clusterFeatures:Map[Int, Map[String, Double]],
-                     coocFeatures:Map[Int, Map[String, Double]],
-                     depFeatures:Map[Int, Map[String, Double]],
-                     trigramFeatures:Map[Int, Map[String, Double]],
-                     usePriors:Boolean) = {
+    def predict(contextFeaturesRaw:Array[String],
+                inventory:Map[Int, Map[String, Double]],
+                clusterFeatures:Map[Int, Map[String, Double]],
+                coocFeatures:Map[Int, Map[String, Double]],
+                depFeatures:Map[Int, Map[String, Double]],
+                trigramFeatures:Map[Int, Map[String, Double]],
+                usePriors:Boolean): Prediction = {
 
-        println(".")
         // Initialisation
         val contextFeatures = postprocessContext(contextFeaturesRaw)
         val senseProbs = collection.mutable.Map[Int, Double]()
@@ -128,63 +132,48 @@ object WSD {
         for (sense <- inventory.keys) {
             for (feature <- contextFeatures) {
                 val featureProb =
-                    if (clusterFeatures(sense).contains(feature)) {
+                    if (clusterFeatures.contains(sense) && clusterFeatures(sense).contains(feature)) {
                         usedFeatures += feature
-                        clusterFeatures(sense).getOrElse(feature, PRIOR_PROB)
-                    } else if (coocFeatures(sense).contains(feature)) {
+                        clusterFeatures(sense).getOrElse(feature, Const.PRIOR_PROB)
+                    } else if (coocFeatures.contains(sense) && coocFeatures(sense).contains(feature)) {
                         usedFeatures += feature
-                        coocFeatures(sense).getOrElse(feature, PRIOR_PROB)
-                    } else if (depFeatures(sense).contains(feature)) {
+                        coocFeatures(sense).getOrElse(feature, Const.PRIOR_PROB)
+                    } else if (depFeatures.contains(sense) && depFeatures(sense).contains(feature)) {
                         usedFeatures += feature
-                        depFeatures(sense).getOrElse(feature, PRIOR_PROB)
-                    } else if (trigramFeatures(sense).contains(feature)) {
+                        depFeatures(sense).getOrElse(feature, Const.PRIOR_PROB)
+                    } else if (trigramFeatures.contains(sense) && trigramFeatures(sense).contains(feature)) {
                         usedFeatures += feature
-                        trigramFeatures(sense).getOrElse(feature, PRIOR_PROB)
+                        trigramFeatures(sense).getOrElse(feature, Const.PRIOR_PROB)
                     } else {
-                        PRIOR_PROB // Smoothing for previously unseen features; each feature must have the same number of feature probs for all senses.
+                        Const.PRIOR_PROB // Smoothing for previously unseen features; each feature must have the same number of feature probs for all senses.
                     }
                 allFeatures += "%d:%s:%.6f".format(sense, feature, featureProb)
-                senseProbs(sense) += (if (featureProb >= PRIOR_PROB) math.log(featureProb) else math.log(PRIOR_PROB))
+                senseProbs(sense) += (if (featureProb >= Const.PRIOR_PROB) math.log(featureProb) else math.log(Const.PRIOR_PROB))
             }
         }
 
-        println(senseProbs)
-
         // return the most probable sense
+        val res = new Prediction()
         if (senseProbs.size > 0) {
             val senseProbsSorted: List[(Int, Double)] = if (usePriors) senseProbs.toList.sortBy(_._2) else util.Random.shuffle(senseProbs.toList).sortBy(_._2)  // to ensure that order doesn't influence choice
             val bestSense = senseProbsSorted.last
-            val senseProbsSortedStr = senseProbsSorted.map{case (label, score) => f"$label:$score"}.mkString(Const.LIST_SEP)
-            val bestSenseConfStr = bestSense._2.toString
-            val bestSenseConfNormStr = if (usedFeatures.size > 0) (bestSense._2 / usedFeatures.size).toString else bestSense._2.toString
-            val worstSense = senseProbsSorted(0)
-            val rangeConfStr = "%.3f".format(bestSense._2 - worstSense._2)
-            val featurenumConfStr = usedFeatures.size.toString
-            val infoStr = bestSenseConfStr + "\t" + bestSenseConfNormStr + "\t" +
-                usedFeatures.toSet.mkString(Const.LIST_SEP) + "\t" +
-                allFeatures.mkString(Const.LIST_SEP) + "\t" +
-                sensePriors.mkString(Const.LIST_SEP)
 
-            (senseProbsSortedStr, rangeConfStr, featurenumConfStr, infoStr)
-        } else {
-            (DEFAULT_SENSE_ID, DEFAULT_SENSE_CONF, DEFAULT_SENSE_CONF, "\t")
+            res.confs = senseProbsSorted.map{case (label, score) => s"%s:%.3f".format(label, score)}
+            val worstSense = senseProbsSorted(0)
+            res.predictConf = math.abs(bestSense._2 - worstSense._2)
+            res.usedFeaturesNum = usedFeatures.size
+            res.bestConfNorm = if (usedFeatures.size > 0) (bestSense._2 / usedFeatures.size) else bestSense._2
+            res.usedFeatures = usedFeatures.toSet
+            res.allFeatures = allFeatures.toList
+            res.sensePriors = sensePriors.toList
         }
+        res
     }
 
     def computeMatchingScore[T](matchingCountsSorted:Array[(T, Int)]):(Int, Int) = {
         val countSum = matchingCountsSorted.map(matchCount => matchCount._2).sum
         // return "highest count" / "sum of all counts"
         (matchingCountsSorted.head._2, countSum)
-    }
-
-    def mappingToClusters[A, B](mapping:Iterable[(A, B)]):Seq[Set[A]] = {
-        mapping.groupBy(_._2)
-           .toSeq
-           .map({case (b,aAndBs) => aAndBs.map(_._1).toSet})
-    }
-
-    def pruneClusters[C](clusters:Iterable[(Int, (Double, Int, C))], maxNumClusters:Int):Iterable[(Int, (Double, Int, C))] = {
-        clusters.toList.sortBy({case (sense, (senseCount, clusterSize, _)) => clusterSize}).reverse.take(maxNumClusters)
     }
 
     def symmetrizeDeps(depFeatures:Array[String]) = {
@@ -346,32 +335,36 @@ object WSD {
             .join(coocFeatures)
             .join(depsFeatures)
             .join(trigramFeatures)
-            //.map{ case (target, ((((((contextFeatures, dataset), inventory), clusters), coocs), deps), trigrams)) =>
-            //    (dataset, predictSense(contextFeatures, inventory, clusters, coocs, deps, trigrams, usePriorProb)) }
+            .map{ case (target, ((((((contextFeatures, dataset), inventory), clusters), coocs), deps), trigrams)) =>
+                (dataset, predict(contextFeatures, inventory, clusters, coocs, deps, trigrams, usePriorProb)) }
 
         println(s"#classified lex samples: ${result.count()}")
         Util.delete(outputPath)
-        result.saveAsTextFile(outputPath)
 
-        /*
-        // Classify contexts
-        var result: RDD[((String, String, String, String, String, String, String, String, String, String, String, String), (String, String, String, String))] = null
-        if (clusterFeatures != null && coocFeatures != null && depFeatures != null) {
-            result = lexSample
-              .join(coocFeatures)
-              .join(depFeatures)
-              .join(clusterFeatures)
-              .map{ case (target, ((((tokens, dataset), coocs), deps),clusters)) => (dataset, predictSense(tokens.toSet, clusters, coocs, deps, usePriorProb)) }
-        }
-
+        // Save results in the CSV format
         result
-          .map{ case ((context_id,	target,	target_pos,	target_position, gold_sense_ids, predict_sense_ids,	golden_related,	predict_related, context, word_features, holing_features,	target_holing_features),(bestSenseId, bestSenseConf, bestSenseConfNorm, usedFeatures)) =>
-              context_id + "\t" +	target + "\t" +	target_pos + "\t" +	target_position + "\t" +	gold_sense_ids + "\t" +	bestSenseId + "\t" +	golden_related + "\t" +
-                predict_related + "\t" + context + "\t" +	word_features + "\t" +	holing_features + "\t" + target_holing_features + "\t" + bestSenseConf + "\t" +
-                bestSenseConfNorm + "\t" + usedFeatures}
-          .saveAsTextFile(outputPath)
+            .map{ case ((context_id,	target,	target_pos,	target_position, gold_sense_ids, predict_sense_ids,	golden_related,	predict_related, context, word_features, holing_features,	target_holing_features), prediction) =>
+                context_id + "\t" +
+                target + "\t" +
+                target_pos + "\t" +
+                target_position + "\t" +
+                gold_sense_ids + "\t" +
+                prediction.confs.mkString(Const.LIST_SEP) + "\t" +
+                golden_related + "\t" +
+                predict_related + "\t" +
+                context + "\t" +
+                word_features + "\t" +
+                holing_features + "\t" +
+                target_holing_features + "\t" +
+                "%.3f".format(prediction.predictConf) + "\t" +
+                "%.3f".format(prediction.usedFeaturesNum) + "\t" +
+                "%.3f".format(prediction.bestConfNorm) + "\t" +
+                prediction.sensePriors.mkString(Const.LIST_SEP) + "\t" +
+                prediction.usedFeatures.mkString(Const.LIST_SEP) + "\t" +
+                prediction.allFeatures.mkString(Const.LIST_SEP)}
+            .saveAsTextFile(outputPath)
 
-        */
+
 
     }
 

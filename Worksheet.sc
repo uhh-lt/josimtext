@@ -54,3 +54,37 @@ val PRIOR_PROB = 0.000001
 val featureProb = 0.001
 if (featureProb >= PRIOR_PROB) math.log(featureProb) else math.log(PRIOR_PROB)
 
+
+val a = "a"
+val b = "b"
+val c = "c"
+List(a,b,c).mkString("+")
+
+
+
+val DEFAULT_FEATURE = "-1"
+
+case class Prediction(confs:List[String]=List(DEFAULT_FEATURE),
+                      predictConf:Double=0.0,
+                      usedFeaturesNum:Double=0.0,
+                      var bestSenseConfNormStr:Double=0.0,
+                      var usedFeatures:Iterable[String]=List(),
+                      var allFeatures:Iterable[String]=List(),
+                      sensePriors:Iterable[String]=List())
+
+val p = new Prediction(List("a:0","b:0"), 0.0, 0.0, 0.0, Set("a","b","c"), Set("a","b","c"), Set("a","b","c"))
+
+p.bestSenseConfNormStr
+
+var r = new Prediction()
+r.allFeatures = Set()
+
+
+//println(r.)
+
+
+val logs = -100 - -10000
+
+val probs = 0.9 - 0.1
+
+math.abs(math.log(0.9) - math.log(0.1))
