@@ -295,3 +295,19 @@ acid    0   word    vitamin:0.128  protein:0.126  Acid:0.125  calcium:0.118  glu
 ```
 
 
+Lexical Sample Dataset 
+------------------
+
+All fields are tab separated. The 9 column format (contexts and their gold standard labeling):
+```
+context_id	target	target_pos	target_position	gold_sense_ids	predict_sense_ids	golden_related	predict_related	context
+```
+
+Examples: ```https://github.com/tudarmstadt-lt/context-eval/tree/master/data/Dataset-*```
+
+The 12 column format (+ features extracted from the context):
+
+```
+context_id	target	target_pos	target_position	gold_sense_ids	predict_sense_ids	golden_related	predict_related	context word_features holing_features target_holing_features
+```
+
