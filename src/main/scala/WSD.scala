@@ -12,7 +12,8 @@ case class Prediction(var confs:List[String]=List(Const.NO_FEATURE_LABEL),
                       var bestConfNorm:Double=Const.NO_FEATURE_CONF,
                       var usedFeatures:Iterable[String]=List(),
                       var allFeatures:Iterable[String]=List(),
-                      var sensePriors:Iterable[String]=List())
+                      var sensePriors:Iterable[String]=List(),
+                      var predictRelated:Iterable[String]=List())
 
 
 object WSD {
@@ -166,6 +167,7 @@ object WSD {
             res.usedFeatures = usedFeatures.toSet
             res.allFeatures = allFeatures.toList
             res.sensePriors = sensePriors.toList
+            res.predictRelated = inventory(bestSense._1).map{case (label, score) => s"%s:%.3f".format(label, score)}.toList
         }
         res
     }
@@ -335,8 +337,8 @@ object WSD {
             .join(coocFeatures)
             .join(depsFeatures)
             .join(trigramFeatures)
-            .map{ case (target, ((((((contextFeatures, dataset), inventory), clusters), coocs), deps), trigrams)) =>
-                (dataset, predict(contextFeatures, inventory, clusters, coocs, deps, trigrams, usePriorProb)) }
+            .map{ case (target, ((((((contextFeatures, dataset), inventoryT), clustersT), coocsT), depsT), trigramsT)) =>
+                (dataset, predict(contextFeatures, inventoryT, clustersT, coocsT, depsT, trigramsT, usePriorProb)) }
 
         println(s"#classified lex samples: ${result.count()}")
         Util.delete(outputPath)
@@ -351,7 +353,7 @@ object WSD {
                 gold_sense_ids + "\t" +
                 prediction.confs.mkString(Const.LIST_SEP) + "\t" +
                 golden_related + "\t" +
-                predict_related + "\t" +
+                prediction.predictRelated.mkString(Const.LIST_SEP) + "\t" +
                 context + "\t" +
                 word_features + "\t" +
                 holing_features + "\t" +

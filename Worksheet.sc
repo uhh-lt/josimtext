@@ -49,19 +49,14 @@ println(senseProbs)
 
 
 val y = inventory(1).getOrElse("java",0.0)
-
 val PRIOR_PROB = 0.000001
 val featureProb = 0.001
 if (featureProb >= PRIOR_PROB) math.log(featureProb) else math.log(PRIOR_PROB)
-
 
 val a = "a"
 val b = "b"
 val c = "c"
 List(a,b,c).mkString("+")
-
-
-
 val DEFAULT_FEATURE = "-1"
 
 case class Prediction(confs:List[String]=List(DEFAULT_FEATURE),
@@ -79,12 +74,19 @@ p.bestSenseConfNormStr
 var r = new Prediction()
 r.allFeatures = Set()
 
-
 //println(r.)
-
 
 val logs = -100 - -10000
 
 val probs = 0.9 - 0.1
 
 math.abs(math.log(0.9) - math.log(0.1))
+
+//val x: Map[String, Double] = inventory(bestSense._1)
+
+val mm = Map("a"->1., "b"->2., "c"->3., "d"->5.)
+
+
+val mmr = mm.map{ case (k,v) =>  s"%s:%.3f".format(k, v)}
+
+

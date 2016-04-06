@@ -6,9 +6,9 @@ import org.apache.spark.rdd._
 import scala.util.Try
 
 object SenseFeatureAggregator {
-    val MAX_SIM_WORDS_NUM = 20
+    val MAX_SIM_WORDS_NUM = 50
     val MAX_FEATURE_NUM = 10000
-    val MIN_WORD_FEATURE_COUNT = 0.0
+    val MIN_WORD_FEATURE_COUNT = 0
     val PRIOR_FEATURE_PROB = 0.000001
     val FEATURE_TYPES = List("words", "deps", "depwords", "trigrams")
     val LOWERCASE_WORDS_FROM_DEPS = true
@@ -113,7 +113,7 @@ object SenseFeatureAggregator {
         val maxFeatureNum = if (args.length > 7) args(7).toInt else MAX_FEATURE_NUM
         val minWordFeatureCount = if (args.length > 8) args(8).toDouble else MIN_WORD_FEATURE_COUNT
         val featureScoreNorm = if (args.length > 9) args(9) else FEATURE_SCORE_NORMS(1)
-        val targetWords:Set[String] = if (args.length > 10) Util.loadVocabulary(sc, args(10)) else Set()
+        val targetWords: Set[String] = if (args.length > 10) Util.loadVocabulary(sc, args(10)) else Set()
 
         println("Senses: " + sensesPath)
         println("Words: " + wordsPath)
@@ -126,6 +126,13 @@ object SenseFeatureAggregator {
         println("Minimum word feature count: " + minWordFeatureCount)
         println("Feature score normalization: " + featureScoreNorm)
         println("Target words: " + targetWords)
+
+    }
+
+    def run(sc: SparkContext, sensesPath:String, wordsPath: String, featuresPath:String, wordFeaturesPath:String, outputPath:String,
+            numSimWords:Int=MAX_SIM_WORDS_NUM,
+            featureType:String, maxFeatureNum:Int=MAX_FEATURE_NUM, minWordFeatureCount:Int=MIN_WORD_FEATURE_COUNT, featureScoreNorm:String="wc",
+            targetWords:Set[String]=Set()) = {
 
         Util.delete(outputPath)
 
@@ -205,8 +212,5 @@ object SenseFeatureAggregator {
                     .map({case (feature, prob) => "%s%s%.6f".format(feature, Const.SCORE_SEP, prob)})
                     .mkString(Const.LIST_SEP)})
             .saveAsTextFile(outputPath)
-
     }
-
-
 }
