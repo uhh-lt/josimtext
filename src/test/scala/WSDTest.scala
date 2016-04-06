@@ -6,12 +6,12 @@ class WSDTest extends FlatSpec with ShouldMatchers {
     def wsd(mode: WSDFeatures.Value) = {
         val senses =  getClass.getResource(Const.PRJ.SENSES).getPath()
         val output =  senses + "-output"
-        val resDir = Const.PRJ.RES_DIR
-        val clusters = resDir + "/clusters.csv"
-        val coocs = resDir + "/depwords.csv"
-        val trigrams = resDir + "/trigrams.csv"
-        val deps = resDir + "/deps.csv"
-        val contexts = resDir + "/contexts.csv"
+        val clusters = Const.PRJ.TEST_RES.clusters
+        val coocs = Const.PRJ.TEST_RES.coocs
+        val trigrams = Const.PRJ.TEST_RES.trigrams
+        val deps = Const.PRJ.TEST_RES.deps
+        val contexts = Const.PRJ.TEST_RES.contexts
+
 
         val conf = new SparkConf()
             .setAppName("JST: WSD")

@@ -18,6 +18,17 @@ object Const {
       val SENSES = "/prj-senses.csv"
       val WORDS = "/prj-w.csv"
       val WORD_FEATURES = "/prj-wf.csv"
-      val RES_DIR = "/Users/alex/Desktop/prj/test-res"
+
+      object TEST_RES {
+          val dir = "/Users/alex/Desktop/prj/test-res"  // can be downloaded from http://panchenko.me/data/joint/jst/test-res.tar.gz
+          val clusters = dir + "/clusters.csv"
+          val coocs = dir + "/depwords.csv"
+          val trigrams = dir + "/trigrams.csv"
+          val deps = dir + "/deps.csv"
+          val contexts = dir + "/contexts.csv"
+          val wordsTrigram = dir + "/W-trigram"
+          val featuresTrigram = dir + "/F-trigram"
+          val wordsFeaturesTrigram = dir + "/WF-trigram"
+      }
   }
 }

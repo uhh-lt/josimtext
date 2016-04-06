@@ -1,3 +1,4 @@
+import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
@@ -6,6 +7,9 @@ import org.apache.spark.rdd._
 import scala.util.Try
 
 object SenseFeatureAggregator {
+//    Logger.getLogger("org").setLevel(Level.OFF)
+//    Logger.getLogger("akka").setLevel(Level.OFF)
+
     val MAX_SIM_WORDS_NUM = 50
     val MAX_FEATURE_NUM = 10000
     val MIN_WORD_FEATURE_COUNT = 0
@@ -111,7 +115,7 @@ object SenseFeatureAggregator {
             featureType = "words"
         }
         val maxFeatureNum = if (args.length > 7) args(7).toInt else MAX_FEATURE_NUM
-        val minWordFeatureCount = if (args.length > 8) args(8).toDouble else MIN_WORD_FEATURE_COUNT
+        val minWordFeatureCount = if (args.length > 8) args(8).toInt else MIN_WORD_FEATURE_COUNT
         val featureScoreNorm = if (args.length > 9) args(9) else FEATURE_SCORE_NORMS(1)
         val targetWords: Set[String] = if (args.length > 10) Util.loadVocabulary(sc, args(10)) else Set()
 
@@ -127,12 +131,13 @@ object SenseFeatureAggregator {
         println("Feature score normalization: " + featureScoreNorm)
         println("Target words: " + targetWords)
 
+        run(sc, sensesPath, wordsPath, featuresPath, wordFeaturesPath, outputPath, featureType, numSimWords,
+            maxFeatureNum, minWordFeatureCount, featureScoreNorm, targetWords)
     }
 
-    def run(sc: SparkContext, sensesPath:String, wordsPath: String, featuresPath:String, wordFeaturesPath:String, outputPath:String,
-            numSimWords:Int=MAX_SIM_WORDS_NUM,
-            featureType:String, maxFeatureNum:Int=MAX_FEATURE_NUM, minWordFeatureCount:Int=MIN_WORD_FEATURE_COUNT, featureScoreNorm:String="wc",
-            targetWords:Set[String]=Set()) = {
+    def run(sc: SparkContext, sensesPath:String, wordsPath: String, featuresPath:String, wordFeaturesPath:String, outputPath:String, featureType:String,
+            numSimWords:Int=MAX_SIM_WORDS_NUM,  maxFeatureNum:Int=MAX_FEATURE_NUM, minWordFeatureCount:Int=MIN_WORD_FEATURE_COUNT,
+            featureScoreNorm:String="wc", targetWords:Set[String]=Set()) = {
 
         Util.delete(outputPath)
 
