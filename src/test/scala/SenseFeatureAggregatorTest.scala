@@ -8,8 +8,7 @@ class SenseFeatureAggregatorTest extends FlatSpec with ShouldMatchers {
         SenseFeatureAggregator.keepFeature("[27]_@_philosophy", "trigrams") should equal(false)
     }
 
-    def agg() = {
-        val senses =  getClass.getResource(Const.PRJ.SENSES).getPath()
+    def agg(senses:String) = {
         val output =  senses + "-output"
         val words = Const.PRJ.TEST_RES.wordsTrigram
         val features = Const.PRJ.TEST_RES.featuresTrigram
@@ -27,6 +26,12 @@ class SenseFeatureAggregatorTest extends FlatSpec with ShouldMatchers {
     }
 
     "Aggregate PRJ" should "run" in {
-        agg()
+        val senses =  getClass.getResource(Const.PRJ.SENSES).getPath()
+        agg(senses)
+    }
+
+    "Aggregate WordNet" should "run" in {
+        val senses =  "/Users/alex/Desktop/topic_signatures_kb_semeval_16/inventory/senses.csv"
+        agg(senses)
     }
 }

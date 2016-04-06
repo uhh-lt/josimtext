@@ -7,8 +7,8 @@ import org.apache.spark.rdd._
 import scala.util.Try
 
 object SenseFeatureAggregator {
-//    Logger.getLogger("org").setLevel(Level.OFF)
-//    Logger.getLogger("akka").setLevel(Level.OFF)
+    Logger.getLogger("org").setLevel(Level.OFF)
+    Logger.getLogger("akka").setLevel(Level.OFF)
 
     val MAX_SIM_WORDS_NUM = 50
     val MAX_FEATURE_NUM = 10000
@@ -145,10 +145,12 @@ object SenseFeatureAggregator {
         val clusterSimWords: RDD[((String, String), (Array[(String, Double)], Double))] = sc  // (target, sense_id), [((word, sim), sum_sum)]
             .textFile(sensesPath)
             .map(line => line.split("\t"))
-            .map{ case Array(target, sense_id, keyword, cluster) => (target, sense_id, keyword, cluster) case _ => ("?", "-1", "?", "") }
-            .filter{ case (target, sense_id, keyword, cluster) => target != "?" }
-            .map{ case (target, sense_id, keyword, cluster) => (
-                (target, sense_id + "\t" + keyword),
+            .map{ case Array(target, sense_id, cluster) => (target, sense_id, cluster)
+                  case Array(target, sense_id) => (target, sense_id, "")
+                  case _ => ("?", "-1", "") }
+            .filter{ case (target, sense_id, cluster) => target != "?" }
+            .map{ case (target, sense_id, cluster) => (
+                (target, sense_id),
                 cluster.split(Const.LIST_SEP)
                   .take(numSimWords)
                   .map(wordWithSim => Util.splitLastN(wordWithSim, Const.SCORE_SEP, 2))
@@ -185,14 +187,7 @@ object SenseFeatureAggregator {
             .join(wordCounts)
             .map({case (word, ((feature, wfc, fc), wc)) => (word, (feature, wc, fc, wfc))})
 
-        val wordSenseCounts: RDD[((String, String), Double)] = clusterWords  // (target, sense_id), count
-            .join(wordCounts)
-            .map({case (simWord, ((word, sim, sense, simSum), wc)) => ((word, sense), wc*sim)})
-            .reduceByKey(_+_)
-            .join(clusterSimSums)
-            .mapValues({case (wcSum, simSum) => wcSum/simSum})
-
-        val result: RDD[((String, String), ((Double, List[(String, Double)]), (Array[(String, Double)], Double)))] = clusterWords
+        val result: RDD[((String, String), (List[(String, Double)], (Array[(String, Double)], Double)))] = clusterWords
             .join(wordFeatures)
             .map{ case (simWord, ((word, sim, sense, simSum), (feature, wc, fc, wfc))) => ((word, sense, feature), featureScore(sim, wc, fc, wfc, featureScoreNorm)) }
             .reduceByKey(_ + _)
@@ -200,22 +195,23 @@ object SenseFeatureAggregator {
             .join(clusterSimSums)
             .map{ case ((word, sense), ((feature, pSum), simSum)) => ((word, sense), (feature, pSum/simSum)) }
             .groupByKey()
-            .join(wordSenseCounts)
-            .map{ case ((word, sense), (senseFeatureProbs, senseCount)) => ((word, sense), (senseCount, senseFeatureProbs.toList)) }
+            .map{ case ((word, sense), senseFeatureProbs) => ((word, sense), senseFeatureProbs.toList) }
             .join(clusterSimWords)
-            .sortByKey()
 
-        result
-            .map({case ((word, sense), ((senseCount, senseFeatureProbs), (simWordSim, simSum))) =>
+        clusterSimWords
+            .leftOuterJoin(result)
+            .map{ case ((word, sense), ((simWordSim, simSum), senseFeatures)) =>  ((word, sense), senseFeatures.getOrElse((List[(String, Double)](), (simWordSim, 0.0)))) }
+            .sortByKey()
+            .map{ case ((word, sense), (senseFeatureProbs, (simWordSim, simSum))) =>
                 word + "\t" +
-                sense + "\t" +
-                "%.0f".format(senseCount) + "\t" +
-                simWordSim
-                    .map({case (simWord, sim) => "%s%s%.6f".format(simWord, Const.SCORE_SEP, sim)})
-                    .mkString(Const.LIST_SEP) + "\t" +
-                formatFeatures(senseFeatureProbs, maxFeatureNum, featureType, word)
-                    .map({case (feature, prob) => "%s%s%.6f".format(feature, Const.SCORE_SEP, prob)})
-                    .mkString(Const.LIST_SEP)})
+                    sense + "\t" +
+                    simWordSim
+                        .map({case (simWord, sim) => "%s%s%.6f".format(simWord, Const.SCORE_SEP, sim)})
+                        .mkString(Const.LIST_SEP) + "\t" +
+                    formatFeatures(senseFeatureProbs, maxFeatureNum, featureType, word)
+                        .map({case (feature, prob) => "%s%s%.6f".format(feature, Const.SCORE_SEP, prob)})
+                        .mkString(Const.LIST_SEP) }
+
             .saveAsTextFile(outputPath)
     }
 }
