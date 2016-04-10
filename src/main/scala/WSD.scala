@@ -20,11 +20,11 @@ object WSD {
     Logger.getLogger("org").setLevel(Level.OFF)
     Logger.getLogger("akka").setLevel(Level.OFF)
 
-    val WSD_MODE = WSDFeatures.DEFAULT
+    val WSD_MODE = WSDFeatures.DepstargetCoocsClustersTrigramstarget
     val USE_PRIOR_PROB = true
     val MAX_FEATURE_NUM = 1000000
     val PARTITIONS_NUM = 16
-    val DEPS_TARGET_FEATURES_BOOST = 3  // boost for strong sparse features
+    val TARGET_FEATURES_BOOST = 3  // boost for strong sparse features
     val SYMMETRIZE_DEPS = true
     val DEBUG = false
 
@@ -51,53 +51,51 @@ object WSD {
         val res = featuresStr
           .split(Const.LIST_SEP)
           .map(featureValues => parseFeature(word, featureValues))
-          .filter(_ != Const.NO_FEATURE_LABEL)
+          .filter(_ != (Const.NO_FEATURE_LABEL, Const.NO_FEATURE_CONF))
           .take(maxFeaturesNum)
         res.toMap
     }
 
 
+    def getHolingFeatures(holingFeaturesStr:String, symmetrize:Boolean) = {
+        val holingFeatures = holingFeaturesStr.split(Const.LIST_SEP)
+        val holingDeps = holingFeatures.filter{ case f => f.contains("(@,") || f.contains(",@)") }
+        val holingDepsSym = if (symmetrize) symmetrizeDeps(holingDeps) else holingDeps
+        val holingTrigrams = holingFeatures.filter{ case f => f.contains("_@_") }
 
-    def getContextFeatures(wordFeaturesStr: String, depstargetFeaturesStr: String, depsallFeaturesStr:String, featuresMode:WSDFeatures.Value): Array[String] = {
-        val wordFeatures =
-            if (!WSDFeatures.wordsNeeded(featuresMode)) Array[String]()
-            else wordFeaturesStr.split(Const.LIST_SEP)
-
-        val depstargetFeatures =
-            if (!WSDFeatures.depstargetNeeded(featuresMode)){
-                Array[String]()
-            } else if (SYMMETRIZE_DEPS) {
-                val singleFeatures = symmetrizeDeps(depstargetFeaturesStr.split(Const.LIST_SEP))
-                var boostedFeatures = List[String]()
-                for (i <- 1 to DEPS_TARGET_FEATURES_BOOST) boostedFeatures = boostedFeatures ++ singleFeatures
-                boostedFeatures.toArray
-            } else {
-                depstargetFeaturesStr.split(Const.LIST_SEP)
-            }
-
-        val depsallFeatures =
-            if (!WSDFeatures.depsallNeeded(featuresMode)) Array[String]()
-            else if (SYMMETRIZE_DEPS) symmetrizeDeps(depsallFeaturesStr.split(Const.LIST_SEP))
-            else depsallFeaturesStr.split(Const.LIST_SEP)
-
-        if (DEBUG) {
-            println("word (%d): %s".format(wordFeatures.size, wordFeatures.mkString(",")))
-            println("target deps (%d): %s".format(depstargetFeatures.size, depstargetFeatures.mkString(",")))
-            println("all deps (%d): %s".format(depsallFeatures.size, depsallFeatures.mkString(",")))
-            println(">>> " + (wordFeatures ++ depstargetFeatures ++ depsallFeatures).size + "\n")
-        }
-
-        wordFeatures ++ depstargetFeatures ++ depsallFeatures
+        (holingDepsSym.toList, holingTrigrams.toList)
     }
 
+    def boostFeatures(features:List[String], boostFactor:Int) = {
+        var res = List[String]()
+        for (i <- 1 to boostFactor) res = res ++ features
+        res
+    }
+
+    def getContextFeatures(wordFeaturesStr: String, holingTargetFeaturesStr: String, holingAllFeaturesStr:String, featuresMode:WSDFeatures.Value): Array[String] = {
+        val wordFeatures = wordFeaturesStr.split(Const.LIST_SEP)
+        val (depsTarget, trigramsTarget) = getHolingFeatures(holingTargetFeaturesStr, SYMMETRIZE_DEPS)
+        val depsTargetBoosted = boostFeatures(depsTarget, TARGET_FEATURES_BOOST)
+        val trigramsTargetBoosted = boostFeatures(trigramsTarget, TARGET_FEATURES_BOOST)
+        val (depsAll, trigramsAll) = getHolingFeatures(holingAllFeaturesStr, SYMMETRIZE_DEPS)
+
+        var res = new collection.mutable.ListBuffer[String]()
+        if (WSDFeatures.wordsNeeded(featuresMode)) res ++= wordFeatures
+        if (WSDFeatures.depstargetNeeded(featuresMode)) res ++= depsTargetBoosted
+        if (WSDFeatures.trigramstargetNeeded(featuresMode)) res ++= trigramsTargetBoosted
+        if (WSDFeatures.depsallNeeded(featuresMode)) res ++= depsAll
+        if (WSDFeatures.trigramsallNeeded(featuresMode)) res ++= trigramsAll
+        res.toArray
+    }
 
     def postprocessContext(contextFeatures:Array[String]) = {
         contextFeatures
             .map(feature => feature.toLowerCase())
             .filter(feature => !_stopwords.contains(feature))
+            .filter(feature => feature.length > 1)
+            .filter(feature => !Util.isNumber(feature))
             .map(feature => feature.replaceAll("@@","@"))
     }
-
 
     def predict(contextFeaturesRaw:Array[String],
                 inventory:Map[Int, Map[String, Double]],
@@ -105,12 +103,12 @@ object WSD {
                 coocFeatures:Map[Int, Map[String, Double]],
                 depFeatures:Map[Int, Map[String, Double]],
                 trigramFeatures:Map[Int, Map[String, Double]],
-                usePriors:Boolean): Prediction = {
+                usePriors:Boolean,
+                rejectNoFeatures:Boolean=true): Prediction = {
 
         // Initialisation
         val contextFeatures = postprocessContext(contextFeaturesRaw)
         val senseProbs = collection.mutable.Map[Int, Double]()
-
 
         // Prior sense probabilities
         var sensePriors = new collection.mutable.ListBuffer[String]()

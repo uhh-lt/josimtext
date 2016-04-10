@@ -8,7 +8,7 @@ from collections import Counter
 import numpy as np
 from pandas import Series
 
-
+from combine_lib import LIST_SEP
 DEF_SCORE = 0.000010
 SEP = "  "
 VERBOSE = False
@@ -78,7 +78,7 @@ def predict_context(used_dict):
     if len(label_probs) == 0 or only_zeros:
         return "-1"
     else:
-        return ",".join(["%s:%.2f" % (label, score) for label, score in label_probs])
+        return LIST_SEP.join(["%s:%.2f" % (label, score) for label, score in label_probs])
 
 
 def used_all_to_string(used_all):
@@ -198,7 +198,7 @@ def plot_features(lexsamples, context_ids=[]):
 ##############################################
 # can be imported from twsi_evaluation import get_best_id
 
-def get_best_id(predict_sense_ids, sep=","):
+def get_best_id(predict_sense_ids, sep=LIST_SEP):
     """ Converts a string '1:0.9, 2:0.1' to '1', or just keeps the simple format the same e.g. '1' -> '1'. """
 
     try:

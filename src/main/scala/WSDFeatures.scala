@@ -5,8 +5,6 @@ object WSDFeatures extends Enumeration {
     val Depstarget, Depsall, Coocs, Clusters, DepsallCoocsClusters, DepstargetCoocsClusters,
         DepstargetCoocsClustersTrigramstarget, DepsallCoocsClustersTrigramsall, Trigramsall,
         Trigramstarget, TrigramstargetDepstarget = Value
-    val DEFAULT = WSDFeatures.DepstargetCoocsClusters
-
 
     def trigramsNeeded(v: WSDFeatures): Boolean = v.toString.toLowerCase contains "trigram"
 
@@ -34,12 +32,12 @@ object WSDFeatures extends Enumeration {
         if (!res1.isSuccess) {
             val res2 = Try(WSDFeatures.withName(str(0).isUpper + str.substring(1).toLowerCase()))
             if (!res2.isSuccess) {
-                DEFAULT
+                DepstargetCoocsClusters
             } else {
-                res2.getOrElse(DEFAULT)
+                res2.getOrElse(DepstargetCoocsClusters)
             }
         } else {
-            res1.getOrElse(DEFAULT)
+            res1.getOrElse(DepstargetCoocsClusters)
         }
     }
 }

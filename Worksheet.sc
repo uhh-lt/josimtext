@@ -69,8 +69,6 @@ case class Prediction(confs:List[String]=List(DEFAULT_FEATURE),
 
 val p = new Prediction(List("a:0","b:0"), 0.0, 0.0, 0.0, Set("a","b","c"), Set("a","b","c"), Set("a","b","c"))
 
-p.bestSenseConfNormStr
-
 var r = new Prediction()
 r.allFeatures = Set()
 
@@ -90,3 +88,12 @@ val mm = Map("a"->1., "b"->2., "c"->3., "d"->5.)
 val mmr = mm.map{ case (k,v) =>  s"%s:%.3f".format(k, v)}
 
 
+def isNumber(s:String): Boolean = s.matches("[+-]?\\d+.?\\d+")
+
+isNumber("009999")
+isNumber("-0.09999")
+isNumber("1.999")
+isNumber("wii9")
+isNumber("wii999")
+isNumber("999i")
+isNumber("67352628i98237")
