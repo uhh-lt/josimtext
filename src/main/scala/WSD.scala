@@ -191,7 +191,7 @@ object WSD {
 
     def main(args: Array[String]) {
         if (args.size < 4) {
-            println("Usage: WSD clusters-with-coocs clusters-with-deps lex-sample-dataset output [prob-smoothing] [wsd-mode] [use-prior-probs] [max-num-features] [partitions-num]")
+            println("Usage: clusters coocs deps trigrams lexsample output [wsd-mode] [use-prior-prob] [max-num-features] [partitions-num]")
             return
         }
 
