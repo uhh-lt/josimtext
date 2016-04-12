@@ -200,10 +200,10 @@ object WSD {
         val sc = new SparkContext(conf)
 
         val clustersPath = args(0)
-        val clusterCoocsPath = args(1)
-        val clusterDepsPath = args(2)
+        val coocsPath = args(1)
+        val depsPath = args(2)
         val trigramsPath = args(3)
-        val contextsPath = args(4)
+        val lexSamplePath = args(4)
         val outputPath = args(5)
         val wsdMode = if (args.length > 6) WSDFeatures.fromString(args(6)) else WSD_MODE
         val usePriorProb = if (args.length > 7) args(7).toLowerCase().equals("true") else USE_PRIOR_PROB
@@ -211,25 +211,28 @@ object WSD {
         val partitionsNum = if (args.length > 9) args(9).toInt else PARTITIONS_NUM
 
         println("Cluster features: " + clustersPath)
-        println("Co-occurrence features: " + clusterCoocsPath)
-        println("Dependency features: " + clusterDepsPath)
+        println("Co-occurrence features: " + coocsPath)
+        println("Dependency features: " + depsPath)
         println("Trigram features: " + trigramsPath)
-        println("Lexical sample dataset: " + contextsPath)
+        println("Lexical sample dataset: " + lexSamplePath)
         println("Output: " + outputPath)
         println("WSD mode: " + wsdMode)
         println("Use prior probs.: " + usePriorProb)
         println("Max feature num: " + maxNumFeatures)
         println("Number of partitions of sense features: " + partitionsNum)
 
-        if (!Util.exists(clusterCoocsPath) && !Util.exists(clusterDepsPath)) {
+        if (!Util.exists(coocsPath) && !Util.exists(depsPath)) {
             println("Error: either coocs or dependency features must exist.")
             return
-        } else if (!Util.exists(clusterCoocsPath)) {
+        } else if (!Util.exists(coocsPath)) {
             println("Warning: coocs features not available. Using only deps features.")
-        } else if (!Util.exists(clusterDepsPath)) {
+        } else if (!Util.exists(depsPath)) {
             println("Warning: deps features not available. Using only coocs features.")
         }
         Util.delete(outputPath)
+
+        run(sc, lexSamplePath, outputPath, clustersPath, coocsPath, depsPath, trigramsPath, usePriorProb, wsdMode,
+            maxNumFeatures, partitionsNum)
     }
 
     def loadCols2Features(featuresCols: RDD[(String, Int, String, String)], maxNumFeatures:Int, partitionsNum: Int): RDD[(String, Map[Int, Map[String, Double]])] = {
@@ -264,7 +267,6 @@ object WSD {
             }
             .cache()
         println(s"# lexical samples: ${lexSample.count()}")
-        lexSample.keys.foreach(println)
 
         // Load clusters senses and the associated features (required)
         // senses and features are the format: (lemma, (sense -> (feature -> prob)))
@@ -275,7 +277,6 @@ object WSD {
             .groupByKey()
             .mapValues(clusters => clusters.toMap)
         println(s"#words (inventory): ${inventory.count()}")
-        inventory.keys.foreach(println)
 
         val noFeatures: RDD[(String, Map[Int, Map[String, Double]])] = clustersCols
             .map{ case (word, senseId, cluster, features) => (word, (senseId, (Map[String, Double]()))) }
@@ -283,17 +284,14 @@ object WSD {
             .mapValues(clusters => clusters.toMap)
             .persist()
         println(s"#words (no features): ${noFeatures.count()}")
-        noFeatures.keys.foreach(println)
 
-        val clusterFeatures =
+        val clusterFeatures: RDD[(String, Map[Int, Map[String, Double]])] =
             if (WSDFeatures.clustersNeeded(wsdMode)) {
-                val cols = loadFile2Cols(sc, clustersPath)
-                loadCols2Features(cols, maxNumFeatures, partitionsNum)
+                loadCols2Features(clustersCols, maxNumFeatures, partitionsNum)
             } else {
                 noFeatures
             }
         println(s"#words (cluster features): ${clusterFeatures.count()}")
-        clusterFeatures.keys.foreach(println)
 
         val coocFeatures =
             if (WSDFeatures.coocsNeeded(wsdMode) && Util.exists(coocsPath)) {
@@ -304,7 +302,6 @@ object WSD {
                 noFeatures
             }
         println(s"#words (coocs features): ${clusterFeatures.count()}")
-        clusterFeatures.keys.foreach(println)
 
         val depsFeatures =
             if (WSDFeatures.depsNeeded(wsdMode) && Util.exists(depsPath)) {
@@ -315,7 +312,6 @@ object WSD {
                 noFeatures
             }
         println(s"#words (deps features): ${depsFeatures.count()}")
-        depsFeatures.keys.foreach(println)
 
         val trigramFeatures =
             if (WSDFeatures.trigramsNeeded(wsdMode) && Util.exists(trigramsPath)) {
@@ -326,7 +322,6 @@ object WSD {
                 noFeatures
             }
         println(s"#words (trigrams features): ${trigramFeatures.count()}")
-        trigramFeatures.keys.foreach(println)
 
 
         val result = lexSample
