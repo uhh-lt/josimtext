@@ -50,6 +50,26 @@ def load_lexsamples(lexsample_fpaths, header):
     return lexsamples
 
 
+def load_lexsamples2(lexsample_fpaths, header):
+    """ Load a dictionary lexsamples 'as is' into a dictionary name->dataframe. """
+
+    lexsamples = {name: load_lexsample(lexsample_fpaths[name], header) for name in lexsample_fpaths}
+
+    lens = {l:len(lexsamples[l]) for l in lexsamples}
+    lens_equal = True
+    first = lens.values()[0]
+    for l in lens.values():
+        if l != first:
+            lens_equal = False
+            break
+
+    if not lens_equal:
+        print "Warning: lengths of the data are not equal:"
+        print lens
+
+    return lexsamples
+
+
 def predict_context(used_dict):
     """ Predict class of the system based on a dictionary of used features for classification.
     The result is a sting with confedences e.g. '0:-199.0,1:-99'. If no features, or only features
