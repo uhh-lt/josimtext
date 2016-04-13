@@ -10,7 +10,7 @@ from pandas import Series
 
 from combine_lib import LIST_SEP
 DEF_SCORE = 0.000010
-SEP = "  "
+SEP = ","
 VERBOSE = False
 
 
@@ -107,7 +107,7 @@ def used_all_to_string(used_all):
         for feature in sorted(used_all[label], key=used_all[label].get, reverse=True):
             res.append("%s:%s:%s" % (label, feature, used_all[label][feature]))
 
-    return "  ".join(res)
+    return SEP.join(res)
 
 
 def used_features_with_scores(used_features, all_features):
@@ -200,7 +200,7 @@ def plot_context(row):
     used_dict = parse_used_features(row.used_features)
     for feature, score_label in sort_by_relevance(used_dict):
         features_by_relevance.append("%s:%.2f:%s" % (feature, score_label[0], score_label[1]))
-    print "sorted by relevance: %s" % "  ".join(features_by_relevance)
+    print "sorted by relevance: %s" % SEP.join(features_by_relevance)
 
 
 def plot_features(lexsamples, context_ids=[]):

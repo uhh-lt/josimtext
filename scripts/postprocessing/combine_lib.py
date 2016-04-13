@@ -5,7 +5,7 @@ import numpy as np
 from traceback import format_exc
 
 
-LIST_SEP = "  "
+LIST_SEP = ","
 TMP_SEP = "\t"
 
 
