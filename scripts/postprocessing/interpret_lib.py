@@ -10,7 +10,6 @@ from pandas import Series
 
 from combine_lib import LIST_SEP
 DEF_SCORE = 0.000010
-SEP = ","
 VERBOSE = False
 
 
@@ -28,26 +27,6 @@ def load_lexsample(fpath, header):
     df.predict_sense_ids = df.predict_sense_ids.astype(unicode)
     df = df.fillna("")
     return df
-
-
-def load_lexsamples(lexsample_fpaths, header):
-    """ Load a list of lexsamples 'as is' into a dictionary fname->dataframe. """
-
-    lexsamples = {basename(fpath): load_lexsample(fpath, header) for fpath in lexsample_fpaths}
-
-    lens = {l:len(lexsamples[l]) for l in lexsamples}
-    lens_equal = True
-    first = lens.values()[0]
-    for l in lens.values():
-        if l != first:
-            lens_equal = False
-            break
-
-    if not lens_equal:
-        print "Warning: lengths of the data are not equal:"
-        print lens
-
-    return lexsamples
 
 
 def load_lexsamples2(lexsample_fpaths, header):
@@ -107,17 +86,17 @@ def used_all_to_string(used_all):
         for feature in sorted(used_all[label], key=used_all[label].get, reverse=True):
             res.append("%s:%s:%s" % (label, feature, used_all[label][feature]))
 
-    return SEP.join(res)
+    return LIST_SEP.join(res)
 
 
 def used_features_with_scores(used_features, all_features):
     """ From a list of used features and a dictionary of all features construct
     a dictionary of used features. """
 
-    used_set = set(used_features.split(SEP))
+    used_set = set(used_features.split(LIST_SEP))
 
     all_dict = defaultdict(dict)
-    for x in all_features.split(SEP):
+    for x in all_features.split(LIST_SEP):
         try:
             label, feature, score = x.split(":")
             score = float(score) if float(score) > DEF_SCORE else DEF_SCORE
@@ -158,7 +137,7 @@ def predict_lexsample(lexsample, output_fpath):
 def parse_used_features(all_features):
     all_dict = defaultdict(dict)
 
-    for x in all_features.split(SEP):
+    for x in all_features.split(LIST_SEP):
         try:
             label, feature, score = x.split(":")
             score = float(score) if float(score) > DEF_SCORE else DEF_SCORE
@@ -200,7 +179,7 @@ def plot_context(row):
     used_dict = parse_used_features(row.used_features)
     for feature, score_label in sort_by_relevance(used_dict):
         features_by_relevance.append("%s:%.2f:%s" % (feature, score_label[0], score_label[1]))
-    print "sorted by relevance: %s" % SEP.join(features_by_relevance)
+    print "sorted by relevance: %s" % LIST_SEP.join(features_by_relevance)
 
 
 def plot_features(lexsamples, context_ids=[]):
