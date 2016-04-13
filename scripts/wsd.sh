@@ -1,3 +1,56 @@
+spark="/home/panchenko/spark/spark-1.6.1-bin-hadoop2.6/bin/spark-submit"
+jst="/home/panchenko/spark/josimtext_2.10-0.3.jar"
+m=152g
+s="/home/panchenko/spark/features/ukwac/clusters-ukwac-dep-cw-e0-N200-n200-minsize5-semeval-twsi-js-format-1038-nolower-1930.csv";
+c="/home/panchenko/spark/features/ukwac/depwords-50nn-20000-4cols.csv";
+d="/home/panchenko/spark/features/ukwac/deps-50nn-20000-4cols.csv";
+t="/home/panchenko/spark/features/ukwac/trigrams-50nn-20k-wc-4cols.csv";
+l="/home/panchenko/spark/Dataset-SemEval-2013-13-js-features-new-trigrams.csv";
+
+for mode in DepstargetCoocsClustersTrigramstarget DepsallCoocsClustersTrigramsall DepstargetCoocsClusters DepsallCoocsClusters Depstarget Depsall Coocs Clusters Trigramsall Trigramstarget ; do
+    o="/home/panchenko/spark/semeval/ukwac/starsem-$mode";
+    time $spark --class WSD --num-executors 16 --driver-memory $m --executor-memory $m $jst $s $c $d $t $l $o $mode true 200000 16  
+done
+
+exit
+
+
+
+
+spark="/home/panchenko/spark/spark-1.6.1-bin-hadoop2.6/bin/spark-submit"
+jst="/home/panchenko/spark/josimtext_2.10-0.3.jar"
+m=154g
+s="/home/panchenko/spark/senses/clusters-wiki-deps-jst-wpf1k-fpw1k-thr-cw-e0-N200-n200-minsize15-js-format-1042-lower-1692.csv";
+c="/home/panchenko/spark/features/wiki/depwords-50nn-20k-word-freq-wikisenses-4cols.csv";
+d="/home/panchenko/spark/features/wiki/deps-50nn-20k-word-freq-wikisenses-4cols.csv";
+t="/home/panchenko/spark/features/wiki/trigrams-50nn-20k-word-freq-wikisenses-4cols.csv";
+l="/home/panchenko/spark/Dataset-TWSI-2-with-js-features-new-trigrams.csv";
+
+for mode in DepstargetCoocsClusters Depstarget Depsall Coocs Clusters Trigramsall Trigramstarget DepsallCoocsClusters DepstargetCoocsClusters DepstargetCoocsClustersTrigramstarget DepsallCoocsClustersTrigramsall; do
+    o="/home/panchenko/spark/twsi/wiki/starsem-$mode";
+    time $spark --class WSD --num-executors 16 --driver-memory $m --executor-memory $m $jst $s $c $d $t $l $o $mode true 200000 16  
+done
+
+exit
+
+
+spark="/home/panchenko/spark/spark-1.6.1-bin-hadoop2.6/bin/spark-submit"
+jst="/home/panchenko/spark/josimtext_2.10-0.3.jar"
+m=132g
+s="/home/panchenko/spark/senses/clusters-ukwac-dep-cw-e0-N200-n200-minsize5-semeval-twsi-js-format-1038-nolower-1930.csv";
+c="/home/panchenko/spark/features/ukwac/depwords-50nn-20000-4cols.csv";
+d="/home/panchenko/spark/features/ukwac/deps-50nn-20000-4cols.csv";
+t="/home/panchenko/spark/features/ukwac/trigrams-50nn-20k-wc-4cols.csv";
+l="/home/panchenko/spark/Dataset-TWSI-2-with-js-features-new-trigrams.csv";
+
+for mode in DepstargetCoocsClusters Depstarget Depsall Coocs Clusters Trigramsall Trigramstarget DepsallCoocsClusters DepstargetCoocsClusters DepstargetCoocsClustersTrigramstarget DepsallCoocsClustersTrigramsall; do
+    o="/home/panchenko/spark/twsi/ukwac/starsem-$mode";
+    time $spark --class WSD --num-executors 16 --driver-memory $m --executor-memory $m $jst $s $c $d $t $l $o $mode true 200000 16  
+done
+
+exit
+
+
 for norm in word-freq ; do for coocs in words-from-deps ; do for nn in 50 ; do for mode in Depstarget ; do time spark-1.6.0-bin-hadoop2.6/bin/spark-submit --class WSD --num-executors 16 --driver-memory 64g --executor-memory 64g josimtext_2.10-0.2.jar senses/senses-wiki-deps-jst-wpf1k-fpw1k-thr-cw-e0-N200-n200-minsize15-js-format-1042-lower-1692.csv features/wiki/${coocs}-${nn}nn-20k-${norm}-wikisenses.csv features/wiki/deps-${nn}nn-20k-${norm}-wikisenses.csv Dataset-TWSI-2-js-features.csv twsi/wiki/${mode}-${norm}-${coocs}-${nn}nn-conf.csv $mode true 200000 16 2> twsi/log.err ; done ; done ; done ; done
 
 for norm in word-freq ; do for coocs in words-from-deps ; do for nn in 50 ; do for mode in DepstargetCoocsClusters ; do time spark-1.6.0-bin-hadoop2.6/bin/spark-submit --class WSD --num-executors 16 --driver-memory 100g --executor-memory 100g josimtext_2.10-0.2.jar senses/senses-wiki-deps-jst-wpf1k-fpw1k-thr-cw-e0-N200-n200-minsize15-js-format-1042-lower-1692.csv features-wiki/${coocs}-${nn}nn-20k-${norm}-wikisenses.csv features-wiki/deps-${nn}nn-20k-${norm}-wikisenses.csv Dataset-TWSI twsi/wiki-nofeatures 0.00001 $mode true 0 16  2> twsi/nofeatures.err ; done ; done ; done ; done

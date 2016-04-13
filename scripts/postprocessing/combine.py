@@ -6,11 +6,11 @@ import argparse
 
 def combine(lexsample_fpaths, output_dir):
     lexsamples = load_lexsamples(lexsample_fpaths, header=None)
-    for fpath in lexsamples:
-        predict_lexsample(lexsamples[fpath], join(output_dir, fpath + "-re2.csv"))
-    lexsamples = load_lexsamples([join(output_dir, fpath + "-re2.csv") for fpath in lexsample_fpaths], header=None)
+    for fname in lexsamples:
+        predict_lexsample(lexsamples[fname], join(output_dir, fname + "-re2.csv"))
+    lexsamples = load_lexsamples([join(output_dir, fname + "-re2.csv") for fname in lexsamples], header=None)
 
-    cmb_name = "+".join(x.split("-")[0] for x in lexsamples)
+    cmb_name = "+".join(x.split("-")[1].replace(".csv","") for x in lexsamples)
     combine_majority(lexsamples, join(output_dir, "cmb-majority-%s.csv" % cmb_name ))
     combine_weighted_average(lexsamples, join(output_dir, "cmb-weighted-avg-reject50-%s.csv" % cmb_name), reject_more_than_50=True)
     combine_weighted_average(lexsamples, join(output_dir, "cmb-weighted-avg-%s.csv" % cmb_name), reject_more_than_50=False)

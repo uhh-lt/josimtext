@@ -2,10 +2,12 @@ from ast import literal_eval
 from collections import Counter
 from pandas import Series
 import numpy as np
+from traceback import format_exc
 
 
 LIST_SEP = "  "
 TMP_SEP = "\t"
+
 
 def get_best_id(predict_sense_ids):
     """ Converts a string '1:0.9, 2:0.1' to '1', or just keeps the simple format the same e.g. '1' -> '1'. """
