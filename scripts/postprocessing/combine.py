@@ -8,7 +8,7 @@ def combine(lexsample_fpaths, output_dir):
     lexsamples = load_lexsamples(lexsample_fpaths, header=None)
     for fpath in lexsamples:
         predict_lexsample(lexsamples[fpath], join(output_dir, fpath + "-re2.csv"))
-    lexsamples = load_lexsamples([fpath + "-re2.csv" for fpath in lexsample_fpaths], header=None)
+    lexsamples = load_lexsamples([join(output_dir, fpath + "-re2.csv") for fpath in lexsample_fpaths], header=None)
 
     cmb_name = "+".join(x.split("-")[0] for x in lexsamples)
     combine_majority(lexsamples, join(output_dir, "cmb-majority-%s.csv" % cmb_name ))
