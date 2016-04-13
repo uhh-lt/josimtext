@@ -6,14 +6,14 @@ import org.apache.log4j.Level
 import scala.collection.immutable.Iterable
 
 
-case class Prediction(var confs:List[String]=List(Const.NO_FEATURE_LABEL),
-                      var predictConf:Double=Const.NO_FEATURE_CONF,
-                      var usedFeaturesNum:Double=Const.NO_FEATURE_CONF,
-                      var bestConfNorm:Double=Const.NO_FEATURE_CONF,
-                      var usedFeatures:Iterable[String]=List(),
-                      var allFeatures:Iterable[String]=List(),
-                      var sensePriors:Iterable[String]=List(),
-                      var predictRelated:Iterable[String]=List())
+case class Prediction(var confs: List[String] = List(Const.NO_FEATURE_LABEL),
+                      var predictConf: Double = Const.NO_FEATURE_CONF,
+                      var usedFeaturesNum: Double = Const.NO_FEATURE_CONF,
+                      var bestConfNorm: Double = Const.NO_FEATURE_CONF,
+                      var usedFeatures: Iterable[String] = List(),
+                      var allFeatures: Iterable[String] = List(),
+                      var sensePriors: Iterable[String] = List(),
+                      var predictRelated: Iterable[String] = List())
 
 
 object WSD {
@@ -24,16 +24,19 @@ object WSD {
     val USE_PRIOR_PROB = true
     val MAX_FEATURE_NUM = 1000000
     val PARTITIONS_NUM = 16
-    val TARGET_FEATURES_BOOST = 3  // boost for strong sparse features
+    val TARGET_FEATURES_BOOST = 3
+    // boost strong but sparse target features
     val SYMMETRIZE_DEPS = true
     val DEBUG = false
+    val FEATURES_POSTFIX = "-features"
+    val SAVE_FEATURES = true
 
     val _stopwords = Util.getStopwords()
 
     /**
       * Parses featureScore pair e.g. 'f:0.99' and returns a tuple f->0.99
-      * */
-    def parseFeature(word:String, featureScoreStr:String): (String, Double) = {
+      **/
+    def parseFeature(word: String, featureScoreStr: String): (String, Double) = {
         val featureArr = Util.splitLastN(featureScoreStr, Const.SCORE_SEP, 2)
         val feature = featureArr(0)
         if (featureArr.length != 2 || feature.equals(word))
@@ -45,34 +48,33 @@ object WSD {
 
     /**
       * Returns a map features->scores from a string representations e.g. "f:0.99  z:0.88".
-      * */
-    def parseFeatures(word:String, featuresStr:String, maxFeaturesNum:Int=MAX_FEATURE_NUM): Map[String, Double] = {
+      **/
+    def parseFeatures(word: String, featuresStr: String, maxFeaturesNum: Int = MAX_FEATURE_NUM): Map[String, Double] = {
 
         val res = featuresStr
-          .split(Const.LIST_SEP)
-          .map(featureValues => parseFeature(word, featureValues))
-          .filter(_ != (Const.NO_FEATURE_LABEL, Const.NO_FEATURE_CONF))
-          .take(maxFeaturesNum)
+            .split(Const.LIST_SEP)
+            .map(featureValues => parseFeature(word, featureValues))
+            .filter(_ !=(Const.NO_FEATURE_LABEL, Const.NO_FEATURE_CONF))
+            .take(maxFeaturesNum)
         res.toMap
     }
 
-
-    def getHolingFeatures(holingFeaturesStr:String, symmetrize:Boolean) = {
+    def getHolingFeatures(holingFeaturesStr: String, symmetrize: Boolean) = {
         val holingFeatures = holingFeaturesStr.split(Const.LIST_SEP)
-        val holingDeps = holingFeatures.filter{ case f => f.contains("(@,") || f.contains(",@)") }
+        val holingDeps = holingFeatures.filter { case f => f.contains("(@,") || f.contains(",@)") }
         val holingDepsSym = if (symmetrize) symmetrizeDeps(holingDeps) else holingDeps
-        val holingTrigrams = holingFeatures.filter{ case f => f.contains("_@_") }
+        val holingTrigrams = holingFeatures.filter { case f => f.contains("_@_") }
 
         (holingDepsSym.toList, holingTrigrams.toList)
     }
 
-    def boostFeatures(features:List[String], boostFactor:Int) = {
+    def boostFeatures(features: List[String], boostFactor: Int) = {
         var res = List[String]()
         for (i <- 1 to boostFactor) res = res ++ features
         res
     }
 
-    def getContextFeatures(wordFeaturesStr: String, holingTargetFeaturesStr: String, holingAllFeaturesStr:String, featuresMode:WSDFeatures.Value): Array[String] = {
+    def getContextFeatures(wordFeaturesStr: String, holingTargetFeaturesStr: String, holingAllFeaturesStr: String, featuresMode: WSDFeatures.Value): Array[String] = {
         val wordFeatures = wordFeaturesStr.split(Const.LIST_SEP)
         val (depsTarget, trigramsTarget) = getHolingFeatures(holingTargetFeaturesStr, SYMMETRIZE_DEPS)
         val depsTargetBoosted = boostFeatures(depsTarget, TARGET_FEATURES_BOOST)
@@ -88,23 +90,23 @@ object WSD {
         res.toArray
     }
 
-    def postprocessContext(contextFeatures:Array[String]) = {
+    def postprocessContext(contextFeatures: Array[String]) = {
         contextFeatures
             .map(feature => feature.toLowerCase())
             .filter(feature => !_stopwords.contains(feature))
             .filter(feature => feature.length > 1)
             .filter(feature => !Util.isNumber(feature))
-            .map(feature => feature.replaceAll("@@","@"))
+            .map(feature => feature.replaceAll("@@", "@"))
     }
 
-    def predict(contextFeaturesRaw:Array[String],
-                inventory:Map[Int, Map[String, Double]],
-                clusterFeatures:Map[Int, Map[String, Double]],
-                coocFeatures:Map[Int, Map[String, Double]],
-                depFeatures:Map[Int, Map[String, Double]],
-                trigramFeatures:Map[Int, Map[String, Double]],
-                usePriors:Boolean,
-                rejectNoFeatures:Boolean=true): Prediction = {
+    def predict(contextFeaturesRaw: Array[String],
+                inventory: Map[Int, Map[String, Double]],
+                clusterFeatures: Map[Int, Map[String, Double]],
+                coocFeatures: Map[Int, Map[String, Double]],
+                depFeatures: Map[Int, Map[String, Double]],
+                trigramFeatures: Map[Int, Map[String, Double]],
+                usePriors: Boolean,
+                rejectNoFeatures: Boolean = true): Prediction = {
 
         // Initialisation
         val contextFeatures = postprocessContext(contextFeaturesRaw)
@@ -113,11 +115,11 @@ object WSD {
         // Prior sense probabilities
         var sensePriors = new collection.mutable.ListBuffer[String]()
         val allClusterWordsNum = inventory
-          .map{ case (senseId, senseCluster) => senseCluster.size }
-          .sum
-          .toDouble
+            .map { case (senseId, senseCluster) => senseCluster.size }
+            .sum
+            .toDouble
 
-        for (sense <- inventory.keys){
+        for (sense <- inventory.keys) {
             if (usePriors) {
                 val sensePrior = math.log(inventory(sense).size / allClusterWordsNum)
                 senseProbs(sense) = sensePrior
@@ -154,10 +156,10 @@ object WSD {
         // return the most probable sense
         val res = new Prediction()
         if (senseProbs.size > 0) {
-            val senseProbsSorted: List[(Int, Double)] = if (usePriors) senseProbs.toList.sortBy(_._2) else util.Random.shuffle(senseProbs.toList).sortBy(_._2)  // to ensure that order doesn't influence choice
+            val senseProbsSorted: List[(Int, Double)] = if (usePriors) senseProbs.toList.sortBy(_._2) else util.Random.shuffle(senseProbs.toList).sortBy(_._2) // to ensure that order doesn't influence choice
             val bestSense = senseProbsSorted.last
 
-            res.confs = senseProbsSorted.map{case (label, score) => s"%s:%.3f".format(label, score)}
+            res.confs = senseProbsSorted.map { case (label, score) => s"%s:%.3f".format(label, score) }
             val worstSense = senseProbsSorted(0)
             res.predictConf = math.abs(bestSense._2 - worstSense._2)
             res.usedFeaturesNum = usedFeatures.size
@@ -165,18 +167,18 @@ object WSD {
             res.usedFeatures = usedFeatures.toSet
             res.allFeatures = allFeatures.toList
             res.sensePriors = sensePriors.toList
-            res.predictRelated = inventory(bestSense._1).map{case (label, score) => s"%s:%.3f".format(label, score)}.toList
+            res.predictRelated = inventory(bestSense._1).map { case (label, score) => s"%s:%.3f".format(label, score) }.toList
         }
         res
     }
 
-    def computeMatchingScore[T](matchingCountsSorted:Array[(T, Int)]):(Int, Int) = {
+    def computeMatchingScore[T](matchingCountsSorted: Array[(T, Int)]): (Int, Int) = {
         val countSum = matchingCountsSorted.map(matchCount => matchCount._2).sum
         // return "highest count" / "sum of all counts"
         (matchingCountsSorted.head._2, countSum)
     }
 
-    def symmetrizeDeps(depFeatures:Array[String]) = {
+    def symmetrizeDeps(depFeatures: Array[String]) = {
         var depFeaturesSymmetrized = new collection.mutable.ListBuffer[String]()
         for (feature <- depFeatures) {
             val (depType, srcWord, dstWord) = Util.parseDep(feature)
@@ -187,6 +189,159 @@ object WSD {
             }
         }
         depFeaturesSymmetrized.toArray
+    }
+
+    def loadCols2Features(featuresCols: RDD[(String, Int, String, String)], maxNumFeatures: Int, partitionsNum: Int): RDD[(String, Map[Int, Map[String, Double]])] = {
+        featuresCols
+            .map { case (word, senseId, cluster, features) => (word, (senseId, (parseFeatures(word, features, maxNumFeatures)))) }
+            .groupByKey()
+            .mapValues(features => features.toMap)
+            .partitionBy(new HashPartitioner(partitionsNum))
+            .persist()
+    }
+
+    def loadFile2Cols(sc: SparkContext, featuresPath: String): RDD[(String, Int, String, String)] = {
+        sc.textFile(featuresPath)
+            .map { line => line.split("\t") }
+            .map { case Array(word, senseId, cluster, features) => (word, senseId.toInt, cluster, features) case _ => ("?", -1, "", "") }
+    }
+
+    def buildFeatures(sc: SparkContext, clustersPath: String, coocsPath: String, depsPath: String, trigramsPath: String,
+            wsdMode: WSDFeatures.Value, maxNumFeatures: Int, partitionsNum: Int):
+            RDD[(String, (Map[Int, Map[String, Double]], Map[Int, Map[String, Double]], Map[Int, Map[String, Double]], Map[Int, Map[String, Double]], Map[Int, Map[String, Double]]))] = {
+
+        val featuresPath = clustersPath + FEATURES_POSTFIX
+        val fs = org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration)
+        val featuresExist = fs.exists(new org.apache.hadoop.fs.Path(featuresPath))
+        println(s"$featuresPath: $featuresExist")
+
+        if (featuresExist) {
+            val loadedFeatures = KryoDiskSerializer.objectFile[(String, (Map[Int, Map[String, Double]], Map[Int, Map[String, Double]], Map[Int, Map[String, Double]], Map[Int, Map[String, Double]], Map[Int, Map[String, Double]]))](sc, featuresPath)
+            loadedFeatures
+        } else {
+            // Load clusters senses and the associated features (required)
+            // senses and features are the format: (lemma, (sense -> (feature -> prob)))
+            val clustersCols = loadFile2Cols(sc, clustersPath).persist()
+
+            val inventory: RDD[(String, Map[Int, Map[String, Double]])] = clustersCols
+                .map { case (word, senseId, cluster, features) => (word, (senseId, (parseFeatures(word, cluster)))) }
+                .groupByKey()
+                .mapValues(clusters => clusters.toMap)
+            println(s"#words (inventory): ${inventory.count()}")
+
+            val noFeatures: RDD[(String, Map[Int, Map[String, Double]])] = clustersCols
+                .map { case (word, senseId, cluster, features) => (word, (senseId, (Map[String, Double]()))) }
+                .groupByKey()
+                .mapValues(clusters => clusters.toMap)
+                .persist()
+            println(s"#words (no features): ${noFeatures.count()}")
+
+            val clusterFeatures: RDD[(String, Map[Int, Map[String, Double]])] =
+                if (WSDFeatures.clustersNeeded(wsdMode)) {
+                    loadCols2Features(clustersCols, maxNumFeatures, partitionsNum)
+                } else {
+                    noFeatures
+                }
+            println(s"#words (cluster features): ${clusterFeatures.count()}")
+
+            val coocFeatures =
+                if (WSDFeatures.coocsNeeded(wsdMode) && Util.exists(coocsPath)) {
+                    val cols = loadFile2Cols(sc, coocsPath)
+                    loadCols2Features(cols, maxNumFeatures, partitionsNum)
+                } else {
+                    if (WSDFeatures.coocsNeeded(wsdMode) && !Util.exists(coocsPath)) println(s"error: not found $coocsPath")
+                    noFeatures
+                }
+            println(s"#words (coocs features): ${clusterFeatures.count()}")
+
+            val depsFeatures =
+                if (WSDFeatures.depsNeeded(wsdMode) && Util.exists(depsPath)) {
+                    val cols = loadFile2Cols(sc, depsPath)
+                    loadCols2Features(cols, maxNumFeatures, partitionsNum)
+                } else {
+                    if (WSDFeatures.depsNeeded(wsdMode) && !Util.exists(depsPath)) println(s"error: not found $depsPath")
+                    noFeatures
+                }
+            println(s"#words (deps features): ${depsFeatures.count()}")
+
+            val trigramFeatures =
+                if (WSDFeatures.trigramsNeeded(wsdMode) && Util.exists(trigramsPath)) {
+                    val cols = loadFile2Cols(sc, trigramsPath)
+                    loadCols2Features(cols, maxNumFeatures, partitionsNum)
+                } else {
+                    if (WSDFeatures.trigramsNeeded(wsdMode) && !Util.exists(trigramsPath)) println(s"error: not found $trigramsPath")
+                    noFeatures
+                }
+            println(s"#words (trigrams features): ${trigramFeatures.count()}")
+
+            val newFeatures = inventory
+                .join(clusterFeatures)
+                .join(coocFeatures)
+                .join(depsFeatures)
+                .join(trigramFeatures)
+                .map { case (target, ((((inventoryT, clustersT), coocsT), depsT), trigramsT)) => (target, (inventoryT, clustersT, coocsT, depsT, trigramsT)) }
+            println(s"#features: ${newFeatures.count()}")
+
+            if (SAVE_FEATURES) {
+                KryoDiskSerializer.saveAsObjectFile(newFeatures, featuresPath)
+                println(s"Saved features: $featuresPath")
+            }
+            newFeatures
+        }
+    }
+
+    def run(sc: SparkContext, lexSamplePath: String, outputPath: String, clustersPath: String, coocsPath: String = "",
+            depsPath: String = "", trigramsPath: String = "", usePriorProb: Boolean = USE_PRIOR_PROB, wsdMode: WSDFeatures.Value = WSD_MODE,
+            maxNumFeatures: Int = MAX_FEATURE_NUM, partitionsNum: Int = PARTITIONS_NUM) = {
+
+        // Load lexical sample
+        // target, (dataset, features)
+        // dataset: context_id	target	target_pos	target_position	gold_sense_ids	predict_sense_ids	golden_related	predict_related	context word_features	holing_features	target_holing_features
+        val lexSample: RDD[(String, (Array[String], (String, String, String, String, String, String, String, String, String, String, String, String)))] = sc.textFile(lexSamplePath)
+            .map(line => line.split("\t", -1))
+            .map { case Array(context_id, target, target_pos, target_position, gold_sense_ids, predict_sense_ids, golden_related, predict_related, context, word_features, holing_features, target_holing_features) =>
+                (target, (
+                    getContextFeatures(word_features, target_holing_features, holing_features, wsdMode),
+                    (context_id, target, target_pos, target_position, gold_sense_ids, predict_sense_ids, golden_related, predict_related, context, word_features, holing_features, target_holing_features)))
+            case _ => ("", (Array[String](), ("", "", "", "", "", "", "", "", "", "", "", "")))
+            }
+            .cache()
+        println(s"# lexical samples: ${lexSample.count()}")
+
+        val features = buildFeatures(sc, clustersPath, coocsPath, depsPath, trigramsPath, wsdMode, maxNumFeatures, partitionsNum)
+
+        val result = lexSample
+            .join(features)
+            .map { case (target, ((contextT, dataset), (inventoryT, clustersT, coocsT, depsT, trigramsT))) =>
+                (dataset, predict(contextT, inventoryT, clustersT, coocsT, depsT, trigramsT, usePriorProb))
+            }
+
+        println(s"#classified lex samples: ${result.count()}")
+        Util.delete(outputPath)
+
+        // Save results in the CSV format
+        result
+            .map { case ((context_id, target, target_pos, target_position, gold_sense_ids, predict_sense_ids, golden_related, predict_related, context, word_features, holing_features, target_holing_features), prediction) =>
+                context_id + "\t" +
+                    target + "\t" +
+                    target_pos + "\t" +
+                    target_position + "\t" +
+                    gold_sense_ids + "\t" +
+                    prediction.confs.mkString(Const.LIST_SEP) + "\t" +
+                    golden_related + "\t" +
+                    prediction.predictRelated.mkString(Const.LIST_SEP) + "\t" +
+                    context + "\t" +
+                    word_features + "\t" +
+                    holing_features + "\t" +
+                    target_holing_features + "\t" +
+                    "%.3f".format(prediction.predictConf) + "\t" +
+                    "%.3f".format(prediction.usedFeaturesNum) + "\t" +
+                    "%.3f".format(prediction.bestConfNorm) + "\t" +
+                    prediction.sensePriors.mkString(Const.LIST_SEP) + "\t" +
+                    prediction.usedFeatures.mkString(Const.LIST_SEP) + "\t" +
+                    prediction.allFeatures.mkString(Const.LIST_SEP)
+            }
+            .saveAsTextFile(outputPath)
     }
 
     def main(args: Array[String]) {
@@ -234,135 +389,4 @@ object WSD {
         run(sc, lexSamplePath, outputPath, clustersPath, coocsPath, depsPath, trigramsPath, usePriorProb, wsdMode,
             maxNumFeatures, partitionsNum)
     }
-
-    def loadCols2Features(featuresCols: RDD[(String, Int, String, String)], maxNumFeatures:Int, partitionsNum: Int): RDD[(String, Map[Int, Map[String, Double]])] = {
-        featuresCols
-            .map { case (word, senseId, cluster, features) => (word, (senseId, (parseFeatures(word, features, maxNumFeatures)))) }
-            .groupByKey()
-            .mapValues(features => features.toMap)
-            .partitionBy(new HashPartitioner(partitionsNum))
-            .persist()
-    }
-
-    def loadFile2Cols(sc:SparkContext, featuresPath:String): RDD[(String, Int, String, String)] = {
-        sc.textFile(featuresPath)
-            .map { line => line.split("\t") }
-            .map { case Array(word, senseId, cluster, features) => (word, senseId.toInt, cluster, features) case _ => ("?", -1, "", "") }
-    }
-
-    def run(sc: SparkContext, lexSamplePath:String, outputPath:String, clustersPath:String, coocsPath:String="",
-            depsPath:String="", trigramsPath:String="", usePriorProb:Boolean=USE_PRIOR_PROB, wsdMode: WSDFeatures.Value=WSD_MODE,
-            maxNumFeatures:Int=MAX_FEATURE_NUM, partitionsNum:Int=PARTITIONS_NUM) = {
-
-        // Load lexical sample
-        // target, (dataset, features)
-        // dataset: context_id	target	target_pos	target_position	gold_sense_ids	predict_sense_ids	golden_related	predict_related	context word_features	holing_features	target_holing_features
-        val lexSample: RDD[(String, (Array[String], (String, String, String, String, String, String, String, String, String, String, String, String)))] = sc.textFile(lexSamplePath)
-            .map(line => line.split("\t", -1))
-            .map{ case Array(context_id,	target,	target_pos,	target_position, gold_sense_ids, predict_sense_ids,	golden_related,	predict_related, context, word_features, holing_features,	target_holing_features) =>
-              (target, (
-                getContextFeatures(word_features, target_holing_features, holing_features, wsdMode),
-                (context_id, target,	target_pos,	target_position, gold_sense_ids, predict_sense_ids,	golden_related,	predict_related, context, word_features, holing_features,	target_holing_features)))
-            case _ => ("", (Array[String](), ("", "", "", "", "", "", "", "", "", "", "", "")))
-            }
-            .cache()
-        println(s"# lexical samples: ${lexSample.count()}")
-
-        // Load clusters senses and the associated features (required)
-        // senses and features are the format: (lemma, (sense -> (feature -> prob)))
-        val clustersCols = loadFile2Cols(sc, clustersPath).persist()
-
-        val inventory: RDD[(String, Map[Int, Map[String, Double]])] = clustersCols
-            .map{ case (word, senseId, cluster, features) => (word, (senseId, (parseFeatures(word, cluster)))) }
-            .groupByKey()
-            .mapValues(clusters => clusters.toMap)
-        println(s"#words (inventory): ${inventory.count()}")
-
-        val noFeatures: RDD[(String, Map[Int, Map[String, Double]])] = clustersCols
-            .map{ case (word, senseId, cluster, features) => (word, (senseId, (Map[String, Double]()))) }
-            .groupByKey()
-            .mapValues(clusters => clusters.toMap)
-            .persist()
-        println(s"#words (no features): ${noFeatures.count()}")
-
-        val clusterFeatures: RDD[(String, Map[Int, Map[String, Double]])] =
-            if (WSDFeatures.clustersNeeded(wsdMode)) {
-                loadCols2Features(clustersCols, maxNumFeatures, partitionsNum)
-            } else {
-                noFeatures
-            }
-        println(s"#words (cluster features): ${clusterFeatures.count()}")
-
-        val coocFeatures =
-            if (WSDFeatures.coocsNeeded(wsdMode) && Util.exists(coocsPath)) {
-                val cols = loadFile2Cols(sc, coocsPath)
-                loadCols2Features(cols, maxNumFeatures, partitionsNum)
-            } else {
-                if (WSDFeatures.coocsNeeded(wsdMode) && !Util.exists(coocsPath)) println(s"error: not found $coocsPath")
-                noFeatures
-            }
-        println(s"#words (coocs features): ${clusterFeatures.count()}")
-
-        val depsFeatures =
-            if (WSDFeatures.depsNeeded(wsdMode) && Util.exists(depsPath)) {
-                val cols = loadFile2Cols(sc, depsPath)
-                loadCols2Features(cols, maxNumFeatures, partitionsNum)
-            } else {
-                if (WSDFeatures.depsNeeded(wsdMode) && !Util.exists(depsPath)) println(s"error: not found $depsPath")
-                noFeatures
-            }
-        println(s"#words (deps features): ${depsFeatures.count()}")
-
-        val trigramFeatures =
-            if (WSDFeatures.trigramsNeeded(wsdMode) && Util.exists(trigramsPath)) {
-                val cols = loadFile2Cols(sc, trigramsPath)
-                loadCols2Features(cols, maxNumFeatures, partitionsNum)
-            } else {
-                if (WSDFeatures.trigramsNeeded(wsdMode) && !Util.exists(trigramsPath)) println(s"error: not found $trigramsPath")
-                noFeatures
-            }
-        println(s"#words (trigrams features): ${trigramFeatures.count()}")
-
-
-        val result = lexSample
-            .join(inventory)
-            .join(clusterFeatures)
-            .join(coocFeatures)
-            .join(depsFeatures)
-            .join(trigramFeatures)
-            .map{ case (target, ((((((contextFeatures, dataset), inventoryT), clustersT), coocsT), depsT), trigramsT)) =>
-                (dataset, predict(contextFeatures, inventoryT, clustersT, coocsT, depsT, trigramsT, usePriorProb)) }
-
-        println(s"#classified lex samples: ${result.count()}")
-        Util.delete(outputPath)
-
-        // Save results in the CSV format
-        result
-            .map{ case ((context_id,	target,	target_pos,	target_position, gold_sense_ids, predict_sense_ids,	golden_related,	predict_related, context, word_features, holing_features,	target_holing_features), prediction) =>
-                context_id + "\t" +
-                target + "\t" +
-                target_pos + "\t" +
-                target_position + "\t" +
-                gold_sense_ids + "\t" +
-                prediction.confs.mkString(Const.LIST_SEP) + "\t" +
-                golden_related + "\t" +
-                prediction.predictRelated.mkString(Const.LIST_SEP) + "\t" +
-                context + "\t" +
-                word_features + "\t" +
-                holing_features + "\t" +
-                target_holing_features + "\t" +
-                "%.3f".format(prediction.predictConf) + "\t" +
-                "%.3f".format(prediction.usedFeaturesNum) + "\t" +
-                "%.3f".format(prediction.bestConfNorm) + "\t" +
-                prediction.sensePriors.mkString(Const.LIST_SEP) + "\t" +
-                prediction.usedFeatures.mkString(Const.LIST_SEP) + "\t" +
-                prediction.allFeatures.mkString(Const.LIST_SEP)}
-            .saveAsTextFile(outputPath)
-
-
-
-    }
-
-
-
 }
