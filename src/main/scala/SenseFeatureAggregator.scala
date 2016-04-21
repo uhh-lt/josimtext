@@ -17,6 +17,7 @@ object SenseFeatureAggregator {
     val FEATURE_TYPES = List("words", "deps", "depwords", "trigrams")
     val LOWERCASE_WORDS_FROM_DEPS = true
     val FEATURE_SCORE_NORMS = List("wc", "lmi")
+    val MIN_WORD_LEN = 3
     val _stopwords = Util.getStopwords()
     val _numbersRegex = """\d+""".r
 
@@ -155,7 +156,7 @@ object SenseFeatureAggregator {
                   .take(numSimWords)
                   .map(wordWithSim => Util.splitLastN(wordWithSim, Const.SCORE_SEP, 2))
                   .map{ case Array(word, sim) =>  if (Try(sim.toDouble).isSuccess) (word.trim(), sim.toDouble) else (word.trim(), 0.0) case _ => ("?", 0.0) }
-                  .filter({ case (word, sim) => !_stopwords.contains(word) })  )}
+                  .filter({ case (word, sim) => !_stopwords.contains(word) && !_stopwords.contains(word.toLowerCase) && word.length >= MIN_WORD_LEN})  )}
             .filter{ case ((word, sense), simWords) => targetWords.size == 0 || targetWords.contains(word) }
             .map{ case ((word, sense), simWords) => ((word, sense), (simWords, simWords.map(_._2).sum)) }
             .cache()

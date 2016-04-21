@@ -15,7 +15,6 @@ case class Prediction(var confs: List[String] = List(Const.NO_FEATURE_LABEL),
                       var sensePriors: Iterable[String] = List(),
                       var predictRelated: Iterable[String] = List())
 
-
 object WSD {
     Logger.getLogger("org").setLevel(Level.OFF)
     Logger.getLogger("akka").setLevel(Level.OFF)
