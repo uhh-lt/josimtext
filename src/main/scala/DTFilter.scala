@@ -5,8 +5,8 @@ object DTFilter {
     def main(args: Array[String]) {
         if (args.size < 4) {
             println("Usage: DTFilter <dt-path.csv> <mwe-vocabulary.csv> <output-dt-directory> <keep-single-words>")
-            println("<dt.csv>\tis a distributional thesaurus in the format 'word_i<TAB>word_j<TAB>similarity_ij<TAB>features_ij'")
-            println("<mwe-vocabulary.csv>\tis a list of words that the program will keep (word_i and word_j must be in the list)")
+            println("<dt>\tis a distributional thesaurus in the format 'word_i<TAB>word_j<TAB>similarity_ij<TAB>features_ij'")
+            println("<vocabulary>\tis a list of words that the program will keep (word_i and word_j must be in the list)")
             println("<output-dt-directory>\toutput directory with the filtered distributional thesaurus")
             println("<keep-single-words>\tif 'true' then all single words are kept even if they are not in the <vocabulary.csv>.")
             println("<filter-only-target>\tif 'true' then only target words will be filtered and all related words will be kept.")
@@ -30,17 +30,17 @@ object DTFilter {
         println("Input DT: " + dtPath)
         println("Vocabulary:" + vocPath)
         println("Output DT: " + outPath)
-        println("Keep single words: " + keepSingleWords)
+        println("Keep all single words: " + keepSingleWords)
         println("Filter only targets: " + filterOnlyTarget)
 
         Util.delete(outPath)
 
         val voc = sc.textFile(vocPath)
             .map(line => line.split("\t"))
-            .map({ case Array(word) => (word.toLowerCase()) })
+            .map{ case Array(word) => (word.trim().toLowerCase()) }
             .collect()
             .toSet
-
+        println(s"Vocabulary size: ${voc.size}")
 
         val dt = sc.textFile(dtPath)
             .map(line => line.split("\t"))

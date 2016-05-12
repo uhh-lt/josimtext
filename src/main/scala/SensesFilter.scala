@@ -13,7 +13,6 @@ object SensesFilter {
       return
     }
 
-    // Input parameters
     val inSensesPath = args(0)
     val inVocPath = args(1)
     val outSensesPath = args(2)
@@ -29,16 +28,13 @@ object SensesFilter {
     Util.delete(outSensesPath)
     Util.delete(outVocPath)
 
-    // Set Spark configuration
-    val conf = new SparkConf().setAppName("FreqFilter")
+    val conf = new SparkConf().setAppName("JST: SensesFilter")
     conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
     val sc = new SparkContext(conf)
 
-    // Filter
     val voc = Util.loadVocabulary(sc, inVocPath)
     val (senses, clusterVoc) = run(inSensesPath, voc, sc, lowercase)
 
-    // Save results
     senses
       .map({case (target, sense_id, keyword, cluster) => target + "\t" + sense_id + "\t" + keyword + "\t" + cluster})
       .saveAsTextFile(outSensesPath)
@@ -55,11 +51,11 @@ object SensesFilter {
       .filter{ case (target, sense_id, keyword, cluster) => voc.contains( if(lowercase) target.toLowerCase() else target ) }
 
     val clusterVoc = senses
-      .map({ case (target, sense_id, keyword, cluster) => (cluster) })
-      .flatMap({ case (cluster) => cluster.split(Const.LIST_SEP) })
-      .map({ case cluster => cluster.split(":")(0) })
+      .map{ case (target, sense_id, keyword, cluster) => (cluster) }
+      .flatMap{ case (cluster) => cluster.split(Const.LIST_SEP) }
+      .map{ case cluster => cluster.split(":")(0) }
       .distinct()
-      .sortBy({ case cluster => cluster })
+      .sortBy{ case cluster => cluster }
 
     (senses, clusterVoc)
   }

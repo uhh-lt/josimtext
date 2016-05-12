@@ -1,9 +1,9 @@
 import org.apache.spark.{SparkContext, SparkConf}
 import org.scalatest._
 
-class DTFilterTest extends FlatSpec with ShouldMatchers {
+class DTCaseFilterTest extends FlatSpec with ShouldMatchers {
 
-    def run(dtPath:String, vocPath:String) = {
+    def run(dtPath:String) = {
         val outputPath =  dtPath + "-output"
 
         val conf = new SparkConf()
@@ -11,12 +11,12 @@ class DTFilterTest extends FlatSpec with ShouldMatchers {
             .setMaster("local[1]")
         val sc = new SparkContext(conf)
 
-        DTFilter.run(sc, dtPath, vocPath, outputPath, keepSingleWords=false, filterOnlyTarget=true)
+        DTCaseFilter.run(sc, dtPath, outputPath)
     }
 
     "DTFilter object" should "filter DT by vocabulary" in {
         //val senses =  getClass.getResource(Const.PRJ.SENSES).getPath()
-        run(dtPath="/Users/alex/Desktop/w2v-jbt-nns/dt-text.csv",
-            vocPath="/Users/alex/Desktop/w2v-jbt-nns/target.csv")
+        run(dtPath="/Users/alex/Desktop/w2v-jbt-nns/dt-text.csv")
     }
 }
+
