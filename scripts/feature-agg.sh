@@ -1,3 +1,41 @@
+jar=~/josimtext_2.10-0.3.jar;
+ftype=depwords;
+norm=word-freq;
+#f=jst/wiki-deps-coocs/features;
+f=jst/news/Holing-dependency_Lemmatize-true_Coocs-false_MaxLen-110_NounsOnly-false_NounNounOnly-false_Semantify-true;
+#f=jst/59g-deps/Holing-dependency_Lemmatize-true_Coocs-false_MaxLen-110_NounsOnly-false_NounNounOnly-false_Semantify-true;
+q=shortrunning;
+
+
+for sname in nounsS3.WN30-1hop-jobimRW-1hopNSW.ddt-news-n50-485k-closure.csv   nounsS3.WN30G-1hopN-jobimRW-1hopNSW.ddt-news-n50-485k-closure.csv  nounsS7.WN30G-1hop-jobimRW-1hopNSW.ddt-news-n50-485k-closure.csv nounsS3.WN30G-1hop-jobimRW-1hopNSW.ddt-news-n50-485k-closure.csv  nounsS7.WN30-1hop-jobimRW-1hopNSW.ddt-news-n50-485k-closure.csv    nounsS7.WN30G-1hopN-jobimRW-1hopNSW.ddt-news-n50-485k-closure.csv ; do
+
+for nn in 500 5 ; do
+
+s=jst/jobimatch/senses/$sname; 
+o=jst/jobimatch/agg/$ftype-${nn}nn-20k-$norm-$sname-news-debug;
+spark-submit --class SenseFeatureAggregator --master=yarn-cluster --queue=$q --num-executors 200 --driver-memory 8g --executor-memory 8g $jar $s $f/W-* $f/F-* $f/WF-* $o $nn $ftype 20000 2 $norm
+
+done
+done 
+exit
+
+ftype=depwords; norm=word-freq; nn=50; f=jst/wiki-deps-coocs/features; q=shortrunning; s=jst/jobimatch/senses/senses.csv; s_b=$(basename $s); o=jst/jobimatch/agg/$ftype-${nn}nn-20k-$norm-$sb; spark-submit --class SenseFeatureAggregator --master=yarn-cluster --queue=$q --num-executors 200 --driver-memory 8g --executor-memory 8g ~/josimtext_2.10-0.2.jar $s $f/W-* $f/F-* $f/WF-* $o $nn $ftype 20000 2 $norm
+
+ftype=depwords; norm=word-freq; nn=50; f=jst/wiki-deps-coocs/features; q=shortrunning; s=jst/jobimatch/senses/senses.csv; o=jst/jobimatch/agg/$ftype-${nn}nn-20k-$norm; spark-submit --class SenseFeatureAggregator --master=yarn-cluster --queue=$q --num-executors 200 --driver-memory 8g --executor-memory 8g ~/josimtext_2.10-0.2.jar $s $f/W-* $f/F-* $f/WF-* $o $nn $ftype 20000 2 $norm
+
+ftype=trigrams; for norm in word-freq ; do for nn in 50 ; do time spark-submit --class SenseFeatureAggregator --master=yarn-cluster --queue=longrunning --num-executors 200 --driver-memory 8g --executor-memory 8g ~/JoSimText/bin/spark/josimtext_2.10-0.2.jar jst/ukwac/senses/python-jaguar-java-ruby jst/ukwac/features/coocs/trigrams/W-* jst/ukwac/features/coocs/trigrams/F-* jst/ukwac/features/coocs/trigrams/WF-* jst/ukwac/agg/prj-$ftype-${nn}nn-20k-$norm $nn $ftype 20000 2 $norm 2> prj.log ; done ; done
+
+ftype=words-from-deps; for norm in word-freq lmi ; do for nn in 10 20 50 ; do time spark-submit --class SenseFeatureAggregator --master=yarn-cluster --queue=longrunning --num-executors 200 --driver-memory 8g --executor-memory 8g ~/JoSimText/bin/spark/josimtext_2.10-0.2.jar ukwac/senses/senses-wiki-deps-jst-wpf1k-fpw1k-thr.csv-cw-e0-N200-n200-minsize15-js-format-1042-lower-1692.csv wiki-deps-coocs/features/W-* wiki-deps-coocs/features/F-* wiki-deps-coocs/features/WF-* wiki-deps-coocs/agg/$ftype-${nn}nn-20k-$norm-wikisenses $nn $ftype 20000 2 $norm 2> wiki-deps-coocs-$ftype-fix-${nn}nn-20k-$norm.log ; done ; done
+
+o=ukwac/agg; f=ukwac/features/coocs/trigrams; for ftype in trigrams words ; do for norm in lmi ; do for nn in 10 20 50 ; do time spark-submit --class SenseFeatureAggregator --master=yarn-cluster --queue=longrunning --num-executors 200 --driver-memory 8g --executor-memory 8g ~/JoSimText/bin/spark/josimtext_2.10-0.2.jar ukwac/senses/senses-ukwac-dep-cw-e0-N200-n200-minsize5-semeval-twsi-js-format.csv $f/W-* $f/F-* $f/WF-* $o/$ftype-${nn}nn-20k-$norm $nn $ftype 20000 2 $norm 2> $ftype-${nn}nn-20k-$norm.log ; done ; done ; done 
+
+
+ftype=deps; for norm in word-freq lmi ; do for nn in 10 20 50 100 ; do time spark-submit --class SenseFeatureAggregator --master=yarn-cluster --queue=longrunning --num-executors 200 --driver-memory 8g --executor-memory 8g ~/JoSimText/bin/spark/josimtext_2.10-0.2.jar ukwac/senses/senses-ukwac-dep-cw-e0-N200-n200-minsize5-semeval-twsi-js-format.csv wiki-deps-coocs/features/W-* wiki-deps-coocs/features/F-* wiki-deps-coocs/features/WF-* wiki-deps-coocs/agg/$ftype-fix-${nn}nn-20k-$norm $nn $ftype 20000 2 $norm ; done ; done
+
+norm="word-freq"; ftype=trigrams; for nn in 10 20 50 100 ; do time spark-submit --class SenseFeatureAggregator --master=yarn-cluster --queue=longrunning --num-executors 200 --driver-memory 8g --executor-memory 8g ~/JoSimText/bin/spark/josimtext_2.10-0.2.jar ukwac/senses/senses-ukwac-dep-cw-e0-N200-n200-minsize5-semeval-twsi-js-format.csv ukwac/coocs/features/W-* ukwac/coocs/features/F-* ukwac/coocs/features/WF-* ukwac/coocs/$ftype-fix-${nn}nn-20k-$norm $nn trigrams 20000 2 $norm ; done
+
+for nn in 20 ; do time spark-submit --class SenseFeatureAggregator --master=yarn-cluster --queue=longrunning --num-executors 200 --driver-memory 8g --executor-memory 8g ~/JoSimText/bin/spark/josimtext_2.10-0.2.jar ukwac/senses/senses-ukwac-dep-cw-e0-N200-n200-minsize5-semeval-twsi-js-format.csv ukwac/coocs/features/W-* ukwac/coocs/features/F-* ukwac/coocs/features/WF-* ukwac/coocs/trigrams-fix-${nn}nn-20k $nn trigrams 20000 2 ; done
+
 for nn in 10 50 100 ; do time spark-submit --class ClusterContextClueAggregator --master=yarn-cluster --queue=longrunning --num-executors 200 --driver-memory 8g --executor-memory 8g ~/JoSimText/bin/spark/josimtext_2.10-0.2.jar ukwac/senses/senses-ukwac-dep-cw-e0-N200-n200-minsize5-semeval-twsi-js-format.csv ukwac/coocs/features/W-* ukwac/coocs/features/F-* ukwac/coocs/features/WF-* ukwac/coocs/trigrams-fix-${nn}nn-20k $nn trigrams 20000 2 ; done
 
 for nn in 10 50 100 ; do time spark-submit --class ClusterContextClueAggregator --master=yarn-cluster --queue=longrunning --num-executors 200 --driver-memory 8g --executor-memory 8g ~/JoSimText/bin/spark/josimtext_2.10-0.2.jar ukwac/senses/senses-ukwac-dep-cw-e0-N200-n200-minsize5-semeval-twsi-js-format.csv wiki/features/W-* wiki/features/CoocF-* wiki/features/CoocWF-* wiki/coocs-${nn}nn-20k $nn words 20000 2 ; done ;
