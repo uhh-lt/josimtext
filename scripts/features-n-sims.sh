@@ -7,16 +7,20 @@ fi
 
 # Paths to the binaries
 bin_hadoop=/home/panchenko/JoSimText/bin/hadoop/
-bin_spark=/home/panchenko/JoSimText/bin/spark/josimtext_2.10-0.2.jar
+bin_spark=/home/panchenko/JoSimText/bin/spark/josimtext_2.10-0.3.jar
 
 # Meta-paramters of feature extraction
 holing_type="dependency"  
 lemmatize=true
 coocs=false
 maxlen=110
-nouns_only=false
 noun_noun_only=false
 semantify=true
+mwe_dict_path="voc/voc-mwe-dela-wiki-druid-wordnet-babelnet-8m.csv"
+mwe_via_ner=true
+mwe_self_features=false
+hadoop_xmx_mb=8192
+hadoop_mb=8000
 
 # Meta-parameters of similarity
 Significance=LMI
@@ -28,6 +32,7 @@ MinFeatureFreq=5
 SimPrecision=5
 FeaturesPerWord=1000 
 NearestNeighboursNum=200 
+spark_gb=8
 
 # Process input params
 corpus=$1
@@ -35,7 +40,7 @@ output=$2
 calc_features=$3
 calc_sims=$4
 queue=$5
-features="$output/Holing-${holing_type}_Lemmatize-${lemmatize}_Coocs-${coocs}_MaxLen-${maxlen}_NounsOnly-${nouns_only}_NounNounOnly-${noun_noun_only}_Semantify-${semantify}" 
+features="$output/Holing-${holing_type}_Lemmatize-${lemmatize}_Coocs-${coocs}_MaxLen-${maxlen}_NounNounOnly-${noun_noun_only}_Semantify-${semantify}" 
 wordFeatureCountsFile=$features/WF-* 
 wordCountsFile=$features/W-* 
 featureCountsFile=$features/F-* 
@@ -97,23 +102,25 @@ if $calc_features; then
     path=`echo $bin_hadoop/*.jar | tr " " ":"`
 
     HADOOP_CLASSPATH=$path hadoop \
-        de.tudarmstadt.lt.wsi.JoBimExtractAndCount \
+        de.tudarmstadt.lt.jst.ExtractTermFeatureScores.HadoopMain \
         -libjars $jars \
         -Dmapreduce.reduce.failures.maxpercent=10 \
         -Dmapreduce.map.failures.maxpercent=10 \
         -Dmapreduce.job.queuename=$queue\
-        -Dmapreduce.map.java.opts=-Xmx8192m \
-        -Dmapreduce.map.memory.mb=8000 \
-        -Dmapreduce.reduce.java.opts=-Xmx8192m \
-        -Dmapreduce.reduce.memory.mb=8000 \
+        -Dmapreduce.map.java.opts=-Xmx${hadoop_xmx_mb}m \
+        -Dmapreduce.map.memory.mb=$hadoop_mb \
+        -Dmapreduce.reduce.java.opts=-Xmx${hadoop_xmx_mb}m \
+        -Dmapreduce.reduce.memory.mb=$hadoop_mb \
         -Dmapred.max.split.size=1000000 \
         -Dholing.type=$holing_type \
         -Dholing.coocs=$coocs \
-        -Dholing.nouns_only=$nouns_only \
         -Dholing.dependencies.semantify=$semantify \
         -Dholing.sentences.maxlength=$maxlen \
         -Dholing.lemmatize=$lemmatize \
         -Dholing.dependencies.noun_noun_dependencies_only=$noun_noun_only \
+        -Dholing.mwe.vocabulary=$mwe_dict_path \
+        -Dholing.mwe.self_features=$mwe_self_features \
+        -Dholing.holing.mwe.ner=$mwe_via_ner \
         $corpus \
         $features 
 fi 
@@ -136,8 +143,8 @@ if $calc_sims; then
         --master=yarn-cluster \
         --queue=$queue \
         --num-executors 50 \
-        --driver-memory 8g \
-        --executor-memory 8g \
+        --driver-memory ${spark_gb}g \
+        --executor-memory ${spark_gb}g \
         $bin_spark \
         $wordFeatureCountsFile \
         $wordCountsFile \
