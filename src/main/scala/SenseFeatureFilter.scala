@@ -46,7 +46,7 @@ object SenseFeatureFilter {
         val voc = Util.loadVocabulary(sc, vocPath)
         val (senses, clusterVocRDD) = SensesFilter.run(sensesPath, voc, sc)
         senses
-            .map({ case (target, sense_id, keyword, cluster) => target + "\t" + sense_id + "\t" + keyword + "\t" + cluster })
+            .map({ case (target, sense_id, cluster) => target + "\t" + sense_id + "\t" + cluster })
             .saveAsTextFile(sensesOutPath)
 
         val clusterVoc = clusterVocRDD.collect().toSet.union(voc)

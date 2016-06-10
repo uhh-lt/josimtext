@@ -1,5 +1,5 @@
 if [ -z "$1" ] || [ -z "$4" ] ; then
-    echo "Run word sense induction"
+    echo "Run noun sense induction"
     echo "parameters: <corpus-directory> <output-directory> <do-calc-features> <do-calc-sims> <queue>"
     echo "<queue>  shortrunning, longrunning"
     exit
@@ -10,7 +10,7 @@ bin_hadoop=/home/panchenko/JoSimText/bin/hadoop/
 bin_spark=/home/panchenko/JoSimText/bin/spark/josimtext_2.10-0.2.jar
 
 # Meta-paramters of feature extraction
-holing_type="dependency"  
+holing_type="trigram"  #"dependency"  
 lemmatize=true
 coocs=false
 maxlen=110

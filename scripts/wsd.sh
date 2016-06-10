@@ -1,3 +1,8 @@
+mode=DepsallCoocsClusters; time spark-submit --class WSD --master=yarn-cluster --queue=longrunning --num-executors 200 --driver-memory 8g --executor-memory 8g ~/josimtext_2.10-0.2.jar ukwac/senses/senses-ukwac-dep-cw-e0-N200-n200-minsize5-semeval-twsi-js-format.csv ukwac/features/words-from-deps-50nn-20000.csv ukwac/features/deps-10nn-20000.csv ukwac/Dataset-SemEval-2013-13-js-features.csv ukwac/semeval/output-$mode 0.00001 $mode true 20000 50 1> semeval-$mode.log 2> semeval-$mode.err 
+
+
+for mode in DepsallCoocsClusters DepstargetCoocsClusters Clusters Coocs Depsall Depstarget ; do time spark-submit --class WSD --master=yarn-cluster --queue=longrunning --num-executors 200 --driver-memory 8g --executor-memory 8g ~/JoSimText/bin/spark/josimtext_2.10-0.2.jar ukwac/senses/senses-ukwac-dep-cw-e0-N200-n200-minsize5-semeval-twsi-js-format.csv ukwac/features/words-from-deps-20nn-20k ukwac/features/deps-20nn-20k ukwac/Dataset-SemEval-2013-13-js-features.csv ukwac/semeval/$mode 0.00001 $mode true 20000 50 1> semeval-$mode.log 2> semeval-$mode.err ; done
+
 spark="/home/panchenko/spark/spark-1.6.1-bin-hadoop2.6/bin/spark-submit"
 jst="/home/panchenko/spark/josimtext_2.10-0.3.jar"
 m=152g
