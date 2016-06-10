@@ -38,26 +38,35 @@ object WordSimFromCounts {
 
         val wordFeatureCounts = sc.textFile(wordFeatureCountsFile)
             .map(line => line.split("\t"))
-            .map({case Array(word, feature, count) => (word, (feature, count.toInt))})
+            .map{
+                case Array(word, feature, count) => (word, (feature, count.toInt))
+                case _ => ("?", ("?", 0))
+            }
 
         val wordCounts = sc.textFile(wordCountsFile)
             .map(line => line.split("\t"))
-            .map({case Array(word, count) => (word, count.toInt)})
-            .filter({case (word, count) => words == null || words.contains(word)})
+            .map{
+                case Array(word, count) => (word, count.toInt)
+                case _ => ("?", 0)
+            }
+            .filter{case (word, count) => words == null || words.contains(word)}
 
         val featureCounts = sc.textFile(featureCountsFile)
             .map(line => line.split("\t"))
-            .map({case Array(feature, count) => (feature, count.toInt)})
+            .map{
+                case Array(feature, count) => (feature, count.toInt)
+                case _ => ("?", 0)
+            }
 
         val (wordSims, wordSimsWithFeatures) = WordSimUtil.computeWordSimsWithFeatures(wordFeatureCounts, wordCounts, featureCounts,
             param_w, param_t_wf, param_t_w, param_t_f, param_s, param_p, param_l, sig, param_r, outDir)
 
         wordSims
-            .map({case (word1, (word2, score)) => word1 + "\t" + word2 + "\t" + score})
+            .map{case (word1, (word2, score)) => word1 + "\t" + word2 + "\t" + score}
             .saveAsTextFile(outDir + "/SimPruned")
 
         wordSimsWithFeatures
-            .map({case (word1, (word2, score, featureSet)) => word1 + "\t" + word2 + "\t" + score + "\t" + featureSet.toList.sorted.mkString("  ")})
+            .map{case (word1, (word2, score, featureSet)) => word1 + "\t" + word2 + "\t" + score + "\t" + featureSet.toList.sorted.mkString("  ")}
             .saveAsTextFile(outDir + "/SimPrunedWithFeatures")
     }
 }

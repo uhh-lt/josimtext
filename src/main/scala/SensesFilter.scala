@@ -7,7 +7,7 @@ object SensesFilter {
     if (args.size < 3) {
       println("Usage: SensesFilter <input-senses-fpath> <vocabulary-fpath> <output-senses-fpath> <lowercase>")
       println("<input-senses-fpath>\tpath to a csv file with sense clusters in the 'JS' format 'target<TAB>sense<TAB>keyword<TAB>cluster', cluster being 'word:sim'<SPACE><SPACE>'")
-      println("<mwe-vocabulary-csv>\tpath to a list of target words that will be kept in the output sense clusters")
+      println("<vocabulary>\tpath to a list of target words that will be kept in the output sense clusters")
       println("<output-senses-fpath>\tpath to the output senses in the same format as input, but containing only vocabulary target words")
       println("<lowercase>\tIgnore case in vocabulary and sense inventory (true or false).")
       return
