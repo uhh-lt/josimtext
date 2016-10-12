@@ -2,4 +2,7 @@ target
 project/target
 .idea/libraries
 .cache
+.idea
 src/test/resources/*__*
+
+*.pyc
