@@ -5,35 +5,43 @@ if [ -z "$1" ] || [ -z "$4" ] ; then
     exit
 fi
 
-# Paths to the binaries
-bin_hadoop=/home/panchenko/JoSimText/bin/hadoop/
-bin_spark=/home/panchenko/JoSimText/bin/spark/josimtext_2.10-0.3.jar
+# BEFORE USING SPECIFY "SPARK" AND "HADOOP" VARIABLES
 
-# Meta-paramters of feature extraction
-holing_type="dependency"  
-lemmatize=true
-coocs=false
-maxlen=110
-noun_noun_only=false
-semantify=true
-mwe_dict_path="voc/voc-mwe-dela-wiki-druid-wordnet-babelnet-8m.csv"
-mwe_via_ner=true
-mwe_self_features=false
+# Feature extraction
+hadoop="../../hadoop/bin/hadoop" # hadoop
+bin_hadoop="../bin/hadoop/"
 hadoop_xmx_mb=8192
 hadoop_mb=8000
-parser="stanford"
 
-# Meta-parameters of similarity
+holing_type="dependency" # "trigram" 
+lemmatize=true # false
+coocs=false # true
+maxlen=110
+noun_noun_only=false # true
+semantify=true
+mwe_dict_path="voc/voc-mwe-dela-wiki-druid-wordnet-babelnet-8m.csv"
+mwe_via_ner=true # false
+mwe_self_features=false
+parser="stanford" # "malt", "malt"
+
+# Term similarity
+spark="../../spark/bin/spark-submit" # /usr/bin/spark-submit
+bin_spark=`ls ../bin/spark/jo*.jar`
+spark_gb=8
+hadoop_conf_dir=/etc/hadoop/conf/
+yarn_conf_dir=/etc/hadoop/conf.cloudera.yarn/
+
+
 Significance=LMI
-WordsPerFeature=1000 
+WordsPerFeature=1000 # 100 1000 10000 
 MinFeatureSignif=0.0
 MinWordFeatureFreq=2
-MinWordFreq=5
+MinWordFreq=5 
 MinFeatureFreq=5
 SimPrecision=5
-FeaturesPerWord=1000 
+FeaturesPerWord=1000 # 100 1000 10000 
 NearestNeighboursNum=200 
-spark_gb=8
+
 
 # Process input params
 corpus=$1
@@ -50,7 +58,7 @@ wordsim="${features}__Significance-${Significance}_WordsPerFeature-${WordsPerFea
 
 # Display job parameters to the user
 echo "Corpus: $corpus"
-if  hadoop fs -test -e $corpus  ; then
+if  $hadoop fs -test -e $corpus  ; then
     echo "Corpus exists: true"
 else
     echo "Corpus exists: false"
@@ -62,7 +70,7 @@ echo ""
 
 echo "Features: $features"
 echo "Calculate features: $calc_features"
-if  hadoop fs -test -e $features ; then
+if  $hadoop fs -test -e $features ; then
     echo "Features exist: true"
 else
     echo "Features exist: false"
@@ -72,7 +80,7 @@ echo ""
 echo "Similarities: $wordsim"
 echo "Calculate similarities: $calc_sims"
 wordsim=${wordsim:0:254} # to meet 255 limit of HDFS filename
-if  hadoop fs -test -e $wordsim  ; then
+if  $hadoop fs -test -e $wordsim  ; then
     echo "Similarity exist: true"
 else
     echo "Similarity exist: false"
@@ -83,18 +91,18 @@ echo "To start press any key, to stop press Ctrl+C"
 read -n 2
 
 # Create output directory
-if ! hadoop fs -test -e $output  ; then
-    hadoop fs -mkdir $output
+if ! $hadoop fs -test -e $output  ; then
+    $hadoop fs -mkdir $output
     echo "Created output: '$output'"
 fi
 
 
 # Generate word-feature matrix
 if $calc_features; then  
-    if hadoop fs -test -e $features ; then
+    if $hadoop fs -test -e $features ; then
         if [ ${#features} > 40 ] ; then
             echo "Deleting: $features"
-            hadoop fs -rm -r $features
+            $hadoop fs -rm -r $features
         fi
     fi
     echo "Calculating features ..."
@@ -102,7 +110,7 @@ if $calc_features; then
     jars=`echo $bin_hadoop/*.jar | tr " " ","`
     path=`echo $bin_hadoop/*.jar | tr " " ":"`
 
-    HADOOP_CLASSPATH=$path hadoop \
+    HADOOP_CLASSPATH=$path $exec_hadoop \
         de.tudarmstadt.lt.jst.ExtractTermFeatureScores.HadoopMain \
         -libjars $jars \
         -Dmapreduce.reduce.failures.maxpercent=10 \
@@ -129,18 +137,18 @@ fi
 
 # Calculate word similarities
 if $calc_sims; then  
-    if hadoop fs -test -e $wordsim ; then
+    if $hadoop fs -test -e $wordsim ; then
         if [[ ${#wordsim} > 50 ]] ; then
             echo "Deleting: $wordsim"
-            hadoop fs -rmr $wordsim
+            $hadoop fs -rmr $wordsim
         fi
     fi
     echo "Calculating similarities..." 
 
-    export HADOOP_CONF_DIR=/etc/hadoop/conf/
-    export YARN_CONF_DIR=/etc/hadoop/conf.cloudera.yarn/
+    export HADOOP_CONF_DIR=hadoop_conf_dir
+    export YARN_CONF_DIR=yarn_conf_dir
 
-    /usr/bin/spark-submit \
+    $spark \
         --class=WordSimFromCounts \
         --master=yarn-cluster \
         --queue=$queue \
