@@ -21,6 +21,7 @@ mwe_via_ner=true
 mwe_self_features=false
 hadoop_xmx_mb=8192
 hadoop_mb=8000
+parser="stanford"
 
 # Meta-parameters of similarity
 Significance=LMI
@@ -121,6 +122,7 @@ if $calc_features; then
         -Dholing.mwe.vocabulary=$mwe_dict_path \
         -Dholing.mwe.self_features=$mwe_self_features \
         -Dholing.holing.mwe.ner=$mwe_via_ner \
+        -Dholing.dependencies.parser=$parser \
         $corpus \
         $features 
 fi 
