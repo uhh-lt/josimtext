@@ -8,7 +8,7 @@ fi
 # BEFORE USING SPECIFY "SPARK" AND "HADOOP" VARIABLES
 
 # Feature extraction
-hadoop="../../hadoop/bin/hadoop" # hadoop
+hadoop=hadoop # "../../hadoop/bin/hadoop" 
 bin_hadoop="../bin/hadoop/"
 hadoop_xmx_mb=8192
 hadoop_mb=8000
@@ -19,13 +19,13 @@ coocs=false # true
 maxlen=110
 noun_noun_only=false # true
 semantify=true
-mwe_dict_path="voc/voc-mwe-dela-wiki-druid-wordnet-babelnet-8m.csv"
+mwe_dict_path="" # "voc/voc-mwe-dela-wiki-druid-wordnet-babelnet-8m.csv"
 mwe_via_ner=true # false
 mwe_self_features=false
 parser="stanford" # "malt", "malt"
 
 # Term similarity
-spark="../../spark/bin/spark-submit" # /usr/bin/spark-submit
+spark=/usr/bin/spark-submit # "../../spark/bin/spark-submit" 
 bin_spark=`ls ../bin/spark/jo*.jar`
 spark_gb=8
 hadoop_conf_dir=/etc/hadoop/conf/
@@ -110,7 +110,7 @@ if $calc_features; then
     jars=`echo $bin_hadoop/*.jar | tr " " ","`
     path=`echo $bin_hadoop/*.jar | tr " " ":"`
 
-    HADOOP_CLASSPATH=$path $exec_hadoop \
+    HADOOP_CLASSPATH=$path $hadoop \
         de.tudarmstadt.lt.jst.ExtractTermFeatureScores.HadoopMain \
         -libjars $jars \
         -Dmapreduce.reduce.failures.maxpercent=10 \
