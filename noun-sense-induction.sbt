@@ -1,13 +1,13 @@
 name := "josimtext"
 
-version := "0.3"
+version := "0.4"
 
-scalaVersion := "2.10.6"
+scalaVersion := "2.11.8"
 
 resolvers += Resolver.mavenLocal
 
-//libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "2.3.0-cdh5.1.0"
+libraryDependencies += "org.apache.spark" %% "spark-core" % "2.0.1"
+//libraryDependencies += "org.apache.spark" %% "spark-core" % "2.0.1"
 
-libraryDependencies += "org.apache.spark" %% "spark-core" % "1.6.1"
-
-libraryDependencies += "org.scalatest" % "scalatest_2.10" % "2.0" % "test"
+//libraryDependencies += "org.scalatest" % "scalatest_3.0" % "3.0" % "test"
+libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.0" % "test"
