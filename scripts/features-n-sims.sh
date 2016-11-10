@@ -15,22 +15,21 @@ hadoop_mb=8000
 
 holing_type="dependency" # "trigram" 
 lemmatize=true # false
-coocs=false # true
+coocs=false # false # true
 maxlen=110
 noun_noun_only=false # true
 semantify=true
-mwe_dict_path="" # "voc/voc-mwe-dela-wiki-druid-wordnet-babelnet-8m.csv"
+mwe_dict_path="voc/voc-mwe-dela-wiki-druid-wordnet-babelnet-8m.csv" # ""
 mwe_via_ner=true # false
 mwe_self_features=false
-parser="stanford" # "malt", "malt"
+parser="malt" # "stanford" "malt", "mate"
 
 # Term similarity
-spark=/usr/bin/spark-submit # "../../spark/bin/spark-submit" 
+spark=spark-submit # "../../spark/bin/spark-submit" 
 bin_spark=`ls ../bin/spark/jo*.jar`
 spark_gb=8
 hadoop_conf_dir=/etc/hadoop/conf/
 yarn_conf_dir=/etc/hadoop/conf.cloudera.yarn/
-
 
 Significance=LMI
 WordsPerFeature=1000 # 100 1000 10000 
@@ -129,7 +128,7 @@ if $calc_features; then
         -Dholing.dependencies.noun_noun_dependencies_only=$noun_noun_only \
         -Dholing.mwe.vocabulary=$mwe_dict_path \
         -Dholing.mwe.self_features=$mwe_self_features \
-        -Dholing.holing.mwe.ner=$mwe_via_ner \
+        -Dholing.mwe.ner=$mwe_via_ner \
         -Dholing.dependencies.parser=$parser \
         $corpus \
         $features 
@@ -145,12 +144,12 @@ if $calc_sims; then
     fi
     echo "Calculating similarities..." 
 
-    export HADOOP_CONF_DIR=hadoop_conf_dir
-    export YARN_CONF_DIR=yarn_conf_dir
+    export HADOOP_CONF_DIR=$hadoop_conf_dir
+    export YARN_CONF_DIR=$yarn_conf_dir
 
     $spark \
         --class=WordSimFromCounts \
-        --master=yarn-cluster \
+        --master=yarn \
         --queue=$queue \
         --num-executors 50 \
         --driver-memory ${spark_gb}g \
