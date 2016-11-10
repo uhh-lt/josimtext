@@ -7,7 +7,6 @@ class WSDTest extends FlatSpec with ShouldMatchers {
     val holingTargetFeaturesStr = "nn(@,interpreter)  nn(@,execution)  #_@_interpreter  allow_@_code"
     val holingAllFeaturesStr = "nn(@,interpreter)  nn(@,execution)  #_@_interpreter  allow_@_code  cop(@,available)  amod(many,@)  amod(@,system)  installation_@_many  on_@_operating  many_@_system"
 
-
     "WSD" should "separate deps and trigrams" in {
         val holingFeaturesStr = "punct(emphasize,@)  punct(@,.)  prep_of(line,@)  #_@_design  its_@_philosophy  design_@_emphasize"
         val (deps, trigrams) = WSD.getHolingFeatures(holingFeaturesStr, true)

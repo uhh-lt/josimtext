@@ -17,8 +17,7 @@ object WordSim {
         val param_sig = if (args.size > 5) args(5) else "LMI"
         val param_p = if (args.size > 6) args(6).toInt else 1000
         val param_l = if (args.size > 7) args(7).toInt else 200
-
-        def sig(_n:Long, wc:Long, fc:Long, bc:Long) = if (param_sig == "LMI") WordSimUtil.lmi(_n,wc,fc,bc) else WordSimUtil.ll(_n,wc,fc,bc)
+        val sig = "LMI"
 
         val conf = new SparkConf().setAppName("WordSim")
         val sc = new SparkContext(conf)
@@ -26,7 +25,7 @@ object WordSim {
 
         val (wordFeatureCounts, wordCounts, featureCounts) = WordSimUtil.computeWordFeatureCounts(file, outDir)
         val (wordSims, wordSimsWithFeatures) = WordSimUtil.computeWordSimsWithFeatures(wordFeatureCounts, wordCounts, featureCounts,
-                                                                 param_w, param_t, param_t, param_t, param_s, param_p, param_l, sig, 3, outDir)
+            param_w, param_t, param_t, param_t, param_s, param_p, param_l, sig, 3, outDir)
 
         wordSimsWithFeatures
             .map({case (word1, (word2, score, featureSet)) => word1 + "\t" + word2 + "\t" + score + "\t" + featureSet.mkString("  ")})

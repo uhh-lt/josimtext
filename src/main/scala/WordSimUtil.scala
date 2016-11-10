@@ -2,7 +2,7 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
 object WordSimUtil {
-    val DEBUG = true
+    val DEBUG = false
 
     def log2(n:Double): Double = {
         math.log(n) / math.log(2)
@@ -124,44 +124,42 @@ object WordSimUtil {
     def computeFeatureScores(wordFeatureCounts:RDD[(String, (String, Int))],
                              wordCounts:RDD[(String, Int)],
                              featureCounts:RDD[(String, Int)],
-                             w:Int,    // max. number of words per feature
-                             t_wf:Int,    // lower word-feature count threshold
-                             t_w:Int,    // lower word count threshold
-                             t_f:Int,    // lower feature count threshold
-                             s:Double, // lower significance threshold
-                             p:Int,    // max. number of features per word
-                             sig:(Long, Long, Long, Long) => Double,
-                             outDir:String)
+                             wordsPerFeatureNum:Int,
+                             wordFeatureCountMin:Int,
+                             wordCountMin:Int,
+                             featureCountMin:Int,
+                             significanceMin:Double,
+                             featuresPerWordNum:Int,
+                             significance:(Long, Long, Long, Long) => Double,
+                             outputDir:String)
     : (RDD[(String, Array[(String, Double)])]) = {
 
         val wordFeatureCountsFiltered =
-            if (t_wf > 1) wordFeatureCounts.filter({ case (word, (feature, wfc)) => wfc >= t_wf})
+            if (wordFeatureCountMin > 1) wordFeatureCounts.filter({ case (word, (feature, wfc)) => wfc >= wordFeatureCountMin})
             else          wordFeatureCounts
 
         var featureCountsFiltered =
-            if (t_f > 1) featureCounts.filter({case (feature, fc) => fc >= t_f})
+            if (featureCountMin > 1) featureCounts.filter({case (feature, fc) => fc >= featureCountMin})
             else         featureCounts
 
-        if (w != Int.MaxValue) {
-            val wordsPerFeatureCounts = wordFeatureCountsFiltered
-                .map({ case (word, (feature, wfc)) => (feature, word)})
-                .groupByKey()
-                .mapValues(v => v.size)
-                .filter({ case (feature, numWords) => numWords <= w})
+        val wordsPerFeatureCounts = wordFeatureCountsFiltered
+            .map{ case (word, (feature, wfc)) => (feature, word)}
+            .groupByKey()
+            .mapValues(v => v.size)
+            .filter{ case (feature, numWords) => numWords <= wordsPerFeatureNum}
 
-            featureCountsFiltered = featureCountsFiltered
-                .join(wordsPerFeatureCounts) // filter by using a join
-                .map({ case (feature, (fc, fwc)) => (feature, fc)}) // and remove unnecessary data from join
-        }
+        featureCountsFiltered = featureCountsFiltered
+            .join(wordsPerFeatureCounts) // filter using a join
+            .map{ case (feature, (fc, fwc)) => (feature, fc)} // remove unnecessary data from join
         featureCountsFiltered.cache()
 
         val wordCountsFiltered =
-            if (t_w > 1) wordCounts.filter({case (word, wc) => wc >= t_w})
+            if (wordCountMin > 1) wordCounts.filter({case (word, wc) => wc >= wordCountMin})
             else         wordCounts
         wordCountsFiltered.cache()
 
         // Since word counts and feature counts are based on unfiltered word-feature
-        // occurrences, n must be based on unfiltered word-feature counts as well.
+        // occurrences, n must be based on unfiltered word-feature counts as well
         val n = wordFeatureCounts
             .map({case (word, (feature, wfc)) => (feature, (word, wfc))})
             .aggregate(0L)(_ + _._2._2.toLong, _ + _) // we need Long because n might exceed the max. Int value
@@ -170,47 +168,51 @@ object WordSimUtil {
             .join(wordCountsFiltered)
             .map({case (word, ((feature, wfc), wc)) => (feature, (word, wfc, wc))})
             .join(featureCountsFiltered)
-            .map({case (feature, ((word, wfc, wc), fc)) => (word, (feature, sig(n, wc, fc, wfc)))})
-            .filter({case (word, (feature, score)) => score >= s})
+            .map({case (feature, ((word, wfc, wc), fc)) => (word, (feature, significance(n, wc, fc, wfc)))})
+            .filter({case (word, (feature, score)) => score >= significanceMin})
             .groupByKey()
             // (word, [(feature, score), (feature, score), ...])
-            .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}).take(p)) // sort by value desc
-        //featuresPerWordWithScore.cache()
+            .mapValues(featureScores => featureScores.toArray.sortWith({case ((_, s1), (_, s2)) => s1 > s2}).take(featuresPerWordNum)) // sort by value desc
 
         if (DEBUG) {
             wordFeatureCountsFiltered
                 .join(wordCountsFiltered)
                 .map({ case (word, ((feature, wfc), wc)) => (feature, (word, wfc, wc))})
                 .join(featureCountsFiltered)
-                .map({ case (feature, ((word, wfc, wc), fc)) => (word, feature, wc, fc, wfc, sig(n, wc, fc, wfc))})
+                .map({ case (feature, ((word, wfc, wc), fc)) => (word, feature, wc, fc, wfc, significance(n, wc, fc, wfc))})
                 .sortBy({ case (word, feature, wc, fc, wfc, score) => score}, ascending = false)
                 .map({ case (word, feature, wc, fc, wfc, score) => word + "\t" + feature + "\t" + wc + "\t" + fc + "\t" + wfc + "\t" + n + "\t" + score})
-                .saveAsTextFile(outDir + "/AllValuesPerWord")
-            /*featuresPerWordWithScore
-                .flatMap({ case (word, featureScores) => for (featureScore <- featureScores.iterator) yield (featureScore._1, (word, featureScore._2))})
-                .join(featureCountsFiltered)
-                .map({ case (feature, ((word, score), fc)) => word + "\t" + feature + "\t" + score + "\t" + fc})
-                .saveAsTextFile(outDir + "/PruneGraph")*/
+                .saveAsTextFile(outputDir + "/AllValuesPerWord")
         }
 
         featuresPerWordWithScore
     }
 
-    def computeWordSimsWithFeatures(wordFeatureCounts:RDD[(String, (String, Int))],
-                                    wordCounts:RDD[(String, Int)],
-                                    featureCounts:RDD[(String, Int)],
-                                    w:Int,    // max. number of words per feature
-                                    t_wf:Int,    // lower word-feature count threshold
-                                    t_w:Int,    // lower word count threshold
-                                    t_f:Int,    // lower feature count threshold
-                                    s:Double, // lower significance threshold
-                                    p:Int,    // max. number of features per word
-                                    l:Int,    // max. number of similar words per word
-                                    sig:(Long, Long, Long, Long) => Double,
-                                    r:Int,  // # decimal places to round score to
-                                    outDir:String)
+    def getSignificance(significanceType: String) = {
+        significanceType match {
+            case "LMI" => WordSimUtil.lmi _
+            case "COV" => WordSimUtil.cov _
+            case "FREQ" => WordSimUtil.freq _
+            case _ => WordSimUtil.ll _
+        }
+    }
+
+    def computeWordSimsWithFeatures(wordFeatureCounts: RDD[(String, (String, Int))],
+                                    wordCounts: RDD[(String, Int)],
+                                    featureCounts: RDD[(String, Int)],
+                                    w: Int,    // max. number of words per feature
+                                    t_wf: Int,    // lower word-feature count threshold
+                                    t_w: Int,    // lower word count threshold
+                                    t_f: Int,    // lower feature count threshold
+                                    s: Double, // lower significance threshold
+                                    p: Int,    // max. number of features per word
+                                    l: Int,    // max. number of similar words per word
+                                    significanceType: String, // LMI, etc
+                                    r: Int,  // # decimal places to round score to
+                                    outDir: String)
     : (RDD[(String, (String, Double))], RDD[(String, (String, Double, Set[String]))]) = {
 
+        val sig = getSignificance(significanceType)
         val featuresPerWordWithScore = computeFeatureScores(wordFeatureCounts, wordCounts, featureCounts, w, t_wf, t_w, t_f, s, p, sig, outDir)
 
         val featuresPerWord:RDD[(String, Array[String])] = featuresPerWordWithScore
