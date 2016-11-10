@@ -23,8 +23,8 @@ object WordSim {
         val sc = new SparkContext(conf)
         val file = sc.textFile(param_dataset)
 
-        val (wordFeatureCounts, wordCounts, featureCounts) = WordSimUtil.computeWordFeatureCounts(file, outDir)
-        val (wordSims, wordSimsWithFeatures) = WordSimUtil.computeWordSimsWithFeatures(wordFeatureCounts, wordCounts, featureCounts,
+        val (wordFeatureCounts, wordCounts, featureCounts) = WordSimLib.computeWordFeatureCounts(file, outDir)
+        val (wordSims, wordSimsWithFeatures) = WordSimLib.computeWordSimsWithFeatures(wordFeatureCounts, wordCounts, featureCounts,
             param_w, param_t, param_t, param_t, param_s, param_p, param_l, sig, 3, outDir)
 
         wordSimsWithFeatures

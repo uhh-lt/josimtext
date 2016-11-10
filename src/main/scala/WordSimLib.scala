@@ -1,7 +1,8 @@
+import org.apache.hadoop.io.compress.GzipCodec
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
-object WordSimUtil {
+object WordSimLib {
     val DEBUG = false
 
     def log2(n:Double): Double = {
@@ -190,10 +191,10 @@ object WordSimUtil {
 
     def getSignificance(significanceType: String) = {
         significanceType match {
-            case "LMI" => WordSimUtil.lmi _
-            case "COV" => WordSimUtil.cov _
-            case "FREQ" => WordSimUtil.freq _
-            case _ => WordSimUtil.ll _
+            case "LMI" => WordSimLib.lmi _
+            case "COV" => WordSimLib.cov _
+            case "FREQ" => WordSimLib.freq _
+            case _ => WordSimLib.ll _
         }
     }
 
@@ -267,6 +268,14 @@ object WordSimUtil {
             //    .map({ case (feature, wordList) => feature + "\t" + wordList.map(f => f._1).mkString("\t")})
             //    .saveAsTextFile(outDir + "__AggrPerFeature")
         }
+
+        wordSims
+            .map{case (word1, (word2, score)) => word1 + "\t" + word2 + "\t" + score}
+            .saveAsTextFile(outputDir + "/SimPruned", classOf[GzipCodec])
+
+        wordSimsWithFeatures
+            .map{case (word1, (word2, score, featureSet)) => word1 + "\t" + word2 + "\t" + score + "\t" + featureSet.toList.sorted.mkString("  ")}
+            .saveAsTextFile(outputDir + "/SimPrunedWithFeatures", classOf[GzipCodec])
 
         (wordSimsPruned, wordSimsPrunedWithFeatures)
     }

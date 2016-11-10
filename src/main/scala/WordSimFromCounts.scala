@@ -1,6 +1,5 @@
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
-import org.apache.hadoop.io.compress.GzipCodec
 
 object WordSimFromCounts {
     val wordsPerFeatureNumDefault = 1000
@@ -75,16 +74,13 @@ object WordSimFromCounts {
                 case _ => ("?", 0)
             }
 
-        val (wordSims, wordSimsWithFeatures) = WordSimUtil.computeWordSimsWithFeatures(wordFeatureCounts, wordCounts,
-            featureCounts, wordsPerFeatureNum, wordFeatureMinCount, wordMinCount, featureMinCount, significanceMin,
+        val (simsPath, simsWithFeaturesPath, featuresPath) = WordSimLib.computeWordSimsWithFeatures(
+            wordFeatureCounts, wordCounts, featureCounts, wordsPerFeatureNum,
+            wordFeatureMinCount, wordMinCount, featureMinCount, significanceMin,
             featuresPerWordNum, similarWordsMaxNum, significanceType, simScoreDigitsNum, outputDir)
 
-        wordSims
-            .map{case (word1, (word2, score)) => word1 + "\t" + word2 + "\t" + score}
-            .saveAsTextFile(outputDir + "/SimPruned", classOf[GzipCodec])
-
-        wordSimsWithFeatures
-            .map{case (word1, (word2, score, featureSet)) => word1 + "\t" + word2 + "\t" + score + "\t" + featureSet.toList.sorted.mkString("  ")}
-            .saveAsTextFile(outputDir + "/SimPrunedWithFeatures", classOf[GzipCodec])
+        println(s"Word similarities: $simsPath")
+        println(s"Word similarities with features: $simsWithFeaturesPath")
+        println(s"Features: $featuresPath")
     }
 }
