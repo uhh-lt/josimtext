@@ -15,4 +15,5 @@ class UtilTest extends FlatSpec with ShouldMatchers {
     it should "split trigram features 2" in {
       Util.parseTrigram("sport_@_,") should equal(("sport", ","))
     }
+
 }

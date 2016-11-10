@@ -1,7 +1,9 @@
-import java.io.{IOException, File}
+import java.io.{BufferedInputStream, File, FileInputStream, IOException}
+
 import scala.io.{BufferedSource, Source}
 import org.apache.spark.SparkContext
-import java.nio.file.{Paths, Files}
+import java.nio.file.{FileSystems, Files, Path, Paths}
+import java.util.zip.GZIPInputStream
 
 /**
   * Utility functions
@@ -26,6 +28,12 @@ object Util {
             ("?", "?")
         }
     }
+
+    /**
+      * Input stream for gzipped files. Can be used e.g. Source.f
+      * */
+    def gzip(s: String) = new GZIPInputStream(new BufferedInputStream(new FileInputStream(s)))
+
 
     /**
       * Parses dependency line "subj(@,dog)" into the tuple of strings (subj, @, dog)
