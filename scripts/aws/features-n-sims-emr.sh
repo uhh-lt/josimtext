@@ -8,29 +8,21 @@ fi
 # The script assumes hadoop and spark-submit commands availqble (you can redefine path to them)
 # Check if the variables "hadoop_conf_dir" and "yarn_conf_dir" point to correct locations
 
-# Feature extraction
-hadoop=hadoop # "../../hadoop/bin/hadoop" 
-bin_hadoop="../bin/hadoop/"
-hadoop_xmx_mb=8192
-hadoop_mb=8000
 
+
+# Feature extraction
 holing_type="dependency" # "trigram" 
 lemmatize=true # false
 coocs=false # false # true
 maxlen=110
 noun_noun_only=false # true
 semantify=true
-mwe_dict_path=s3://jobimtext/voc/voc.csv  # "voc/voc-mwe-dela-wiki-druid-wordnet-babelnet-8m.csv" # ""
 mwe_via_ner=true # false
 mwe_self_features=false
 parser="malt" # "stanford" "malt", "mate"
 
 # Term similarity
-spark=spark-submit # "../../spark/bin/spark-submit" 
-bin_spark=`ls ../bin/spark/jo*.jar`
-spark_gb=8
-hadoop_conf_dir=/etc/hadoop/conf/
-yarn_conf_dir=/etc/hadoop/conf/
+
 
 Significance=LMI
 WordsPerFeature=1000 # 100 1000 10000 

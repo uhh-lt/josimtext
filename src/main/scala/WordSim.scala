@@ -24,11 +24,6 @@ object WordSim {
         val file = sc.textFile(param_dataset)
 
         val (wordFeatureCounts, wordCounts, featureCounts) = WordSimLib.computeWordFeatureCounts(file, outDir)
-        val (wordSims, wordSimsWithFeatures) = WordSimLib.computeWordSimsWithFeatures(wordFeatureCounts, wordCounts, featureCounts,
-            param_w, param_t, param_t, param_t, param_s, param_p, param_l, sig, 3, outDir)
-
-        wordSimsWithFeatures
-            .map({case (word1, (word2, score, featureSet)) => word1 + "\t" + word2 + "\t" + score + "\t" + featureSet.mkString("  ")})
-            .saveAsTextFile(outDir + "__SimWithFeatures")
+        val (wordSimsPath, wordSimsWithFeaturesPath, featuresPath) = WordSimLib.computeWordSimsWithFeatures(wordFeatureCounts, wordCounts, featureCounts, outDir, param_w, param_p, param_t, param_t, param_t, param_s, param_l, sig)
     }
 }

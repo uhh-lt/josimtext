@@ -5,42 +5,31 @@ if [ -z "$1" ] || [ -z "$4" ] ; then
     exit
 fi
 
-# BEFORE USING SPECIFY "SPARK" AND "HADOOP" VARIABLES
-
-# Feature extraction
-hadoop=hadoop # "../../hadoop/bin/hadoop" 
+source features-n-sims.config.sh
+bin_spark=`ls ../bin/spark/jo*.jar`
 bin_hadoop="../bin/hadoop/"
-hadoop_xmx_mb=8192
-hadoop_mb=8000
 
+
+# Feature extraction parameters
 holing_type="dependency" # "trigram" 
 lemmatize=true # false
 coocs=false # false # true
 maxlen=110
 noun_noun_only=false # true
 semantify=true
-mwe_dict_path="voc/voc-mwe-dela-wiki-druid-wordnet-babelnet-8m.csv" # ""
 mwe_via_ner=true # false
 mwe_self_features=false
 parser="malt" # "stanford" "malt", "mate"
 
 # Term similarity
-spark=spark-submit # "../../spark/bin/spark-submit" 
-bin_spark=`ls ../bin/spark/jo*.jar`
-spark_gb=8
-hadoop_conf_dir=/etc/hadoop/conf/
-yarn_conf_dir=/etc/hadoop/conf.cloudera.yarn/
-
-Significance=LMI
-WordsPerFeature=1000 # 100 1000 10000 
-MinFeatureSignif=0.0
-MinWordFeatureFreq=2
-MinWordFreq=5 
+WordsPerFeature=1000 # 100 1000 10000
+FeaturesPerWord=1000 # 100 1000 10000
+MinWordFreq=5
 MinFeatureFreq=5
-SimPrecision=5
-FeaturesPerWord=1000 # 100 1000 10000 
-NearestNeighboursNum=200 
-
+MinWordFeatureFreq=2
+Significance=LMI
+MinFeatureSignif=0.0
+NearestNeighboursNum=200
 
 # Process input params
 corpus=$1
@@ -53,7 +42,6 @@ wordFeatureCountsFile=$features/WF-*
 wordCountsFile=$features/W-* 
 featureCountsFile=$features/F-* 
 wordsim="${features}__Significance-${Significance}_WordsPerFeature-${WordsPerFeature}_FeaturesPerWord-${FeaturesPerWord}_MinWordFreq-${MinWordFreq}_MinFeatureFreq-${MinFeatureFreq}_MinWordFeatureFreq-${MinWordFeatureFreq}_MinFeatureSignif-${MinFeatureSignif}_SimPrecision-${SimPrecision}_NearestNeighboursNum-${NearestNeighboursNum}"
-
 
 # Display job parameters to the user
 echo "Corpus: $corpus"
@@ -155,17 +143,21 @@ if $calc_sims; then
         --driver-memory ${spark_gb}g \
         --executor-memory ${spark_gb}g \
         $bin_spark \
-        $wordFeatureCountsFile \
+
         $wordCountsFile \
+        $wordFeatureCountsFile \
         $featureCountsFile \
         $wordsim \
         $WordsPerFeature \
-        $MinFeatureSignif \
-        $MinWordFeatureFreq \
+        $FeaturesPerWord \
         $MinWordFreq \
         $MinFeatureFreq \
+        $MinWordFeatureFreq \
+        $MinFeatureSignif \
         $Significance \
-        $SimPrecision \
-        $FeaturesPerWord \
         $NearestNeighboursNum
 fi
+
+val significanceMin = if (args.size > 9) args(9).toDouble else significanceMinDefault
+val significanceType = if (args.size > 10) args(10) else significanceTypeDefault
+val similarWordsMaxNum = if (args.size > 11) args(11).toInt else similarWordsMaxNumDefault
