@@ -1,5 +1,6 @@
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
+import org.apache.hadoop.io.compress.GzipCodec
 
 object WordSimFromCounts {
     val wordsPerFeatureNumDefault = 1000
@@ -80,10 +81,10 @@ object WordSimFromCounts {
 
         wordSims
             .map{case (word1, (word2, score)) => word1 + "\t" + word2 + "\t" + score}
-            .saveAsTextFile(outputDir + "/SimPruned")
+            .saveAsTextFile(outputDir + "/SimPruned", classOf[GzipCodec])
 
         wordSimsWithFeatures
             .map{case (word1, (word2, score, featureSet)) => word1 + "\t" + word2 + "\t" + score + "\t" + featureSet.toList.sorted.mkString("  ")}
-            .saveAsTextFile(outputDir + "/SimPrunedWithFeatures")
+            .saveAsTextFile(outputDir + "/SimPrunedWithFeatures", classOf[GzipCodec])
     }
 }
