@@ -1,5 +1,5 @@
 if [ -z "$1" ] || [ -z "$3" ] ; then
-    echo "Split too long lines in the input corpus"
+    echo "Split too long lines in the input corpus and make the sentences unique."
     echo "parameters: <corpus-directory> <output-directory> <queue>"
     echo "<queue>  shortrunning, longrunning"
     exit
@@ -13,8 +13,7 @@ queue=$3
 make_uniq=true
 compress_output=false
 
-bin=/home/panchenko/JoSimText/bin/hadoop
-
+bin="../bin/hadoop/"
 jars=`echo $bin/*.jar | tr " " ","`
 path=`echo $bin/*.jar | tr " " ":"`
 

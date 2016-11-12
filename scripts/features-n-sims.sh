@@ -145,10 +145,9 @@ if $calc_sims; then
         --driver-memory ${spark_gb}g \
         --executor-memory ${spark_gb}g \
         $bin_spark \
-
         $wordCountsFile \
-        $wordFeatureCountsFile \
         $featureCountsFile \
+        $wordFeatureCountsFile \
         $wordsim \
         $WordsPerFeature \
         $FeaturesPerWord \
@@ -160,6 +159,3 @@ if $calc_sims; then
         $NearestNeighboursNum
 fi
 
-val significanceMin = if (args.size > 9) args(9).toDouble else significanceMinDefault
-val significanceType = if (args.size > 10) args(10) else significanceTypeDefault
-val similarWordsMaxNum = if (args.size > 11) args(11).toInt else similarWordsMaxNumDefault
