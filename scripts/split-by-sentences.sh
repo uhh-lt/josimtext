@@ -11,6 +11,7 @@ corpus=$1
 output=$2
 queue=$3
 make_uniq=true
+compress_output=false
 
 bin=/home/panchenko/JoSimText/bin/hadoop
 
@@ -31,4 +32,5 @@ HADOOP_CLASSPATH=$path hadoop \
     -Dmax_sentences_size=150 \
     $corpus \
     $output \
-    $make_uniq
+    $make_uniq \
+    $compress_output

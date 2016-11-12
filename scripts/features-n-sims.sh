@@ -20,6 +20,7 @@ semantify=true
 mwe_via_ner=true # false
 mwe_self_features=false
 parser="malt" # "stanford" "malt", "mate"
+compress_output=false
 
 # Term similarity
 WordsPerFeature=1000 # 100 1000 10000
@@ -119,7 +120,8 @@ if $calc_features; then
         -Dholing.mwe.ner=$mwe_via_ner \
         -Dholing.dependencies.parser=$parser \
         $corpus \
-        $features 
+        $features \
+        $compress_output
 fi 
 
 # Calculate word similarities
