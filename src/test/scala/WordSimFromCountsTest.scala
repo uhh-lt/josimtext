@@ -9,7 +9,7 @@ import scala.io.Source
 class WordSimFromCountsTest extends FlatSpec with ShouldMatchers {
 
     /**
-      * This function and thus each test case run about about 5 minutes on a core i5 cpu with 8gb of ram
+      * This function and thus each test case run about about 2 minutes on a core i5 cpu with 8gb of ram
       * */
     def run() = {
         val words = getClass.getResource(Const.PRJ.WORDS).getPath()
@@ -39,9 +39,6 @@ class WordSimFromCountsTest extends FlatSpec with ShouldMatchers {
         val simPath = Paths.get(outputDir, "SimPruned");
         Files.exists(simPath) should equal(true)
 
-        val simFeaturesPath = Paths.get(outputDir, "SimPrunedWithFeatures");
-        Files.exists(simFeaturesPath) should equal(true)
-
         // Should contain files with data
         Files.exists(Paths.get(simPath.toString, "part-00123.gz")) should equal(true)
         val pythonSimPath = Paths.get(simPath.toString, "part-00908.gz");
@@ -64,7 +61,7 @@ class WordSimFromCountsTest extends FlatSpec with ShouldMatchers {
         Files.exists(featuresDirPath) should equal(true)
 
         // Should contain files with data
-        val featuresPath = Paths.get(featuresDirPath.toString, "part-00908.gz");
+        val featuresPath = Paths.get(featuresDirPath.toString, "part-00000.gz");
         Files.exists(featuresPath) should equal(true)
 
         // Number of lines in the files should be as expected

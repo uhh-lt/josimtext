@@ -197,12 +197,15 @@ object WordSimLib {
                                     similarWordsMaxNum: Int,
                                     significanceType: String) = {
 
+        val wordSimsPath = outputDir + "/SimPruned"
+        val wordSimsPrunedWithFeaturesPath = if (DEBUG) outputDir + "/SimPrunedWithFeatures" else ""
+        val featuresPath = outputDir + "/FeaturesPruned"
+
         // Normalize and prune word features
         val sig = getSignificance(significanceType)
         val featuresPerWordWithScore = computeFeatureScores(wordFeatureCounts, wordCounts, featureCounts, outputDir, wordsPerFeatureMax, featuresPerWordMaxp, wordCountMin, featureCountMin, wordFeatureCountMin, significanceMin, sig)
         featuresPerWordWithScore.cache()
 
-        val featuresPath = outputDir + "/FeaturesPruned"
         featuresPerWordWithScore
             .flatMap{case (word, featureScores) => (featureScores
                 .map{case (feature, score) => f"$word\t$feature\t$score%.5f"})
@@ -234,37 +237,33 @@ object WordSimLib {
             .reduceByKey{case (score1, score2) => score1 + score2}
             .map{case ((word1, word2), scoreSum) => (word1, (word2, (scoreSum/featuresPerWordMaxp).toDouble))}
             .sortBy({case (word, (simWord, score)) => (word, score)}, ascending=false)
-        wordSimsAll.cache()
 
         val wordSimsPruned:RDD[(String, (String, Double))] = wordSimsAll
             .groupByKey()
             .mapValues(simWords => simWords.toArray
-                .sortWith({case ((w1, s1), (w2, s2)) => if (w1.equals("__RANDOM__")) true else if (w2.equals("__RANDOM__")) false else s1 > s2})
+                .sortWith{case ((w1, s1), (w2, s2)) => s1 > s2}
                 .take(similarWordsMaxNum))
             .flatMap{case (word, simWords) => for(simWord <- simWords.iterator) yield (word, simWord)}
+            .cache()
 
-        val wordSimsPrunedWithFeatures:RDD[(String, (String, Double, Set[String]))] = wordSimsPruned
-            .join(featuresPerWord)
-            .map({case (word, ((simWord, score), featureList1)) => (simWord, (word, score, featureList1))})
-            .join(featuresPerWord)
-            .map({case (simWord, ((word, score, featureList1), featureList2)) => (word, (simWord, score, featureList1.toSet.intersect(featureList2.toSet)))})
-            .sortBy({case (word, (simWord, score, mutualFeatureSet)) => (word, score)}, ascending=false)
+        wordSimsPruned
+            .map{case (word1, (word2, score)) => f"$word1\t$word2\t$score%.5f"}
+            .saveAsTextFile(wordSimsPath, classOf[GzipCodec])
 
         if (DEBUG) {
             wordsPerFeature
                 .map{ case (feature, words) => s"$feature\t${words.size}\t${words.mkString("  ")}"}
                 .saveAsTextFile(outputDir + "/WordsPerFeature", classOf[GzipCodec])
+
+            wordSimsPruned
+                .join(featuresPerWord)
+                .map({case (word, ((simWord, score), featureList1)) => (simWord, (word, score, featureList1))})
+                .join(featuresPerWord)
+                .map({case (simWord, ((word, score, featureList1), featureList2)) => (word, (simWord, score, featureList1.toSet.intersect(featureList2.toSet)))})
+                .sortBy({case (word, (simWord, score, mutualFeatureSet)) => (word, score)}, ascending=false)
+                .map{case (word1, (word2, score, featureSet)) => f"$word1\t$word2\t$score%.5f\t${featureSet.toList.sorted.mkString("  ")}"}
+                .saveAsTextFile(wordSimsPrunedWithFeaturesPath, classOf[GzipCodec])
         }
-
-        val wordSimsPath = outputDir + "/SimPruned"
-        wordSimsPruned
-            .map{case (word1, (word2, score)) => f"$word1\t$word2\t$score%.5f"}
-            .saveAsTextFile(wordSimsPath, classOf[GzipCodec])
-
-        val wordSimsPrunedWithFeaturesPath = outputDir + "/SimPrunedWithFeatures"
-        wordSimsPrunedWithFeatures
-            .map{case (word1, (word2, score, featureSet)) => f"$word1\t$word2\t$score%.5f\t${featureSet.toList.sorted.mkString("  ")}"}
-            .saveAsTextFile(wordSimsPrunedWithFeaturesPath, classOf[GzipCodec])
 
         (wordSimsPath, wordSimsPrunedWithFeaturesPath, featuresPath)
     }
