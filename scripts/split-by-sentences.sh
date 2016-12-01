@@ -1,5 +1,5 @@
 if [ -z "$1" ] || [ -z "$3" ] ; then
-    echo "Split too long lines in the input corpus and make the sentences unique."
+    echo "Split input corpus into one sentence per line, make the sentences unique, remove html."
     echo "parameters: <corpus-directory> <output-directory> <queue>"
     echo "<queue>  shortrunning, longrunning"
     exit
@@ -29,7 +29,8 @@ HADOOP_CLASSPATH=$path hadoop \
     -Dmapreduce.reduce.memory.mb=8192 \
     -Dmapred.max.split.size=1000000 \
     -Dtokenize=true \
-    -Dmax_sentences_size=150 \
+    -Dmax_sentence_size=110 \
+    -Dstrip_html=true \
     $corpus \
     $output \
     $make_uniq \

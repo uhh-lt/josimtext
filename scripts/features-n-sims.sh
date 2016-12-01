@@ -1,26 +1,26 @@
 if [ -z "$1" ] || [ -z "$4" ] ; then
-    echo "Run word sense induction"
-    echo "parameters: <corpus-directory> <output-directory> <do-calc-features> <do-calc-sims> <queue>"
-    echo "<queue>  shortrunning, longrunning"
+    echo "Extract word features and calculate word similarities"
+    echo "parameters: <corpus-directory> <output-directory> <do-calc-features> <do-calc-sims> <features-n-sims.config.sh>"
     exit
 fi
 
-source features-n-sims.config.sh
+# System parameters
+source $5
 bin_spark=`ls ../bin/spark/jo*.jar`
 bin_hadoop="../bin/hadoop/"
-
 
 # Feature extraction parameters
 holing_type="dependency" # "trigram" 
 lemmatize=true # false
 coocs=false # false # true
 maxlen=110
-noun_noun_only=false # true
 semantify=true
 mwe_via_ner=true # false
 mwe_self_features=false
 parser="malt" # "stanford" "malt", "mate"
 compress_output=false
+output_pos=true
+verbose=false 
 
 # Term similarity
 WordsPerFeature=1000 # 100 1000 10000
@@ -37,12 +37,11 @@ corpus=$1
 output=$2
 calc_features=$3
 calc_sims=$4
-queue=$5
-features="$output/Holing-${holing_type}_Lemmatize-${lemmatize}_Coocs-${coocs}_MaxLen-${maxlen}_NounNounOnly-${noun_noun_only}_Semantify-${semantify}" 
+features="$output/${holing_type}_lemz-${lemmatize}_cooc-${coocs}_mxln-${maxlen}_semf-${semantify}" 
 wordFeatureCountsFile=$features/WF-* 
 wordCountsFile=$features/W-* 
 featureCountsFile=$features/F-* 
-wordsim="${features}__Significance-${Significance}_WordsPerFeature-${WordsPerFeature}_FeaturesPerWord-${FeaturesPerWord}_MinWordFreq-${MinWordFreq}_MinFeatureFreq-${MinFeatureFreq}_MinWordFeatureFreq-${MinWordFeatureFreq}_MinFeatureSignif-${MinFeatureSignif}_SimPrecision-${SimPrecision}_NearestNeighboursNum-${NearestNeighboursNum}"
+wordsim="${features}_sign-${Significance}_wpf-${WordsPerFeature}_fpw-${FeaturesPerWord}_minw-${MinWordFreq}_minf-${MinFeatureFreq}_minwf-${MinWordFeatureFreq}_minsign-${MinFeatureSignif}_nnn-${NearestNeighboursNum}"
 
 # Display job parameters to the user
 echo "Corpus: $corpus"
@@ -108,17 +107,18 @@ if $calc_features; then
         -Dmapreduce.map.memory.mb=$hadoop_mb \
         -Dmapreduce.reduce.java.opts=-Xmx${hadoop_xmx_mb}m \
         -Dmapreduce.reduce.memory.mb=$hadoop_mb \
-        -Dmapred.max.split.size=1000000 \
+        -Dmapred.max.split.size=50000000 \
         -Dholing.type=$holing_type \
         -Dholing.coocs=$coocs \
         -Dholing.dependencies.semantify=$semantify \
         -Dholing.sentences.maxlength=$maxlen \
         -Dholing.lemmatize=$lemmatize \
-        -Dholing.dependencies.noun_noun_dependencies_only=$noun_noun_only \
         -Dholing.mwe.vocabulary=$mwe_dict_path \
         -Dholing.mwe.self_features=$mwe_self_features \
         -Dholing.mwe.ner=$mwe_via_ner \
         -Dholing.dependencies.parser=$parser \
+        -Dholing.verbose=$verbose \
+        -Dholing.output_pos=$output_pos \
         $corpus \
         $features \
         $compress_output
