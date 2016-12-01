@@ -27,7 +27,6 @@ HADOOP_CLASSPATH=$path hadoop \
     -Dmapreduce.map.memory.mp=4096 \
     -Dmapreduce.reduce.java.opts=-Xmx8g \
     -Dmapreduce.reduce.memory.mb=8192 \
-    -Dmapred.max.split.size=1000000 \
     -Dtokenize=true \
     -Dmax_sentence_size=110 \
     -Dstrip_html=true \
