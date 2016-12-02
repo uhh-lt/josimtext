@@ -5,14 +5,15 @@ import scala.io.Source
 
 object CoarsifyPosTags {
     val posLookup = Source
-        .fromFile(getClass.getResource("/pos-tags.csv").getPath)
+        .fromURL(getClass.getResource("/pos-tags.csv"))
+        //.fromFile(getClass.getResource("/pos-tags.csv").getPath)
         .getLines
         .map{ _.split("\t") }
         .map{ case Array(freq, posOrig, posNew) => (posOrig, posNew) }
         .toMap
 
     def main(args: Array[String]) {
-        if (args.size < 4) {
+        if (args.size < 2) {
             println("Usage: CoarsifyPosTags <input-dir> <output-dir>")
             println("<input-dir>\tDirectory with word-feature counts (i.e. W-* files, F-* files, WF-* files).'")
             println("<output-dir>\tDirectory with output word-feature counts where W-* and WF-* files" +
