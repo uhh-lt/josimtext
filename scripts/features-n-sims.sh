@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 if [ -z "$1" ] || [ -z "$4" ] ; then
     echo "Extract word features and calculate word similarities"
     echo "parameters: <corpus-directory> <output-directory> <do-calc-features> <do-calc-sims> <features-n-sims.config.sh>"

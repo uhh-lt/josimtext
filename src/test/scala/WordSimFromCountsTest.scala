@@ -12,9 +12,9 @@ class WordSimFromCountsTest extends FlatSpec with ShouldMatchers {
       * This function and thus each test case run about about 2 minutes on a core i5 cpu with 8gb of ram
       * */
     def run() = {
-        val words = getClass.getResource(Const.PRJ.WORDS).getPath()
-        val features = getClass.getResource(Const.PRJ.FEATURES).getPath()
-        val wordFeatures = getClass.getResource(Const.PRJ.WORD_FEATURES).getPath()
+        val words = getClass.getResource(Const.PRJ_TEST.WORDS).getPath()
+        val features = getClass.getResource(Const.PRJ_TEST.FEATURES).getPath()
+        val wordFeatures = getClass.getResource(Const.PRJ_TEST.WORD_FEATURES).getPath()
         val outputDir = FileSystems.getDefault().getPath(new File(".").getCanonicalPath()) + "/output";
         Util.delete(outputDir)
         println(s"Output: $outputDir")
@@ -35,7 +35,7 @@ class WordSimFromCountsTest extends FlatSpec with ShouldMatchers {
         /////////////////////
         // Check similariries
 
-        // Schould have output directories
+        // Should have output directories
         val simPath = Paths.get(outputDir, "SimPruned");
         Files.exists(simPath) should equal(true)
 

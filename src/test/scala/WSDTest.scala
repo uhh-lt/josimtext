@@ -123,13 +123,13 @@ class WSDTest extends FlatSpec with ShouldMatchers {
     }
 
     def wsd(mode: WSDFeatures.Value, outputPath:String="") = {
-        val senses =  getClass.getResource(Const.PRJ.SENSES).getPath()
+        val senses =  getClass.getResource(Const.PRJ_TEST.SENSES).getPath()
         val output =  if (outputPath == "") senses + "-output" else outputPath
-        val clusters = Const.PRJ.TEST_RES.clusters
-        val coocs = Const.PRJ.TEST_RES.coocs
-        val trigrams = Const.PRJ.TEST_RES.trigrams
-        val deps = Const.PRJ.TEST_RES.deps
-        val contexts = Const.PRJ.TEST_RES.contexts
+        val clusters = Const.PRJ_TEST.WSD_RES.clusters
+        val coocs = Const.PRJ_TEST.WSD_RES.coocs
+        val trigrams = Const.PRJ_TEST.WSD_RES.trigrams
+        val deps = Const.PRJ_TEST.WSD_RES.deps
+        val contexts = Const.PRJ_TEST.WSD_RES.contexts
 
         println(s"Senses: $senses")
         println(s"Output: $output")

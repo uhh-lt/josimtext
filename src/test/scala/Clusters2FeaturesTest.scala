@@ -5,7 +5,7 @@ import org.scalatest._
 
 class Clusters2FeaturesTest extends FlatSpec with ShouldMatchers {
     "The Cluster2Features object" should "generate result" in {
-        val sensesPath =  getClass.getResource(Const.PRJ.SENSES).getPath()
+        val sensesPath =  getClass.getResource(Const.PRJ_TEST.SENSES).getPath()
         val outputPath =  sensesPath + "-output"
 
         val conf = new SparkConf()

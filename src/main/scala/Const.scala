@@ -2,6 +2,8 @@
 object Const {
   val LIST_SEP = "  "
   val SCORE_SEP = ':'
+  val POS_SEP = "#"
+  val SENSE_SEP = "#"
   val HOLE = "@"
   val HOLE_DEPRECATED = "@@"
   val NO_FEATURE_LABEL = "-1"
@@ -13,13 +15,13 @@ object Const {
       val STOP_DEPENDENCIES = Set("dep", "punct", "cc", "possessive")
   }
 
-  object PRJ {
+  object PRJ_TEST {
       val FEATURES = "/prj-f.csv"
       val SENSES = "/prj-senses.csv"
       val WORDS = "/prj-w.csv"
       val WORD_FEATURES = "/prj-wf.csv"
 
-      object TEST_RES {
+      object WSD_RES {
           val dir = "/Users/alex/Desktop/prj/test-res"  // can be downloaded from http://panchenko.me/data/joint/jst/test-res.tar.gz
           val clusters = dir + "/clusters.csv"
           val coocs = dir + "/depwords.csv"
