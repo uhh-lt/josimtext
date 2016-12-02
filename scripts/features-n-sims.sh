@@ -2,14 +2,12 @@
 
 if [ -z "$1" ] || [ -z "$4" ] ; then
     echo "Extract word features and calculate word similarities"
-    echo "parameters: <corpus-directory> <output-directory> <do-calc-features> <do-calc-sims> <features-n-sims.config.sh>"
+    echo "parameters: <corpus-directory> <output-directory> <do-calc-features> <do-calc-sims> <cdh.config.sh>"
     exit
 fi
 
 # System parameters
 source $5
-bin_spark=`ls ../bin/spark/jo*.jar`
-bin_hadoop="../bin/hadoop/"
 
 # Feature extraction parameters
 holing_type="dependency" # "trigram" 

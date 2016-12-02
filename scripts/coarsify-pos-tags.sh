@@ -2,14 +2,15 @@
 
 if [ -z "$1" ] || [ -z "$3" ] ; then
     echo "Coarsify POS tags."
-    echo "parameters: <word-feature-counts-directory> <output-directory> <queue>"
+    echo "parameters: <word-feature-counts-directory> <output-directory> <config.sh>"
     exit
 fi
 
 input_dir=$1
 output_dir=$2
-queue=$3
-bin_spark=`ls ../bin/spark/jo*.jar`
+config=$3
+
+source $config 
 
 spark-submit \
     --class CoarsifyPosTags \
