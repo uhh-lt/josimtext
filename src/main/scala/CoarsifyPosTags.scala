@@ -6,7 +6,6 @@ import scala.io.Source
 object CoarsifyPosTags {
     val posLookup = Source
         .fromURL(getClass.getResource("/pos-tags.csv"))
-        //.fromFile(getClass.getResource("/pos-tags.csv").getPath)
         .getLines
         .map{ _.split("\t") }
         .map{ case Array(freq, posOrig, posNew) => (posOrig, posNew) }
