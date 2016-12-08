@@ -12,9 +12,9 @@ config=$3
 
 source $config
 
-spark-submit \
+$spark \
     --class FilterSentences \
-    --master=yarn \
+    --master=$master \
     --queue=$queue \
     --driver-memory 8g \
     --executor-memory 4g \
