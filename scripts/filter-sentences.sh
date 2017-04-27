@@ -12,13 +12,15 @@ config=$3
 
 source $config
 
-spark-submit \
+$spark \
     --class FilterSentences \
-    --master=yarn \
+    --master=$master \
     --queue=$queue \
-    --num-executors 100 \
     --driver-memory 8g \
     --executor-memory 4g \
     $bin_spark \
     $input_dir \
     $output_dir
+
+   # --conf spark.yarn.max.executor.failures    
+   # --num-executors 100 \

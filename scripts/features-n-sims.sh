@@ -11,11 +11,11 @@ source $5
 
 # Feature extraction parameters
 holing_type="dependency" # "trigram" 
-lemmatize=true # false
-coocs=false # false # true
+lemmatize=true 
+coocs=false 
 maxlen=110
 semantify=true
-mwe_via_ner=true # false
+mwe_via_ner=true 
 mwe_self_features=false
 parser="malt" # "stanford" "malt", "mate"
 compress_output=false
@@ -23,8 +23,8 @@ output_pos=true
 verbose=false 
 
 # Term similarity
-WordsPerFeature=1000 # 100 1000 10000
-FeaturesPerWord=1000 # 100 1000 10000
+WordsPerFeature=2000 # 100 1000 10000
+FeaturesPerWord=2000 # 100 1000 10000
 MinWordFreq=5
 MinFeatureFreq=5
 MinWordFeatureFreq=2
@@ -107,7 +107,6 @@ if $calc_features; then
         -Dmapreduce.map.memory.mb=$hadoop_mb \
         -Dmapreduce.reduce.java.opts=-Xmx${hadoop_xmx_mb}m \
         -Dmapreduce.reduce.memory.mb=$hadoop_mb \
-        -Dmapred.max.split.size=50000000 \
         -Dholing.type=$holing_type \
         -Dholing.coocs=$coocs \
         -Dholing.dependencies.semantify=$semantify \
@@ -134,14 +133,10 @@ if $calc_sims; then
     fi
     echo "Calculating similarities..." 
 
-    export HADOOP_CONF_DIR=$hadoop_conf_dir
-    export YARN_CONF_DIR=$yarn_conf_dir
-
     $spark \
         --class=WordSimFromCounts \
         --master=yarn \
         --queue=$queue \
-        --num-executors 50 \
         --driver-memory ${spark_gb}g \
         --executor-memory ${spark_gb}g \
         $bin_spark \

@@ -1,9 +1,12 @@
 hadoop=hadoop 
 hadoop_xmx_mb=8192
 hadoop_mb=8000
-mwe_dict_path=s3://jobimtext/voc/voc.csv  
+mwe_dict_path=s3://jobimtext/voc/voc-mwe6446031-dbpedia-babelnet-wordnet-dela.csv  
 spark=spark-submit 
-spark_gb=8
-hadoop_conf_dir=/etc/hadoop/conf/
-yarn_conf_dir=/etc/hadoop/conf/
+spark_gb=64 #8
+export HADOOP_CONF_DIR=/etc/hadoop/conf/
+export YARN_CONF_DIR=/etc/hadoop/conf/
 queue=default
+
+bin_spark=`ls ../bin/spark/jo*.jar`
+bin_hadoop="../bin/hadoop/"
