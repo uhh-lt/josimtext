@@ -1,4 +1,3 @@
-
 object Const {
   val LIST_SEP = "  "
   val SCORE_SEP = ':'
@@ -9,6 +8,10 @@ object Const {
   val NO_FEATURE_LABEL = "-1"
   val NO_FEATURE_CONF = 0.0
   val PRIOR_PROB = 0.000010
+
+  object FeatureExtractionTests {
+    val conll = "/conll.csv.gz"
+  }
 
   object Resources{
       val STOPWORDS = "/stoplist_en.csv"
