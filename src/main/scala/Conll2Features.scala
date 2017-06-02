@@ -45,6 +45,16 @@ object Conll2Features {
     run(sc, inputPath, outputPath, verbsOnly)
   }
 
+  def simplifyDtype(fullDtype:String) = {
+    if (fullDtype.contains("subj")) "subj"
+    else if (fullDtype.contains("obj")) "obj"
+    else fullDtype
+  }
+
+  def simplifyPos(fullPos:String) = {
+    CoarsifyPosTags.full2coarse(fullPos)
+  }
+
   def run(sc: SparkContext, inputConllDir: String, outputFeaturesDir: String, verbsOnly: Boolean) = {
 
     // Initialization
@@ -86,9 +96,9 @@ object Conll2Features {
         val lemmas2features = collection.mutable.Map[(String, String), ListBuffer[String]]()
         for ((id, dep) <- id2dependency) {
           allDepCount.add(1)
-          val inLemma = (dep.inLemma, dep.inPos)
+          val inLemma = (dep.inLemma, simplifyPos(dep.inPos))
           if (id2dependency.contains(dep.outID)) {
-            val outLemma = (id2dependency(dep.outID).inLemma, id2dependency(dep.outID).inPos)
+            val outLemma = (id2dependency(dep.outID).inLemma, simplifyPos(id2dependency(dep.outID).inPos))
 
             if (!lemmas2features.contains(inLemma)) {
               lemmas2features(inLemma) = new ListBuffer[String]()
@@ -100,12 +110,12 @@ object Conll2Features {
             if (dep.inID != dep.outID && dep.dtype.toLowerCase != "root") {
               if (svoOnly) {
                 if (dep.dtype.contains("subj") || dep.dtype.contains("obj")) {
-                  lemmas2features(inLemma).append(s"@--${dep.dtype}--${outLemma._1}${Const.POS_SEP}${outLemma._2}")
-                  lemmas2features(outLemma).append(s"${inLemma._1}${Const.POS_SEP}${inLemma._2}--${dep.dtype}--@")
+                  lemmas2features(inLemma).append(s"@--${simplifyDtype(dep.dtype)}--${outLemma._1}${Const.POS_SEP}${outLemma._2}")
+                  lemmas2features(outLemma).append(s"${inLemma._1}${Const.POS_SEP}${inLemma._2}--${simplifyDtype(dep.dtype)}--@")
                 }
               } else {
-                lemmas2features(inLemma).append(s"@--${dep.dtype}--${outLemma._1}${Const.POS_SEP}${outLemma._2}")
-                lemmas2features(outLemma).append(s"${inLemma._1}${Const.POS_SEP}${inLemma._2}--${dep.dtype}--@")
+                lemmas2features(inLemma).append(s"@--${simplifyDtype(dep.dtype)}--${outLemma._1}${Const.POS_SEP}${outLemma._2}")
+                lemmas2features(outLemma).append(s"${inLemma._1}${Const.POS_SEP}${inLemma._2}--${simplifyDtype(dep.dtype)}--@")
               }
             }
           } else {

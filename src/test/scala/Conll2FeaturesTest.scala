@@ -15,7 +15,7 @@ class Conll2FeaturesTest extends FlatSpec with ShouldMatchers {
   }
 
   "very large dataset verbs only" should "run" in {
-    val conllPath = "/Users/sasha/work/active/joint/JoSimText/src/test/resources/conll_large-output/"
+    val conllPath = "/Users/sasha/work/active/joint/JoSimText/src/test/resources/conll_large-output"
     run(conllPath, true)
   }
 

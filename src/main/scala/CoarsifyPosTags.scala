@@ -4,12 +4,21 @@ import org.apache.spark.SparkConf
 import scala.io.Source
 
 object CoarsifyPosTags {
+
     val posLookup = Source
         .fromURL(getClass.getResource("/pos-tags.csv"))
         .getLines
         .map{ _.split("\t") }
         .map{ case Array(freq, posOrig, posNew) => (posOrig, posNew) }
         .toMap
+
+    def full2coarse(fullPos:String) = {
+        if (posLookup.contains(fullPos)) {
+            posLookup(fullPos)
+        } else{
+            fullPos
+        }
+    }
 
     def main(args: Array[String]) {
         if (args.size < 2) {

@@ -15,6 +15,14 @@ class CoarsifyPosTagsTest extends FlatSpec with ShouldMatchers {
         outputDir
     }
 
+    "full2coarse" should "run" in {
+      CoarsifyPosTags.full2coarse("VBZ") should equal("VB")
+      CoarsifyPosTags.full2coarse("VB") should equal("VB")
+      CoarsifyPosTags.full2coarse("VBZ") should equal("VB")
+      CoarsifyPosTags.full2coarse("NNP") should equal("NP")
+
+    }
+
     "CoarsifyPosTags" should "produce expected results" in {
         val outputDir = run(COUNTS_DIR)
 
