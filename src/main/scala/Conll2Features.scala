@@ -8,16 +8,22 @@ import org.apache.spark.rdd.RDD
 import scala.collection.mutable.ListBuffer
 import scala.util.Try
 
+
+
 object Conll2Features {
   /* CoNLL format: for each dependency output a field with ten columns ending with the bio named entity: http://universaldependencies.org/docs/format.html
      IN_ID TOKEN LEMMA POS_COARSE POS_FULL MORPH ID_OUT TYPE _ NE_BIO
      5 books book NOUN NNS Number=Plur 2 dobj 4:dobj SpaceAfter=No */
+
+  case class Word (lemma:String, pos:String)
+  case class Feature (word:Word, dtype:String)
 
   val verbPos = Set("VB", "VBZ", "VBD", "VBN", "VBP", "MD")
   val verbose = false
   val conllRecordDelimiter = ">>>>>\t"
   val svoOnly = true // subject-verb-object features only
   val saveIntermediate = true
+  val minSvoFreq = 5
 
   case class Dependency(inID: Int, inToken: String, inLemma: String, inPos: String, outID: Int, dtype: String) {
     def this(fields: Array[String]) = {
@@ -68,7 +74,7 @@ object Conll2Features {
     val depErrCount = sc.longAccumulator("numberOfDependenciesWithErrors")
 
     // Calculate features of the individual tokens: a list of grammatical dependendies per lemma
-    val unaggregatedFeatures: RDD[((String, String), ListBuffer[String])] = sc
+    val unaggregatedFeatures = sc
       .newAPIHadoopFile(inputConllDir, classOf[TextInputFormat], classOf[LongWritable], classOf[Text], conf)
       .map { record => record._2.toString }
       .flatMap { record =>
@@ -93,29 +99,29 @@ object Conll2Features {
         }
 
         // find dependent features
-        val lemmas2features = collection.mutable.Map[(String, String), ListBuffer[String]]()
+        val lemmas2features = collection.mutable.Map[Word, ListBuffer[Feature]]()
         for ((id, dep) <- id2dependency) {
           allDepCount.add(1)
-          val inLemma = (dep.inLemma, simplifyPos(dep.inPos))
+          val inLemma = Word(dep.inLemma, simplifyPos(dep.inPos))
           if (id2dependency.contains(dep.outID)) {
-            val outLemma = (id2dependency(dep.outID).inLemma, simplifyPos(id2dependency(dep.outID).inPos))
+            val outLemma = Word(id2dependency(dep.outID).inLemma, simplifyPos(id2dependency(dep.outID).inPos))
 
             if (!lemmas2features.contains(inLemma)) {
-              lemmas2features(inLemma) = new ListBuffer[String]()
+              lemmas2features(inLemma) = new ListBuffer[Feature]()
             }
             if (!lemmas2features.contains(outLemma)) {
-              lemmas2features(outLemma) = new ListBuffer[String]()
+              lemmas2features(outLemma) = new ListBuffer[Feature]()
             }
 
             if (dep.inID != dep.outID && dep.dtype.toLowerCase != "root") {
               if (svoOnly) {
                 if (dep.dtype.contains("subj") || dep.dtype.contains("obj")) {
-                  lemmas2features(inLemma).append(s"@--${simplifyDtype(dep.dtype)}--${outLemma._1}${Const.POS_SEP}${outLemma._2}")
-                  lemmas2features(outLemma).append(s"${inLemma._1}${Const.POS_SEP}${inLemma._2}--${simplifyDtype(dep.dtype)}--@")
+                  lemmas2features(inLemma).append(Feature(outLemma, simplifyDtype(dep.dtype)))
+                  lemmas2features(outLemma).append(Feature(inLemma, simplifyDtype(dep.dtype)))
                 }
               } else {
-                lemmas2features(inLemma).append(s"@--${simplifyDtype(dep.dtype)}--${outLemma._1}${Const.POS_SEP}${outLemma._2}")
-                lemmas2features(outLemma).append(s"${inLemma._1}${Const.POS_SEP}${inLemma._2}--${simplifyDtype(dep.dtype)}--@")
+                lemmas2features(inLemma).append(Feature(outLemma, simplifyDtype(dep.dtype)))
+                lemmas2features(outLemma).append(Feature(inLemma, simplifyDtype(dep.dtype)))
               }
             }
           } else {
@@ -127,7 +133,7 @@ object Conll2Features {
         // keep only tokens of interest if filter is enabled
         val lemmas2featuresPos = if (verbsOnly) {
           lemmas2features.filter {
-            case ((lemma, pos), features) => verbPos.contains(pos) && features.length > 0
+            case (word, features) => verbPos.contains(word.pos) && features.length > 0
           }
         } else {
           lemmas2features
@@ -142,7 +148,7 @@ object Conll2Features {
     if (saveIntermediate){
       val unaggregatedFeaturesPath = outputFeaturesDir + "/unaggregated"
       unaggregatedFeatures
-        .map { case (lemma, features) => s"${lemma._1}${Const.POS_SEP}${lemma._2}\t${features.mkString("\t")}" }
+        .map { case (lemma, features) => s"${lemma.lemma}${Const.POS_SEP}${lemma.pos}\t${features.mkString("\t")}" }
         .saveAsTextFile(unaggregatedFeaturesPath)
     }
 
@@ -164,7 +170,7 @@ object Conll2Features {
     // Word counts
     val wordCountsPath = aggregatedFeaturesPath + "/W"
     val wordCounts = unaggregatedFeatures
-      .map{ case (lemma, features) =>  (s"${lemma._1}${Const.POS_SEP}${lemma._2}", 1) }
+      .map{ case (lemma, features) =>  (s"${lemma.lemma}${Const.POS_SEP}${lemma.pos}", 1) }
       .reduceByKey{ _ + _ }
       .cache()
     if (saveIntermediate) {
@@ -178,12 +184,12 @@ object Conll2Features {
     val wordFeatureCountsPath = aggregatedFeaturesPath + "/WF"
     val wordFeatureCounts = unaggregatedFeatures
       .flatMap{ case (lemma, features) =>
-        var subjs = ListBuffer[String]()
-        var objs = ListBuffer[String]()
+        var subjs = ListBuffer[Feature]()
+        var objs = ListBuffer[Feature]()
 
         for (f <- features){
-          if (f.contains("subj")) subjs.append(f)
-          else if (f.contains("obj")) objs.append(f)
+          if (f.dtype.contains("subj")) subjs.append(f)
+          else if (f.dtype.contains("obj")) objs.append(f)
         }
 
         for (s <- subjs; o <- objs) yield ((lemma, s, o), 1)
@@ -194,9 +200,22 @@ object Conll2Features {
     if (saveIntermediate) {
       wordFeatureCounts
         .sortBy(_._2, ascending = false)
-        .map { case (wso, freq) => s"${wso._1._1}${Const.POS_SEP}${wso._1._2}\t${wso._2}\t${wso._3}\t$freq" }
+        .map { case (wso, freq) => s"${wso._1.lemma}${Const.POS_SEP}${wso._1.pos}\t${wso._2}\t${wso._3}\t$freq" }
         .saveAsTextFile(wordFeatureCountsPath)
      }
+
+//    // Pruned WF (SVO counts)
+//    val wordFeatureCountsPerWordPath = aggregatedFeaturesPath + "/WF-W"
+//    val wordFeatuesPerWord = wordFeatureCounts
+//      .map { case (wso, freq) => ((wso._1), (wso._2, wso._3, freq))}
+//      .groupByKey()
+//      .cache()
+//
+//    if (saveIntermediate) {
+//      wordFeatuesPerWord
+//        .map { case (w, args) =>  s"${w._1}${Const.POS_SEP}${w._2}\t${args.mkString(", ")}" }
+//        .saveAsTextFile(wordFeatureCountsPerWordPath)
+//    }
 
   }
 }
