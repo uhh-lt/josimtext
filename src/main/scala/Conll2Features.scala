@@ -4,10 +4,8 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
 import org.apache.spark.rdd.RDD
-
 import scala.collection.mutable.ListBuffer
 import scala.util.Try
-
 
 
 object Conll2Features {
@@ -17,13 +15,15 @@ object Conll2Features {
 
   case class Word (lemma:String, pos:String)
   case class Feature (word:Word, dtype:String)
+  case class WordFeature (word:Word, feature:Feature)
 
   val verbPos = Set("VB", "VBZ", "VBD", "VBN", "VBP", "MD")
   val verbose = false
   val conllRecordDelimiter = ">>>>>\t"
   val svoOnly = true // subject-verb-object features only
   val saveIntermediate = true
-  val minSvoFreq = 5
+  val minFreq = 5
+  val lmi = true // else pmi
 
   case class Dependency(inID: Int, inToken: String, inLemma: String, inPos: String, outID: Int, dtype: String) {
     def this(fields: Array[String]) = {
@@ -58,7 +58,8 @@ object Conll2Features {
   }
 
   def simplifyPos(fullPos:String) = {
-    CoarsifyPosTags.full2coarse(fullPos)
+    fullPos.substring(0, Math.min(2, fullPos.length))
+    //CoarsifyPosTags.full2coarse(fullPos)
   }
 
   def run(sc: SparkContext, inputConllDir: String, outputFeaturesDir: String, verbsOnly: Boolean) = {
@@ -152,13 +153,15 @@ object Conll2Features {
         .saveAsTextFile(unaggregatedFeaturesPath)
     }
 
+
     val aggregatedFeaturesPath = outputFeaturesDir + "/aggregated"
 
     // Feature counts
     val featureCountsPath = aggregatedFeaturesPath + "/F"
-    val featureCounts = unaggregatedFeatures
-      .flatMap{ case (lemma, features) => for (f <- features) yield (f, 1) }
+    val featureCounts: RDD[(Feature, Long)] = unaggregatedFeatures
+      .flatMap{ case (lemma, features) => for (f <- features) yield (f, 1.toLong) }
       .reduceByKey{ _ + _ }
+      .filter{ case (feature, freq) => freq >= minFreq }
       .cache()
     if (saveIntermediate) {
       featureCounts
@@ -169,9 +172,10 @@ object Conll2Features {
 
     // Word counts
     val wordCountsPath = aggregatedFeaturesPath + "/W"
-    val wordCounts = unaggregatedFeatures
-      .map{ case (lemma, features) =>  (s"${lemma.lemma}${Const.POS_SEP}${lemma.pos}", 1) }
+    val wordCounts: RDD[(Word, Long)] = unaggregatedFeatures
+      .map{ case (lemma, features) =>  (lemma, 1.toLong) }
       .reduceByKey{ _ + _ }
+      .filter{ case (feature, freq) => freq >= minFreq }
       .cache()
     if (saveIntermediate) {
       wordCounts
@@ -192,30 +196,66 @@ object Conll2Features {
           else if (f.dtype.contains("obj")) objs.append(f)
         }
 
-        for (s <- subjs; o <- objs) yield ((lemma, s, o), 1)
+        for (s <- subjs; o <- objs) yield ((lemma, s, o), 1.toLong)
       }
       .reduceByKey{ _ + _ }
+      .filter{ case (wso, freq) => freq >= minFreq }
       .cache()
 
     if (saveIntermediate) {
       wordFeatureCounts
         .sortBy(_._2, ascending = false)
-        .map { case (wso, freq) => s"${wso._1.lemma}${Const.POS_SEP}${wso._1.pos}\t${wso._2}\t${wso._3}\t$freq" }
+        .map { case (wso, freq) => s"${wso._1}\t${wso._2}\t${wso._3}\t$freq" }
         .saveAsTextFile(wordFeatureCountsPath)
      }
 
-//    // Pruned WF (SVO counts)
-//    val wordFeatureCountsPerWordPath = aggregatedFeaturesPath + "/WF-W"
-//    val wordFeatuesPerWord = wordFeatureCounts
-//      .map { case (wso, freq) => ((wso._1), (wso._2, wso._3, freq))}
-//      .groupByKey()
-//      .cache()
-//
-//    if (saveIntermediate) {
-//      wordFeatuesPerWord
-//        .map { case (w, args) =>  s"${w._1}${Const.POS_SEP}${w._2}\t${args.mkString(", ")}" }
-//        .saveAsTextFile(wordFeatureCountsPerWordPath)
-//    }
+    val svoSum = wordFeatureCounts.map(_._2).sum()
 
+    // Prune by wf by min frequency and compute pmi and lmi
+    // Pruned WF (SVO counts)
+    val wordFeatureNormPath = aggregatedFeaturesPath + "/WF-norm"
+    val wordFeatuesNorm = wordFeatureCounts
+      .map{ case (wso, freq) => (wso._1, (wso._2, wso._3, freq))}
+      .join(wordCounts)
+      .map{ case (w, ((s, o, wsoFreq), wFreq)) => (s, (w, o, wFreq, wsoFreq))}
+      .join(featureCounts)
+      .map{ case (s, ((w, o, wFreq, wsoFreq), sFreq)) => (o, (w, s, wFreq, wsoFreq, sFreq)) }
+      .join(featureCounts)
+      .map{ case (o, ((w, s, wFreq, wsoFreq, sFreq), oFreq)) => (w, s, o, wFreq, sFreq, oFreq, wsoFreq) }
+      .map{ case (w, s, o, wFreq, sFreq, oFreq, wsoFreq) =>
+        (w,s,o, norm(svoSum, wFreq, sFreq, oFreq, wsoFreq), wFreq, sFreq, oFreq, wsoFreq) }
+      .cache()
+    if (saveIntermediate) {
+      wordFeatuesNorm
+        .sortBy(_._4, ascending = false)
+        .map { case (w, s, o, score, wFreq, sFreq, oFreq, wsoFreq) =>
+          s"$w\t$s\t$o\t$score\t$wFreq\t$sFreq\t$oFreq\t$wsoFreq" }
+        .saveAsTextFile(wordFeatureNormPath)
+    }
+
+    // Pruned WF (SVO counts)
+    val wordFeatureCountsPerWordPath = aggregatedFeaturesPath + "/WF-W"
+    val wordFeatuesPerWord: RDD[(Word, Iterable[(Feature, Feature, Long)])] = wordFeatureCounts
+      .map { case (wso, freq) => ((wso._1), (wso._2, wso._3, freq))}
+      .groupByKey()
+      .cache()
+
+    if (saveIntermediate) {
+      wordFeatuesPerWord
+        .map { case (w, args) =>  s"$w\t${
+          args
+            .toList.sortBy(-_._3)
+            .mkString(", ")
+        }" }
+        .saveAsTextFile(wordFeatureCountsPerWordPath)
+    }
+  }
+
+  private def norm(svoSum: Double, wFreq: Long, sFreq: Long, oFreq: Long, wsoFreq: Long) = {
+    if (lmi) {
+      wsoFreq.toDouble * (svoSum * svoSum * wsoFreq.toDouble) / (wFreq.toDouble * sFreq.toDouble * oFreq.toDouble)
+    } else { // pmi
+      (svoSum * svoSum * wsoFreq.toDouble) / (wFreq.toDouble * sFreq.toDouble * oFreq.toDouble)
+    }
   }
 }
