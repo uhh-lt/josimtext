@@ -12,11 +12,12 @@ config=$3
 source $config
 
 spark-submit \
-    --class Conll2Features \
+    --class ReformatConll \
     --master=$master \
     --queue=$queue \
     --driver-memory 8g \
     --executor-memory 4g \
     $bin_spark \
     $input_dir \
-    $output_dir
+    $output_dir \
+    true
