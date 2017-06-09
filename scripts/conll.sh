@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-if [ -z "$1" ] || [ -z "$3" ] ; then
+if [ -z "$1" ] || [ -z "$4" ] ; then
     echo "Parse the corpus in the CoNLL format."
-    echo "parameters: <corpus-directory> <output-directory> <cdh.config.sh>"
+    echo "parameters: <corpus-directory> <output-directory> <cdh.config.sh> <compress-output>"
     exit
 fi
 
@@ -10,6 +10,7 @@ source $3
 
 input=$1
 output=$2
+compress=$4
 parser="malt"  # or "stanford"
 collapsing="false"
 
@@ -40,4 +41,5 @@ HADOOP_CLASSPATH=$path $hadoop \
     -DparserName=$parser \
     -Dcollapsing=$collapsing \
     $input \
-    $output
+    $output \
+    $compress
