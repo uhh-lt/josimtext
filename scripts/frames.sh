@@ -15,8 +15,8 @@ spark-submit \
     --class Conll2Features \
     --master=$master \
     --queue=$queue \
-    --driver-memory 24g \
-    --executor-memory 32g \
+    --driver-memory 32g \
+    --executor-memory 4g \
     $bin_spark \
     $input_dir \
     $output_dir \
