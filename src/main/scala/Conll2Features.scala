@@ -229,7 +229,7 @@ object Conll2Features {
       .filter { case (wso, freq) => freq >= minFreq }
       .map { case (wso, freq) => (wso._1, wso._2, wso._3, freq.toDouble) }
       .cache()
-    val wordFeatureCountsPath = outputFeaturesDir + "/WF"
+    val wordFeatureCountsPath = outputFeaturesDir + "/wf"
     saveWF(wordFeatureCountsPath, wordFeatureCounts)
 
     // Pruned WF (SVO counts)
@@ -246,17 +246,17 @@ object Conll2Features {
         (w, s, o, norm(svoSum, wFreq, sFreq, oFreq, wsoFreq))
       }
       .cache()
-    val wordFeaturesNormPath = outputFeaturesDir + "/WF-norm"
+    val wordFeaturesNormPath = outputFeaturesDir + "/wf-norm"
     saveWF(wordFeaturesNormPath, wordFeaturesNorm)
 
     // Grouped WF by word
-    val wordFeatureCountsPerWordPath = outputFeaturesDir + "/WF-W"
+    val wordFeatureCountsPerWordPath = outputFeaturesDir + "/wf-w"
     val wordFeatuesPerWord = aggregateWordFeatures(
       wordFeatureCounts,
       wordFeatureCountsPerWordPath,
       false)
 
-    val wordFeatureCountsNormPerWordPath = outputFeaturesDir + "/WF-norm-W"
+    val wordFeatureCountsNormPerWordPath = outputFeaturesDir + "/wf-norm-w"
     val wordFeatuesNormPerWord = aggregateWordFeatures(
       wordFeaturesNorm,
       wordFeatureCountsNormPerWordPath,
@@ -274,7 +274,7 @@ object Conll2Features {
       .reduceByKey(_ + _)
       .sortBy(r => (s"${r._1._1.lemma}#${r._1._1.pos}", r._2.score), ascending = false)
       .map { case ((w_i, w_j), scoreexp) =>
-        "%s#%s\t%s#%s\t%.6f\t%s".format(w_i.lemma, w_i.pos, w_j.lemma, w_j.pos, scoreexp.score, scoreexp.explanation)
+        "%s#%s\t%s#%s\t%.8f\t%s".format(w_i.lemma, w_i.pos, w_j.lemma, w_j.pos, scoreexp.score, scoreexp.explanation)
       }
       .saveAsTextFile(outputFeaturesDir + "/sims-explained")
 
@@ -335,7 +335,7 @@ object Conll2Features {
       .map { case (w, args) => s"${w.lemma}#${w.pos}\t${
         args
           .toList.sortBy(-_._3)
-          .map { case (s, o, score) => "%s#%s_%s#%s:%.6f".format(
+          .map { case (s, o, score) => "%s#%s_%s#%s:%.8f".format(
             s.word.lemma, s.word.pos, o.word.lemma, o.word.pos, score)
           }
           .mkString(", ")
