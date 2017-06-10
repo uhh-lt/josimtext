@@ -14,8 +14,14 @@ class Conll2FeaturesTest extends FlatSpec with ShouldMatchers {
     Conll2Features.run(sc, inputPath, outputPath, verbsOnly)
   }
 
+  "simplify" should "simplify pos tag" in {
+    Conll2Features.simplifyPos("NNS") should equal("NN")
+    Conll2Features.simplifyPos("VBZ") should equal("VB")
+  }
+
   "very large dataset verbs only" should "run" in {
-    val conllPath = "/Users/sasha/work/active/joint/JoSimText/src/test/resources/conll_large-output"
+    //val conllPath = "/Users/sasha/work/active/joint/JoSimText/src/test/resources/conll_large-output"
+    val conllPath = "/Users/panchenko/Desktop/conll-output"
     run(conllPath, true)
   }
 

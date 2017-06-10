@@ -17,7 +17,8 @@ class ReformatConllTest extends FlatSpec with ShouldMatchers {
   }
 
   "reformat large" should "run" in {
-    val conllPath = "/Users/sasha/work/active/joint/JoSimText/src/test/resources/conll_large"
+    //val conllPath = "/Users/sasha/work/active/joint/JoSimText/src/test/resources/conll_large"
+    val conllPath = "/Users/panchenko/Desktop/conll"
     run(conllPath)
   }
 }
