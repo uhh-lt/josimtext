@@ -13,6 +13,7 @@ object Const {
 
   object FeatureExtractionTests {
     val conll = "/conll.csv.gz"
+    val warc = "/cc-test.warc.gz"
   }
 
   object Resources{

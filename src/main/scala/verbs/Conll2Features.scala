@@ -38,7 +38,7 @@ object Conll2Features {
 
   val verbPos = Set("VB", "VBZ", "VBD", "VBN", "VBP", "MD")
   val verbose = false
-  val conllRecordDelimiter = ">>>>>\t"
+  val conllRecordDelimiter = corpus.ReformatConll.newConllRecordDelimiter
   val svoOnly = true // subject-verb-object features only
   val saveIntermediate = false
   val minFreq = 5

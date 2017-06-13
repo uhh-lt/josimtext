@@ -1,8 +1,8 @@
+package warc
 
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
 import utils.Const
-import verbs.Conll2Features
 
 class WarcToDocumentsTest extends FlatSpec with Matchers {
 
@@ -13,23 +13,16 @@ class WarcToDocumentsTest extends FlatSpec with Matchers {
       .setAppName("test")
       .setMaster("local[*]")
     val sc = new SparkContext(conf)
-    Conll2Features.run(sc, inputPath, outputPath, verbsOnly)
+    WarcToDocuments.run(sc, inputPath, outputPath)
   }
 
-  "simplify" should "simplify pos tag" in {
-    Conll2Features.simplifyPos("NNS") should equal("NN")
-    Conll2Features.simplifyPos("VBZ") should equal("VB")
-  }
-
-  "very large dataset verbs only" should "run" in {
+  "large dataset" should "run" in {
     val conllPath = "/Users/sasha/work/active/joint/JoSimText/src/test/resources/conll_large-output"
-    //val conllPath = "/Users/panchenko/Desktop/conll-output"
     run(conllPath, true)
   }
 
   "small dataset" should "run" in {
-    val conllPath = getClass.getResource(Const.FeatureExtractionTests.conll).getPath()
-    println(conllPath)
-    run(conllPath)
+    val path = getClass.getResource(Const.FeatureExtractionTests.warc).getPath()
+    run(path)
   }
 }
