@@ -1,5 +1,7 @@
-import org.apache.spark.{SparkContext, SparkConf}
+import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
+import util.Const
+import wsd.SenseFeatureAggregator
 
 class SenseFeatureAggregatorTest extends FlatSpec with ShouldMatchers {
     "The SenseFeatureAggregatorTest object" should "skip wrong trigrams" in {

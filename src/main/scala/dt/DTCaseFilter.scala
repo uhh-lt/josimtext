@@ -1,5 +1,6 @@
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkConf
+package dt
+
+import org.apache.spark.{SparkConf, SparkContext}
 
 object DTCaseFilter {
     def main(args: Array[String]) {

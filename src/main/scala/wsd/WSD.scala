@@ -1,20 +1,13 @@
-//import org.apache.spark.SparkContext._
-import org.apache.spark.rdd._
+package wsd
+
+import org.apache.log4j.{Level, Logger}
+import org.apache.spark.rdd.RDD
 import org.apache.spark.{HashPartitioner, SparkConf, SparkContext}
-import org.apache.log4j.Logger
-import org.apache.log4j.Level
-import scala.collection.immutable.Iterable
+import util.{Const, KryoDiskSerializer, Util}
 
-
-case class Prediction(var confs: List[String] = List(Const.NO_FEATURE_LABEL),
-                      var predictConf: Double = Const.NO_FEATURE_CONF,
-                      var usedFeaturesNum: Double = Const.NO_FEATURE_CONF,
-                      var bestConfNorm: Double = Const.NO_FEATURE_CONF,
-                      var usedFeatures: Iterable[String] = List(),
-                      var allFeatures: Iterable[String] = List(),
-                      var sensePriors: Iterable[String] = List(),
-                      var predictRelated: Iterable[String] = List())
-
+/**
+  * Created by sasha on 13/06/17.
+  */
 object WSD {
     Logger.getLogger("org").setLevel(Level.OFF)
     Logger.getLogger("akka").setLevel(Level.OFF)

@@ -1,5 +1,6 @@
 import java.nio.file.Paths
 
+import corpus.FilterSentences
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
 

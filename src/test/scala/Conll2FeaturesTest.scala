@@ -1,6 +1,8 @@
 
-import org.apache.spark.{SparkContext, SparkConf}
+import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
+import util.Const
+import verbs.Conll2Features
 
 class Conll2FeaturesTest extends FlatSpec with ShouldMatchers {
 

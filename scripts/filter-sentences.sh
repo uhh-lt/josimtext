@@ -18,9 +18,8 @@ $spark \
     --queue=$queue \
     --driver-memory 8g \
     --executor-memory 4g \
+    --num-executors 100 \
     $bin_spark \
     $input_dir \
     $output_dir
 
-   # --conf spark.yarn.max.executor.failures    
-   # --num-executors 100 \

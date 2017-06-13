@@ -134,7 +134,7 @@ if $calc_sims; then
     echo "Calculating similarities..." 
 
     $spark \
-        --class=WordSimFromCounts \
+        --class=dt.WordSimFromCounts \
         --master=yarn \
         --queue=$queue \
         --driver-memory ${spark_gb}g \

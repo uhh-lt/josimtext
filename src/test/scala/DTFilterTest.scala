@@ -1,4 +1,5 @@
-import org.apache.spark.{SparkContext, SparkConf}
+import dt.DTFilter
+import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
 
 class DTFilterTest extends FlatSpec with ShouldMatchers {

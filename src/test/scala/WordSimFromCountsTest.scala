@@ -1,8 +1,12 @@
 import java.io.File
 import java.nio.file.{FileSystems, Files, Paths}
-import Util.gzip
+
+import dt.WordSimFromCounts
+import util.Util.gzip
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
+import util.{Const, Util}
+
 import scala.io.Source
 
 

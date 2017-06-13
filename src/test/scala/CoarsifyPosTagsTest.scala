@@ -1,5 +1,6 @@
 import java.nio.file.{Files, Paths}
 
+import corpus.CoarsifyPosTags
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
 

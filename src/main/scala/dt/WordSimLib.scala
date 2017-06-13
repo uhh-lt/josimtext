@@ -1,3 +1,5 @@
+package dt
+
 import org.apache.hadoop.io.compress.GzipCodec
 import org.apache.spark.rdd.RDD
 

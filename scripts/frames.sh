@@ -12,7 +12,7 @@ config=$3
 source $config
 
 spark-submit \
-    --class Conll2Features \
+    --class verbs.Conll2Features \
     --master=$master \
     --queue=$queue \
     --driver-memory 32g \

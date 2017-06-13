@@ -1,3 +1,5 @@
+package util
+
 import org.apache.spark.Partitioner
 
 /**

@@ -1,9 +1,12 @@
+package util
+
 import java.io.{BufferedInputStream, File, FileInputStream, IOException}
+import java.nio.file.{Files, Paths}
+import java.util.zip.GZIPInputStream
+
+import org.apache.spark.SparkContext
 
 import scala.io.{BufferedSource, Source}
-import org.apache.spark.SparkContext
-import java.nio.file.{FileSystems, Files, Path, Paths}
-import java.util.zip.GZIPInputStream
 
 /**
   * Utility functions

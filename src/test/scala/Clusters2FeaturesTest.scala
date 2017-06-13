@@ -1,7 +1,9 @@
 
 
-import org.apache.spark.{SparkContext, SparkConf}
+import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
+import util.Const
+import wsd.Clusters2Features
 
 class Clusters2FeaturesTest extends FlatSpec with ShouldMatchers {
     "The Cluster2Features object" should "generate result" in {

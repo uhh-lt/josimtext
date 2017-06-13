@@ -1,4 +1,5 @@
-import org.apache.spark.{SparkContext, SparkConf}
+import corpus.ReformatConll
+import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
 
 class ReformatConllTest extends FlatSpec with ShouldMatchers {
