@@ -5,7 +5,7 @@ import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.rdd.RDD
-import util.{Const, Util}
+import utils.{Const, Util}
 
 import scala.collection.mutable.ListBuffer
 import scala.util.Try

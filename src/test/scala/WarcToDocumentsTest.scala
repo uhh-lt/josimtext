@@ -4,7 +4,7 @@ import org.scalatest._
 import utils.Const
 import verbs.Conll2Features
 
-class Conll2FeaturesTest extends FlatSpec with Matchers {
+class WarcToDocumentsTest extends FlatSpec with Matchers {
 
   def run(inputPath: String, verbsOnly:Boolean=false) = {
     val outputPath = inputPath + "-output"
@@ -25,17 +25,6 @@ class Conll2FeaturesTest extends FlatSpec with Matchers {
     val conllPath = "/Users/sasha/work/active/joint/JoSimText/src/test/resources/conll_large-output"
     //val conllPath = "/Users/panchenko/Desktop/conll-output"
     run(conllPath, true)
-  }
-
-  "large dataset verbs only" should "run" in {
-    val conllPath = getClass.getResource("part-m-00000.gz").getPath()
-    run(conllPath, true)
-  }
-
-  "large dataset" should "run" in {
-    // wget http://panchenko.me/data/joint/verbs/part-m-00000.gz in src/test/resources
-    val conllPath = getClass.getResource("t").getPath()
-    run(conllPath)
   }
 
   "small dataset" should "run" in {

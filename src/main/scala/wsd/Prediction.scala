@@ -1,6 +1,6 @@
 package wsd
 
-import util.Const
+import utils.Const
 
 import scala.collection.immutable.Iterable
 

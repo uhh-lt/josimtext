@@ -1,4 +1,4 @@
-package util
+package utils
 
 import java.io.{BufferedInputStream, File, FileInputStream, IOException}
 import java.nio.file.{Files, Paths}

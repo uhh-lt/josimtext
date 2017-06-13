@@ -1,6 +1,6 @@
 import org.scalatest._
-import util.Util
-class UtilTest extends FlatSpec with ShouldMatchers {
+import utils.Util
+class UtilTest extends FlatSpec with Matchers {
     "The Utils object" should "split dependency features" in {
         Util.parseDep("subj(work,@)") should equal(("subj", "work", "@"))
     }

@@ -34,7 +34,7 @@ object DTFilter {
         println("Keep all single words: " + keepSingleWords)
         println("Filter only targets: " + filterOnlyTarget)
 
-        Util.delete(outPath)
+        utils.Util.delete(outPath)
 
         val voc = sc.textFile(vocPath)
             .map(line => line.split("\t"))

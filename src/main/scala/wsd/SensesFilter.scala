@@ -2,7 +2,7 @@ package wsd
 
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.rdd.RDD
-import util.{Const, Util}
+import utils.{Const, Util}
 
 object SensesFilter {
   def main(args: Array[String]) {

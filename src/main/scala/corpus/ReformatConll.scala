@@ -1,7 +1,7 @@
 package corpus
 
 import org.apache.spark.{SparkConf, SparkContext}
-import util.Util
+import utils.Util
 
 object ReformatConll {
     val oldConllRecordDelimiter = "^-1\t".r

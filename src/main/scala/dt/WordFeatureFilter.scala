@@ -2,7 +2,7 @@ package dt
 
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.rdd.RDD
-import util.Util
+import utils.Util
 
 
 object WordFeatureFilter {

@@ -1,4 +1,4 @@
-package util
+package utils
 
 object Const {
   val LIST_SEP = "  "

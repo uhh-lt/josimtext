@@ -2,7 +2,7 @@ package corpus
 
 
 import org.apache.spark.{SparkConf, SparkContext}
-import util.{Const, Util}
+import utils.{Const, Util}
 
 import scala.io.Source
 import scala.util.Try

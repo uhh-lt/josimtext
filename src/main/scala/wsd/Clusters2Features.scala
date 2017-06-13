@@ -1,7 +1,7 @@
 package wsd
 
 import org.apache.spark.{SparkConf, SparkContext}
-import util.Util
+import utils.Util
 
 
 object Clusters2Features {

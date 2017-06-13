@@ -2,7 +2,7 @@ import dt.DTFilter
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
 
-class DTFilterTest extends FlatSpec with ShouldMatchers {
+class DTFilterTest extends FlatSpec with Matchers {
 
     def run(dtPath:String, vocPath:String) = {
         val outputPath =  dtPath + "-output"

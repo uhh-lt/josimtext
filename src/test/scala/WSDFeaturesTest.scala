@@ -1,7 +1,7 @@
 import org.scalatest._
 import wsd.WSDFeatures
 
-class WSDFeaturesTest extends FlatSpec with ShouldMatchers {
+class WSDFeaturesTest extends FlatSpec with Matchers {
     "The WSDFeatureTest enumerateion" should "detect modes that require all but trigrams" in {
         val m = WSDFeatures.DepsallCoocsClusters
         WSDFeatures.depstargetNeeded(m) should equal(true)

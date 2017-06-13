@@ -25,7 +25,7 @@ object DTCaseFilter {
     def run(sc:SparkContext, dtPath:String, outPath:String) = {
         println("Input DT: " + dtPath)
         println("Output DT: " + outPath)
-        Util.delete(outPath)
+        utils.Util.delete(outPath)
 
         val dt = sc.textFile(dtPath)
             .map(line => line.split("\t"))

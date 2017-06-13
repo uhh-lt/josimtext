@@ -2,7 +2,7 @@ package wsd
 
 import dt.FreqFilter
 import org.apache.spark.{SparkConf, SparkContext}
-import util.Util
+import utils.Util
 
 
 object SenseFeatureFilter {
@@ -58,7 +58,7 @@ object SenseFeatureFilter {
             .map({ case (word, freq) => word + "\t" + freq })
             .saveAsTextFile(wordsOutPath)
 
-        val (wordFeatures, featureVocRDD) = WordFeatureFilter.run(wordFeaturesPath, clusterVoc, sc)
+        val (wordFeatures, featureVocRDD) = dt.WordFeatureFilter.run(wordFeaturesPath, clusterVoc, sc)
         val featureVoc = featureVocRDD.collect().toSet
         wordFeatures
             .map({ case (word, feature, freq) => word + "\t" + feature + "\t" + freq })

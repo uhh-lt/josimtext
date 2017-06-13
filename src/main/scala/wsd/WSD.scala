@@ -3,7 +3,8 @@ package wsd
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{HashPartitioner, SparkConf, SparkContext}
-import util.{Const, KryoDiskSerializer, Util}
+import utils.{Const, KryoDiskSerializer, Util}
+import scala.util.Random
 
 /**
   * Created by sasha on 13/06/17.
@@ -148,7 +149,7 @@ object WSD {
         // return the most probable sense
         val res = new Prediction()
         if (senseProbs.size > 0) {
-            val senseProbsSorted: List[(Int, Double)] = if (usePriors) senseProbs.toList.sortBy(_._2) else util.Random.shuffle(senseProbs.toList).sortBy(_._2) // to ensure that order doesn't influence choice
+            val senseProbsSorted: List[(Int, Double)] = if (usePriors) senseProbs.toList.sortBy(_._2) else Random.shuffle(senseProbs.toList).sortBy(_._2) // to ensure that order doesn't influence choice
             val bestSense = senseProbsSorted.last
 
             res.confs = senseProbsSorted.map { case (label, score) => s"%s:%.3f".format(label, score) }

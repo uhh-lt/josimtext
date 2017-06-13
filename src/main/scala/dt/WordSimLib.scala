@@ -230,7 +230,7 @@ object WordSimLib {
             // the following 4 lines partition the RDD for equal words-per-feature distribution over the partitions
             .zipWithIndex()
             .map{case ((feature, words), index) => (index, (feature, words))}
-            .partitionBy(new IndexModuloPartitioner(1000))
+            .partitionBy(new utils.IndexModuloPartitioner(1000))
             .map{case (index, (feature, words)) => (feature, words)}
         wordsPerFeatureFairPartitioned.cache()
 
