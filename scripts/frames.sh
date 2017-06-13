@@ -14,9 +14,10 @@ source $config
 spark-submit \
     --class verbs.Conll2Features \
     --master=$master \
+    --num-executors 2000 \
     --queue=$queue \
     --driver-memory 32g \
-    --executor-memory 4g \
+    --executor-memory 16g \
     $bin_spark \
     $input_dir \
     $output_dir \
