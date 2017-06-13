@@ -1,7 +1,8 @@
+package corpus
 
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkConf
-import scala.io.Source
+
+import org.apache.spark.{SparkConf, SparkContext}
+import utils.Util
 
 object FilterSentences {
 

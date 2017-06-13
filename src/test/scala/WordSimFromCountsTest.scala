@@ -1,12 +1,16 @@
 import java.io.File
 import java.nio.file.{FileSystems, Files, Paths}
-import Util.gzip
+
+import dt.WordSimFromCounts
+import utils.Util.gzip
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
+import utils.{Const, Util}
+
 import scala.io.Source
 
 
-class WordSimFromCountsTest extends FlatSpec with ShouldMatchers {
+class WordSimFromCountsTest extends FlatSpec with Matchers {
 
     /**
       * This function and thus each test case run about about 2 minutes on a core i5 cpu with 8gb of ram

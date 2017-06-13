@@ -1,5 +1,6 @@
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkConf
+package dt
+
+import org.apache.spark.{SparkConf, SparkContext}
 
 object DTCaseFilter {
     def main(args: Array[String]) {
@@ -24,7 +25,7 @@ object DTCaseFilter {
     def run(sc:SparkContext, dtPath:String, outPath:String) = {
         println("Input DT: " + dtPath)
         println("Output DT: " + outPath)
-        Util.delete(outPath)
+        utils.Util.delete(outPath)
 
         val dt = sc.textFile(dtPath)
             .map(line => line.split("\t"))

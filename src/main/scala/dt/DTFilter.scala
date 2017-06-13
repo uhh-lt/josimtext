@@ -1,5 +1,6 @@
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkConf
+package dt
+
+import org.apache.spark.{SparkConf, SparkContext}
 
 object DTFilter {
     def main(args: Array[String]) {
@@ -33,7 +34,7 @@ object DTFilter {
         println("Keep all single words: " + keepSingleWords)
         println("Filter only targets: " + filterOnlyTarget)
 
-        Util.delete(outPath)
+        utils.Util.delete(outPath)
 
         val voc = sc.textFile(vocPath)
             .map(line => line.split("\t"))

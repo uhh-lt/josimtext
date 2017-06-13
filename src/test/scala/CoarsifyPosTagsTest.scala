@@ -1,11 +1,12 @@
 import java.nio.file.{Files, Paths}
 
+import corpus.CoarsifyPosTags
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
 
 import scala.io.Source
 
-class CoarsifyPosTagsTest extends FlatSpec with ShouldMatchers {
+class CoarsifyPosTagsTest extends FlatSpec with Matchers {
     val COUNTS_DIR = getClass.getResource("/counts").getPath
 
     def run(inputDir: String) = {

@@ -1,20 +1,14 @@
-//import org.apache.spark.SparkContext._
-import org.apache.spark.rdd._
+package wsd
+
+import org.apache.log4j.{Level, Logger}
+import org.apache.spark.rdd.RDD
 import org.apache.spark.{HashPartitioner, SparkConf, SparkContext}
-import org.apache.log4j.Logger
-import org.apache.log4j.Level
-import scala.collection.immutable.Iterable
+import utils.{Const, KryoDiskSerializer, Util}
+import scala.util.Random
 
-
-case class Prediction(var confs: List[String] = List(Const.NO_FEATURE_LABEL),
-                      var predictConf: Double = Const.NO_FEATURE_CONF,
-                      var usedFeaturesNum: Double = Const.NO_FEATURE_CONF,
-                      var bestConfNorm: Double = Const.NO_FEATURE_CONF,
-                      var usedFeatures: Iterable[String] = List(),
-                      var allFeatures: Iterable[String] = List(),
-                      var sensePriors: Iterable[String] = List(),
-                      var predictRelated: Iterable[String] = List())
-
+/**
+  * Created by sasha on 13/06/17.
+  */
 object WSD {
     Logger.getLogger("org").setLevel(Level.OFF)
     Logger.getLogger("akka").setLevel(Level.OFF)
@@ -155,7 +149,7 @@ object WSD {
         // return the most probable sense
         val res = new Prediction()
         if (senseProbs.size > 0) {
-            val senseProbsSorted: List[(Int, Double)] = if (usePriors) senseProbs.toList.sortBy(_._2) else util.Random.shuffle(senseProbs.toList).sortBy(_._2) // to ensure that order doesn't influence choice
+            val senseProbsSorted: List[(Int, Double)] = if (usePriors) senseProbs.toList.sortBy(_._2) else Random.shuffle(senseProbs.toList).sortBy(_._2) // to ensure that order doesn't influence choice
             val bestSense = senseProbsSorted.last
 
             res.confs = senseProbsSorted.map { case (label, score) => s"%s:%.3f".format(label, score) }

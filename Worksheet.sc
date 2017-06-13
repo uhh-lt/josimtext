@@ -67,9 +67,9 @@ case class Prediction(confs:List[String]=List(DEFAULT_FEATURE),
                       var allFeatures:Iterable[String]=List(),
                       sensePriors:Iterable[String]=List())
 
-val p = new Prediction(List("a:0","b:0"), 0.0, 0.0, 0.0, Set("a","b","c"), Set("a","b","c"), Set("a","b","c"))
+val p = new wsd.Prediction(List("a:0","b:0"), 0.0, 0.0, 0.0, Set("a","b","c"), Set("a","b","c"), Set("a","b","c"))
 
-var r = new Prediction()
+var r = new wsd.Prediction()
 r.allFeatures = Set()
 
 //println(r.)

@@ -1,11 +1,12 @@
 import java.nio.file.Paths
 
+import corpus.FilterSentences
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
 
 import scala.io.Source
 
-class FilterSentencesTest extends FlatSpec with ShouldMatchers {
+class FilterSentencesTest extends FlatSpec with Matchers {
     val SENTENCES_PATH = getClass.getResource("/noisy-sentences.txt.gz").getPath
 
     def run(inputPath:String) = {

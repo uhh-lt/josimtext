@@ -1,6 +1,9 @@
+package corpus
 
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkConf
+
+import org.apache.spark.{SparkConf, SparkContext}
+import utils.{Const, Util}
+
 import scala.io.Source
 import scala.util.Try
 

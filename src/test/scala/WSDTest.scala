@@ -1,7 +1,9 @@
-import org.apache.spark.{SparkContext, SparkConf}
+import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
+import utils.Const
+import wsd.{WSD, WSDFeatures}
 
-class WSDTest extends FlatSpec with ShouldMatchers {
+class WSDTest extends FlatSpec with Matchers {
 
     val wordFeaturesStr = "Python  be  a  widely  use"
     val holingTargetFeaturesStr = "nn(@,interpreter)  nn(@,execution)  #_@_interpreter  allow_@_code"

@@ -1,7 +1,8 @@
-import org.apache.spark.{SparkContext, SparkConf}
+import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
+import wsd.SensesFilter
 
-class SenseFilterTest extends FlatSpec with ShouldMatchers {
+class SenseFilterTest extends FlatSpec with Matchers {
 
   def run(sensesPath:String, vocPath:String) = {
     val outputPath = sensesPath + "-output"

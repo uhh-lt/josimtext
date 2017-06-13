@@ -1,7 +1,8 @@
-import org.apache.spark.{SparkContext, SparkConf}
+import corpus.ReformatConll
+import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
 
-class ReformatConllTest extends FlatSpec with ShouldMatchers {
+class ReformatConllTest extends FlatSpec with Matchers {
   def run(inputPath:String) = {
     val outputPath = inputPath + "-output"
     val conf = new SparkConf()

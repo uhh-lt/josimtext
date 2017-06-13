@@ -1,6 +1,8 @@
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkConf
+package dt
+
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.rdd.RDD
+import utils.Util
 
 
 object FreqFilter {
