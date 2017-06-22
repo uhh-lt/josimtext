@@ -1,6 +1,6 @@
 hadoop=hadoop 
-hadoop_xmx_mb=8192
-hadoop_mb=8000
+hadoop_xmx_mb=8192 #4096
+hadoop_mb=8000 #4000
 spark=spark-submit 
 spark_gb=8
 

@@ -12,8 +12,8 @@ input=$1
 output=$2
 compress=$4
 parser="malt"  # or "stanford"
-collapsing="false"
-
+collapsing="true"
+inputType="document"
 
 echo "Corpus: $input"
 if  $hadoop fs -test -e $input  ; then
@@ -40,6 +40,7 @@ HADOOP_CLASSPATH=$path $hadoop \
     -Dmapreduce.map.memory.mb=$hadoop_mb \
     -DparserName=$parser \
     -Dcollapsing=$collapsing \
+    -DinputType=$inputType \
     $input \
     $output \
     $compress

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [ -z "$1" ] || [ -z "$3" ] ; then
-    echo "parameters: <conll-dir> <output-dir> <config.sh>"
+    echo "parameters: <input-dir> <output-dir> <config.sh>"
     exit
 fi
 

@@ -23,7 +23,7 @@ output_pos=true
 verbose=false 
 
 # Term similarity
-WordsPerFeature=2000 # 100 1000 10000
+WordsPerFeature=1000 # 100 1000 10000
 FeaturesPerWord=2000 # 100 1000 10000
 MinWordFreq=5
 MinFeatureFreq=5
@@ -137,6 +137,7 @@ if $calc_sims; then
         --class=dt.WordSimFromCounts \
         --master=yarn \
         --queue=$queue \
+        --num-executors 2000 \
         --driver-memory ${spark_gb}g \
         --executor-memory ${spark_gb}g \
         $bin_spark \
