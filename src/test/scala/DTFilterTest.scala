@@ -3,17 +3,17 @@ import de.tudarmstadt.lt.testtags.NeedsMissingFiles
 import dt.DTFilter
 import org.scalatest._
 
-class DTFilterTest extends FlatSpec with Matchers  with SharedSparkContext {
+class DTFilterTest extends FlatSpec with Matchers with SharedSparkContext {
 
-    def run(dtPath:String, vocPath:String) = {
-        val outputPath =  dtPath + "-output"
+  def run(dtPath: String, vocPath: String) = {
+    val outputPath = dtPath + "-output"
 
-        DTFilter.run(sc, dtPath, vocPath, outputPath, keepSingleWords=false, filterOnlyTarget=true)
-    }
+    DTFilter.run(sc, dtPath, vocPath, outputPath, keepSingleWords = false, filterOnlyTarget = true)
+  }
 
-     ignore should "filter DT by vocabulary" taggedAs NeedsMissingFiles in {
-        //val senses =  getClass.getResource(Const.PRJ.SENSES).getPath()
-        run(dtPath="/Users/alex/Desktop/w2v-jbt-nns/dt-text.csv",
-            vocPath="/Users/alex/Desktop/w2v-jbt-nns/target.csv")
-    }
+  ignore should "filter DT by vocabulary" taggedAs NeedsMissingFiles in {
+    //val senses =  getClass.getResource(Const.PRJ.SENSES).getPath()
+    run(dtPath = "/Users/alex/Desktop/w2v-jbt-nns/dt-text.csv",
+      vocPath = "/Users/alex/Desktop/w2v-jbt-nns/target.csv")
+  }
 }
