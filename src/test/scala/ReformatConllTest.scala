@@ -1,23 +1,20 @@
+import com.holdenkarau.spark.testing.SharedSparkContext
 import corpus.ReformatConll
-import org.apache.spark.{SparkConf, SparkContext}
+import de.tudarmstadt.lt.testtags.NeedsMissingFiles
 import org.scalatest._
 
-class ReformatConllTest extends FlatSpec with Matchers {
+class ReformatConllTest extends FlatSpec with Matchers  with SharedSparkContext {
   def run(inputPath:String) = {
     val outputPath = inputPath + "-output"
-    val conf = new SparkConf()
-      .setAppName("test")
-      .setMaster("local[*]")
-    val sc = new SparkContext(conf)
     ReformatConll.run(sc, inputPath, outputPath)
   }
 
-  "reformat standard" should "run" in {
+  ignore should "run reformat standard" taggedAs NeedsMissingFiles in {
     val conllPath = getClass.getResource("/conll_orig").getPath()
     run(conllPath)
   }
 
-  "reformat large" should "run" in {
+  ignore should "run reformat large" taggedAs NeedsMissingFiles in {
     //val conllPath = "/Users/sasha/work/active/joint/JoSimText/src/test/resources/conll_large"
     val conllPath = "/Users/panchenko/Desktop/conll"
     run(conllPath)

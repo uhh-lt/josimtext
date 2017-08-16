@@ -1,9 +1,11 @@
-import org.apache.spark.{SparkConf, SparkContext}
+import com.holdenkarau.spark.testing.SharedSparkContext
+import de.tudarmstadt.lt.testtags.NeedsMissingFiles
 import org.scalatest._
 import utils.Const
 import wsd.SenseFeatureAggregator
+import org.scalatest.Tag
 
-class SenseFeatureAggregatorTest extends FlatSpec with Matchers {
+class SenseFeatureAggregatorTest extends FlatSpec with Matchers  with SharedSparkContext {
     "The SenseFeatureAggregatorTest object" should "skip wrong trigrams" in {
         SenseFeatureAggregator.keepFeature("programming_@_22", "trigrams") should equal(false)
         SenseFeatureAggregator.keepFeature("programming_@_.[22][23]", "trigrams") should equal(false)
@@ -19,20 +21,15 @@ class SenseFeatureAggregatorTest extends FlatSpec with Matchers {
         println(s"Senses: $senses")
         println(s"Output: $output")
 
-        val conf = new SparkConf()
-            .setAppName("JST: WSD")
-            .setMaster("local[1]")
-        val sc = new SparkContext(conf)
-
         SenseFeatureAggregator.run(sc, senses, words, features, wordFeatures, output, featureType)
     }
 
-    "Aggregate PRJ" should "run" in {
+    ignore should "run Aggregate PRJ" taggedAs NeedsMissingFiles in {
         val senses =  getClass.getResource(Const.PRJ_TEST.SENSES).getPath()
         agg(senses)
     }
 
-    "Aggregate WordNet" should "run" in {
+    ignore should "run Aggregate WordNet" taggedAs NeedsMissingFiles in {
         val senses =  "/Users/alex/Desktop/topic_signatures_kb_semeval_16/inventory/senses.csv"
         agg(senses)
     }

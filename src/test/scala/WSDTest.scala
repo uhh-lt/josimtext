@@ -1,9 +1,11 @@
-import org.apache.spark.{SparkConf, SparkContext}
+
+import com.holdenkarau.spark.testing.SharedSparkContext
+import de.tudarmstadt.lt.testtags.NeedsMissingFiles
 import org.scalatest._
 import utils.Const
 import wsd.{WSD, WSDFeatures}
 
-class WSDTest extends FlatSpec with Matchers {
+class WSDTest extends FlatSpec with Matchers  with SharedSparkContext {
 
     val wordFeaturesStr = "Python  be  a  widely  use"
     val holingTargetFeaturesStr = "nn(@,interpreter)  nn(@,execution)  #_@_interpreter  allow_@_code"
@@ -32,7 +34,6 @@ class WSDTest extends FlatSpec with Matchers {
         contextFeatures should contain("amod(many,@)")
         contextFeatures should contain("amod(@,many)")
         contextFeatures should not contain("#_@_interpreter")
-        println(contextFeatures.mkString(","))
     }
 
     "Trigramall" should "extract context features" in {
@@ -49,8 +50,6 @@ class WSDTest extends FlatSpec with Matchers {
         contextFeatures should contain("#_@_interpreter")
         contextFeatures should contain("allow_@_code")
         contextFeatures should contain("many_@_system")
-
-        println(contextFeatures.mkString(","))
     }
 
     "Trigramstarget" should "extract context features" in {
@@ -68,8 +67,6 @@ class WSDTest extends FlatSpec with Matchers {
         contextFeatures should contain("allow_@_code")
         contextFeatures should not contain("many_@_system")
         contextFeatures should not contain("installation_@_many")
-
-        println(contextFeatures.mkString(","))
     }
 
 
@@ -89,8 +86,6 @@ class WSDTest extends FlatSpec with Matchers {
         contextFeatures should not contain("many_@_system")
         contextFeatures should not contain("installation_@_many")
         contextFeatures should not contain("amod(@,system)")
-
-        println(contextFeatures.mkString(","))
     }
 
 
@@ -111,8 +106,6 @@ class WSDTest extends FlatSpec with Matchers {
         contextFeatures should not contain("installation_@_many")
         contextFeatures should not contain("amod(@,system)")
 
-        println(contextFeatures.mkString(","))
-
     }
 
 
@@ -121,7 +114,6 @@ class WSDTest extends FlatSpec with Matchers {
         val boosted = WSD.boostFeatures(holingFeaturesStr.split("  ").toList, 2)
         boosted.size should equal(12)
         boosted should contain("punct(emphasize,@)")
-        println(boosted)
     }
 
     def wsd(mode: WSDFeatures.Value, outputPath:String="") = {
@@ -136,55 +128,50 @@ class WSDTest extends FlatSpec with Matchers {
         println(s"Senses: $senses")
         println(s"Output: $output")
 
-        val conf = new SparkConf()
-            .setAppName("JST: WSD")
-            .setMaster("local[1]")
-        val sc = new SparkContext(conf)
-
         WSD.run(sc, contexts, output, clusters, coocs, deps, trigrams, true, mode, 20000, 1)
     }
 
-    "DepstargetCoocsClustersTrigramstarget" should "run" in {
+    ignore should "run DepstargetCoocsClustersTrigramstarget" taggedAs NeedsMissingFiles in {
         wsd(WSDFeatures.DepstargetCoocsClustersTrigramstarget)
     }
 
-    "DepsallCoocsClustersTrigramsall" should "run" in {
+    ignore should "run DepsallCoocsClustersTrigramsall" taggedAs NeedsMissingFiles in {
         wsd(WSDFeatures.DepsallCoocsClustersTrigramsall)
     }
 
-    "DepsallCoocsClusters" should "run" in {
+    ignore should "run DepsallCoocsClusters" taggedAs NeedsMissingFiles in {
         wsd(WSDFeatures.DepsallCoocsClusters)
     }
 
-    "DepstargetCoocsClusters" should "run" in {
+    ignore should "run DepstargetCoocsClusters" taggedAs NeedsMissingFiles in {
         wsd(WSDFeatures.DepstargetCoocsClusters)
     }
 
-    "TrigramstargetDepstarget" should "run" in {
+    ignore should "run TrigramstargetDepstarget" taggedAs NeedsMissingFiles in {
         wsd(WSDFeatures.TrigramstargetDepstarget)
     }
 
-    "Depstarget" should "run" in {
+    ignore should "run Depstarget" taggedAs NeedsMissingFiles in {
         wsd(WSDFeatures.Depstarget)
     }
 
-    "Clusters" should "run" in {
+    ignore should "run Clusters" taggedAs NeedsMissingFiles in {
         wsd(WSDFeatures.Clusters)
     }
 
-    "Coocs" should "run" in {
+    ignore should "run Coocs" taggedAs NeedsMissingFiles in {
         wsd(WSDFeatures.Coocs)
     }
 
-    "Depsall" should "run" in {
+    ignore should "run Depsall" taggedAs NeedsMissingFiles in {
         wsd(WSDFeatures.Depsall)
     }
 
-    "Trigramsall" should "run" in {
+    ignore should "run Trigramsall" taggedAs NeedsMissingFiles in {
         wsd(WSDFeatures.Trigramsall)
     }
 
-    "Trigramstarget" should "run" in {
+    ignore should "run Trigramstarget" in {
         wsd(WSDFeatures.Trigramstarget)
     }
 }

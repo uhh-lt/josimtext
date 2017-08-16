@@ -1,17 +1,16 @@
 import java.nio.file.Paths
 
+import com.holdenkarau.spark.testing.SharedSparkContext
 import corpus.FilterSentences
-import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
 
 import scala.io.Source
 
-class FilterSentencesTest extends FlatSpec with Matchers {
+class FilterSentencesTest extends FlatSpec with Matchers  with SharedSparkContext {
     val SENTENCES_PATH = getClass.getResource("/noisy-sentences.txt.gz").getPath
 
     def run(inputPath:String) = {
         val outputPath =  inputPath + "-output"
-        val sc = new SparkContext(new SparkConf().setAppName("FilterSentencesTest").setMaster("local[1]"))
         FilterSentences.run(sc, inputPath, outputPath)
         outputPath
     }

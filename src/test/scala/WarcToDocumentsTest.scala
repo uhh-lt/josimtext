@@ -1,22 +1,19 @@
 package warc
 
-import org.apache.spark.{SparkConf, SparkContext}
+import com.holdenkarau.spark.testing.SharedSparkContext
+import de.tudarmstadt.lt.testtags.NeedsMissingFiles
 import org.scalatest._
 import utils.Const
 
-class WarcToDocumentsTest extends FlatSpec with Matchers {
+class WarcToDocumentsTest extends FlatSpec with Matchers  with SharedSparkContext {
 
   def run(inputPath: String, verbsOnly:Boolean=false) = {
     val outputPath = inputPath + "-output"
 
-    val conf = new SparkConf()
-      .setAppName("test")
-      .setMaster("local[*]")
-    val sc = new SparkContext(conf)
     WarcToDocuments.run(sc, inputPath, outputPath)
   }
 
-  "large dataset" should "run" in {
+  ignore should "run large dataset" taggedAs NeedsMissingFiles in {
     val conllPath = "/Users/sasha/work/active/joint/JoSimText/src/test/resources/conll_large-output"
     run(conllPath, true)
   }

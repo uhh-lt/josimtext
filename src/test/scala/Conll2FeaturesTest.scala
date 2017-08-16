@@ -1,18 +1,15 @@
 
-import org.apache.spark.{SparkConf, SparkContext}
+import com.holdenkarau.spark.testing.SharedSparkContext
+import de.tudarmstadt.lt.testtags.NeedsMissingFiles
 import org.scalatest._
 import utils.Const
 import verbs.Conll2Features
 
-class Conll2FeaturesTest extends FlatSpec with Matchers {
+class Conll2FeaturesTest extends FlatSpec with Matchers  with SharedSparkContext {
 
   def run(inputPath: String, verbsOnly:Boolean=false) = {
     val outputPath = inputPath + "-output"
 
-    val conf = new SparkConf()
-      .setAppName("test")
-      .setMaster("local[*]")
-    val sc = new SparkContext(conf)
     Conll2Features.run(sc, inputPath, outputPath, verbsOnly)
   }
 
@@ -21,13 +18,13 @@ class Conll2FeaturesTest extends FlatSpec with Matchers {
     Conll2Features.simplifyPos("VBZ") should equal("VB")
   }
 
-  "very large dataset verbs only" should "run" in {
+  ignore should "run very large dataset verbs only" taggedAs NeedsMissingFiles in {
     val conllPath = "/Users/sasha/work/active/joint/JoSimText/src/test/resources/conll_large-output"
     //val conllPath = "/Users/panchenko/Desktop/conll-output"
     run(conllPath, true)
   }
 
-  "large dataset verbs only" should "run" in {
+  it should "run large dataset verbs only" in {
     val conllPath = getClass.getResource("part-m-00000.gz").getPath()
     run(conllPath, true)
   }

@@ -1,16 +1,16 @@
 import java.io.File
 import java.nio.file.{FileSystems, Files, Paths}
 
+import com.holdenkarau.spark.testing.SharedSparkContext
 import dt.WordSimFromCounts
 import utils.Util.gzip
-import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
 import utils.{Const, Util}
-
+import org.scalatest.tagobjects.Slow
 import scala.io.Source
 
 
-class WordSimFromCountsTest extends FlatSpec with Matchers {
+class WordSimFromCountsTest extends FlatSpec with Matchers  with SharedSparkContext {
 
     /**
       * This function and thus each test case run about about 2 minutes on a core i5 cpu with 8gb of ram
@@ -23,15 +23,10 @@ class WordSimFromCountsTest extends FlatSpec with Matchers {
         Util.delete(outputDir)
         println(s"Output: $outputDir")
 
-        val conf = new SparkConf()
-            .setAppName("JST: WordSimFromCounts test")
-            .setMaster("local[1]")
-        val sc = new SparkContext(conf)
-
         WordSimFromCounts.run(sc, words, features, wordFeatures, outputDir, wordMinCount=1, featureMinCount=1, wordFeatureMinCount=1, significanceMin=0.0)
     }
 
-    "DefaultConf" should "produce default results" in {
+    ignore should "DefaultConf produce default results" taggedAs Slow in {
         run()
 
         val outputDir = FileSystems.getDefault().getPath(new File(".").getCanonicalPath()) + "/output";

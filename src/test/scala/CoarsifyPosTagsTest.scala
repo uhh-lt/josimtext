@@ -1,17 +1,16 @@
 import java.nio.file.{Files, Paths}
 
+import com.holdenkarau.spark.testing.SharedSparkContext
 import corpus.CoarsifyPosTags
-import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
 
 import scala.io.Source
 
-class CoarsifyPosTagsTest extends FlatSpec with Matchers {
+class CoarsifyPosTagsTest extends FlatSpec with Matchers  with SharedSparkContext {
     val COUNTS_DIR = getClass.getResource("/counts").getPath
 
     def run(inputDir: String) = {
         val outputDir =  inputDir + "-output"
-        val sc = new SparkContext(new SparkConf().setAppName("CoarsifyPosTagsTest").setMaster("local[1]"))
         CoarsifyPosTags.run(sc, inputDir, outputDir)
         outputDir
     }
