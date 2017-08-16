@@ -1,0 +1,12 @@
+# parser = MaltParser Language: English. Parser configuration: Stack. Transition system: Projective. Model: de.tudarmstadt.ukp.dkpro.core.maltparser-upstream-parser-en-linear. Model version: 20120312.
+# newdoc	url = http://www.designfloat.com/blog/2011/07/22/website-usability-tips-mistakes-roundup/	s3 = s3://aws-publicdatasets/common-crawl/crawl-data/CC-MAIN-2016-07/segments/1454701164289.84/warc/CC-MAIN-20160205193924-00290-ip-10-236-182-209.ec2.internal.warc.gz
+# sent_id = http://www.designfloat.com/blog/2011/07/22/website-usability-tips-mistakes-roundup/#1
+# text = Website Usability Tips, Tricks and Mistakes.
+0	Website	Website	NNP	NNP		2	nn	2:nn	O
+1	Usability	Usability	NNP	NNP		2	nn	2:nn	O
+2	Tips	Tips	NNP	NNP		2	ROOT	2:ROOT	O
+3	,	,	,	,		2	punct	2:punct	O
+4	Tricks	Tricks	NNP	NNP		2	conj	2:conj_and	O
+5	and	and	CC	CC		2	cc	_	O
+6	Mistakes	Mistakes	NNP	NNP		2	conj	2:conj_and	O
+7	.	.	.	.		2	punct	2:punct	O
