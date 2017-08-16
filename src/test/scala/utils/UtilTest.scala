@@ -1,5 +1,6 @@
+package utils
+
 import org.scalatest._
-import utils.Util
 
 class UtilTest extends FlatSpec with Matchers {
   "The Utils object" should "split dependency features" in {

@@ -1,8 +1,9 @@
+package wsd
+
 
 import com.holdenkarau.spark.testing.SharedSparkContext
 import org.scalatest._
 import utils.Const
-import wsd.Clusters2Features
 
 class Clusters2FeaturesTest extends FlatSpec with Matchers with SharedSparkContext {
   "The Cluster2Features object" should "generate result" in {

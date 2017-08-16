@@ -1,8 +1,9 @@
+package dt
+
 import java.io.File
 import java.nio.file.{FileSystems, Files, Paths}
 
 import com.holdenkarau.spark.testing.SharedSparkContext
-import dt.WordSimFromCounts
 import org.scalatest._
 import org.scalatest.tagobjects.Slow
 import utils.Util.gzip

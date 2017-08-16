@@ -1,9 +1,10 @@
+package wsd
+
 
 import com.holdenkarau.spark.testing.SharedSparkContext
 import de.tudarmstadt.lt.testtags.NeedsMissingFiles
 import org.scalatest._
 import utils.Const
-import wsd.{WSD, WSDFeatures}
 
 class WSDTest extends FlatSpec with Matchers with SharedSparkContext {
 

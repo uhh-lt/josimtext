@@ -1,5 +1,6 @@
+package corpus
+
 import com.holdenkarau.spark.testing.SharedSparkContext
-import corpus.ReformatConll
 import de.tudarmstadt.lt.testtags.NeedsMissingFiles
 import org.scalatest._
 

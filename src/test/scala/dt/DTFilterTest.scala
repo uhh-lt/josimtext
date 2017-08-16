@@ -1,6 +1,7 @@
+package dt
+
 import com.holdenkarau.spark.testing.SharedSparkContext
 import de.tudarmstadt.lt.testtags.NeedsMissingFiles
-import dt.DTFilter
 import org.scalatest._
 
 class DTFilterTest extends FlatSpec with Matchers with SharedSparkContext {

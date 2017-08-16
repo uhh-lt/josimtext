@@ -1,11 +1,12 @@
+package wsd
+
 import com.holdenkarau.spark.testing.SharedSparkContext
 import de.tudarmstadt.lt.testtags.NeedsMissingFiles
 import org.scalatest._
 import utils.Const
-import wsd.SenseFeatureAggregator
 
 class SenseFeatureAggregatorTest extends FlatSpec with Matchers with SharedSparkContext {
-  "The SenseFeatureAggregatorTest object" should "skip wrong trigrams" in {
+  "The wsd.SenseFeatureAggregatorTest object" should "skip wrong trigrams" in {
     SenseFeatureAggregator.keepFeature("programming_@_22", "trigrams") should equal(false)
     SenseFeatureAggregator.keepFeature("programming_@_.[22][23]", "trigrams") should equal(false)
     SenseFeatureAggregator.keepFeature("[27]_@_philosophy", "trigrams") should equal(false)

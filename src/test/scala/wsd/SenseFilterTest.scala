@@ -1,7 +1,8 @@
+package wsd
+
 import com.holdenkarau.spark.testing.SharedSparkContext
 import de.tudarmstadt.lt.testtags.NeedsMissingFiles
 import org.scalatest._
-import wsd.SensesFilter
 
 class SenseFilterTest extends FlatSpec with Matchers  with SharedSparkContext {
 

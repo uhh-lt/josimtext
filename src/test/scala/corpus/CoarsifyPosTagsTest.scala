@@ -1,7 +1,8 @@
+package corpus
+
 import java.nio.file.{Files, Paths}
 
 import com.holdenkarau.spark.testing.SharedSparkContext
-import corpus.CoarsifyPosTags
 import org.scalatest._
 
 import scala.io.Source

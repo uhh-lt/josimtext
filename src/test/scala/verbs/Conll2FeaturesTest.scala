@@ -1,9 +1,9 @@
+package verbs
 
 import com.holdenkarau.spark.testing.SharedSparkContext
 import de.tudarmstadt.lt.testtags.NeedsMissingFiles
 import org.scalatest._
 import utils.Const
-import verbs.Conll2Features
 
 class Conll2FeaturesTest extends FlatSpec with Matchers  with SharedSparkContext {
 
