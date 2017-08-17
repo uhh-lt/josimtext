@@ -134,7 +134,7 @@ if $calc_sims; then
     echo "Calculating similarities..." 
 
     $spark \
-        --class=dt.WordSimFromCounts \
+        --class=de.uhh.lt.jst.dt.WordSimFromCounts \
         --master=yarn \
         --queue=$queue \
         --num-executors 2000 \
