@@ -34,7 +34,7 @@ echo "To start press any key, to stop press Ctrl+C"
 read -n 2
 
 $spark \
-    --class=dt.WordSimFromCounts \
+    --class=de.tudarmstadt.lt.jst.dt.WordSimFromCounts \
     --master=$master \
     --queue=$queue \
     --num-executors $num_executors \

@@ -2,7 +2,7 @@ package de.tudarmstadt.lt.jst.dt
 
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.rdd.RDD
-import utils.Util
+import de.tudarmstadt.lt.jst.utils.Util
 
 
 object FreqFilter {

@@ -1,6 +1,7 @@
 package de.tudarmstadt.lt.jst.dt
 
 import org.apache.spark.{SparkConf, SparkContext}
+import de.tudarmstadt.lt.jst.utils
 
 object DTFilter {
     def main(args: Array[String]) {

@@ -19,7 +19,7 @@ import org.apache.spark.sql.types._
   */
 class DefaultSource extends TextBasedFileFormat with DataSourceRegister {
 
-    override def shortName(): String = "de.tudarmstadt.lt.jbt.corpus"
+    override def shortName(): String = "de.tudarmstadt.lt.jbt.de.tudarmstadt.lt.jst.corpus"
 
     override def toString: String = "Corpus"
 

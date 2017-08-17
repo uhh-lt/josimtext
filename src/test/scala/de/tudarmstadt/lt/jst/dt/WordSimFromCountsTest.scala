@@ -6,8 +6,8 @@ import java.nio.file.{FileSystems, Files, Paths}
 import com.holdenkarau.spark.testing.SharedSparkContext
 import org.scalatest._
 import org.scalatest.tagobjects.Slow
-import utils.Util.gzip
-import utils.{Const, Util}
+import de.tudarmstadt.lt.jst.utils.Util.gzip
+import de.tudarmstadt.lt.jst.utils.{Const, Util}
 
 import scala.io.Source
 
