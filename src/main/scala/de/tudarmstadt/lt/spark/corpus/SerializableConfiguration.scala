@@ -7,7 +7,7 @@ import scala.util.control.NonFatal
 import org.slf4j.LoggerFactory
 
 /**
-  * Copied from [[SerializableConfiguration]]
+  * Copied from [[org.apache.spark.util.SerializableConfiguration]]
   */
 class SerializableConfiguration(@transient var value: Configuration) extends Serializable {
   @transient private[corpus] lazy val log = LoggerFactory.getLogger(getClass)

@@ -1,6 +1,6 @@
 package de.tudarmstadt.lt.spark
 
-import org.apache.spark.sql.{DataFrame, DataFrameReader, DataFrameWriter}
+import org.apache.spark.sql.{DataFrame, DataFrameReader}
 
 
 /**
@@ -12,21 +12,13 @@ import org.apache.spark.sql.{DataFrame, DataFrameReader, DataFrameWriter}
   */
 package object corpus {
 
-  /* TODO implement writer
-  /**
-    * Adds a method, `de.tudarmstadt.lt.jst.corpus`, to DataFrameWriter that allows you to write de.tudarmstadt.lt.jst.corpus files using
-    * the DataFileWriter
-    */
-  implicit class CorpusDataFrameWriter[T](writer: DataFrameWriter[T]) {
-    def de.tudarmstadt.lt.jst.corpus: String => Unit = writer.format("de.tudarmstadt.lt.spark.de.tudarmstadt.lt.jst.corpus").save
-  }
-  */
+  // TODO implement writer
 
   /**
     * Adds a method, `de.tudarmstadt.lt.jst.corpus`, to DataFrameReader that allows you to read de.tudarmstadt.lt.jst.corpus files using
     * the DataFileReader
     */
   implicit class CorpusDataFrameReader(reader: DataFrameReader) {
-    def corpus: String => DataFrame = reader.format("de.tudarmstadt.lt.spark.de.tudarmstadt.lt.jst.corpus").load
+    def corpus: String => DataFrame = reader.format("de.tudarmstadt.lt.spark.corpus").load
   }
 }
