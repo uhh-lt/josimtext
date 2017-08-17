@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 if [ -z "$1" ] || [ -z "$3" ] ; then
     echo "Run noun sense induction"
     echo "parameters: <corpus-directory> <output-directory> <queue>"
