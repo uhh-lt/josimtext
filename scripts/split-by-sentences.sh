@@ -19,7 +19,7 @@ jars=`echo $bin/*.jar | tr " " ","`
 path=`echo $bin/*.jar | tr " " ":"`
 
 HADOOP_CLASSPATH=$path hadoop \
-    de.tudarmstadt.lt.jst.SentenceSplitter.HadoopMain \
+    de.uhh.lt.jst.SentenceSplitter.HadoopMain \
     -libjars $jars \
     -Dmapreduce.reduce.failures.maxpercent=10 \
     -Dmapreduce.map.failures.maxpercent=10 \

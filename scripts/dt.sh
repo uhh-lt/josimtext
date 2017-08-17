@@ -98,7 +98,7 @@ if $calc_features; then
     path=`echo $bin_hadoop/*.jar | tr " " ":"`
 
     HADOOP_CLASSPATH=$path $hadoop \
-        de.tudarmstadt.lt.jst.ExtractTermFeatureScores.HadoopMain \
+        de.uhh.lt.jst.ExtractTermFeatureScores.HadoopMain \
         -libjars $jars \
         -Dmapreduce.reduce.failures.maxpercent=10 \
         -Dmapreduce.map.failures.maxpercent=10 \

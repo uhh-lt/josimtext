@@ -21,7 +21,7 @@ echo "To start press any key, to stop press Ctrl+C"
 read -n 2
 
 $spark \
-    --class=de.tudarmstadt.lt.jst.dt.CoNLL2DepTermContext \
+    --class=de.uhh.lt.jst.dt.CoNLL2DepTermContext \
     --master=$master \
     --queue=$queue \
     --num-executors $num_executors \
