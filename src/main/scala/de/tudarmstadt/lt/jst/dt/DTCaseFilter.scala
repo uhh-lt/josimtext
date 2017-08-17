@@ -1,4 +1,4 @@
-package dt
+package de.tudarmstadt.lt.jst.dt
 
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -6,9 +6,9 @@ object DTCaseFilter {
     def main(args: Array[String]) {
         if (args.size < 2) {
             println("Filters out target words that at not all small caps or first capital + all small caps")
-            println("Usage: DTCaseFilter <dt-path.csv> <output-dt-directory>")
-            println("<dt>\tis a distributional thesaurus in the format 'word_i<TAB>word_j<TAB>similarity_ij[<TAB>features_ij]'")
-            println("<output-dt-directory>\toutput directory with the filtered distributional thesaurus")
+            println("Usage: DTCaseFilter <de.tudarmstadt.lt.jst.dt-path.csv> <output-de.tudarmstadt.lt.jst.dt-directory>")
+            println("<de.tudarmstadt.lt.jst.dt>\tis a distributional thesaurus in the format 'word_i<TAB>word_j<TAB>similarity_ij[<TAB>features_ij]'")
+            println("<output-de.tudarmstadt.lt.jst.dt-directory>\toutput directory with the filtered distributional thesaurus")
             return
         }
 

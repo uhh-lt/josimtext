@@ -1,14 +1,14 @@
-package dt
+package de.tudarmstadt.lt.jst.dt
 
 import org.apache.spark.{SparkConf, SparkContext}
 
 object DTFilter {
     def main(args: Array[String]) {
         if (args.size < 4) {
-            println("Usage: DTFilter <dt-path.csv> <mwe-vocabulary.csv> <output-dt-directory> <keep-single-words>")
-            println("<dt>\tis a distributional thesaurus in the format 'word_i<TAB>word_j<TAB>similarity_ij<TAB>features_ij'")
+            println("Usage: DTFilter <de.tudarmstadt.lt.jst.dt-path.csv> <mwe-vocabulary.csv> <output-de.tudarmstadt.lt.jst.dt-directory> <keep-single-words>")
+            println("<de.tudarmstadt.lt.jst.dt>\tis a distributional thesaurus in the format 'word_i<TAB>word_j<TAB>similarity_ij<TAB>features_ij'")
             println("<vocabulary>\tis a list of words that the program will keep (word_i and word_j must be in the list)")
-            println("<output-dt-directory>\toutput directory with the filtered distributional thesaurus")
+            println("<output-de.tudarmstadt.lt.jst.dt-directory>\toutput directory with the filtered distributional thesaurus")
             println("<keep-single-words>\tif 'true' then all single words are kept even if they are not in the <vocabulary.csv>.")
             println("<filter-only-target>\tif 'true' then only target words will be filtered and all related words will be kept.")
             return

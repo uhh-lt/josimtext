@@ -1,4 +1,4 @@
-package dt
+package de.tudarmstadt.lt.jst.dt
 
 import org.apache.hadoop.io.compress.GzipCodec
 import org.apache.spark.rdd.RDD

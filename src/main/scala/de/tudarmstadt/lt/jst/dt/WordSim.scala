@@ -1,4 +1,4 @@
-package dt
+package de.tudarmstadt.lt.jst.dt
 
 import org.apache.spark.{SparkConf, SparkContext}
 

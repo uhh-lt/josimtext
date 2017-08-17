@@ -1,6 +1,6 @@
 package wsd
 
-import dt.FreqFilter
+import de.tudarmstadt.lt.jst.dt.FreqFilter
 import org.apache.spark.{SparkConf, SparkContext}
 import utils.Util
 

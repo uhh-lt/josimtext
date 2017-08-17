@@ -1,4 +1,4 @@
-package dt
+package de.tudarmstadt.lt.jst.dt
 
 import de.tudarmstadt.lt.conll.{CoNLLParser, Row, Sentence}
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}

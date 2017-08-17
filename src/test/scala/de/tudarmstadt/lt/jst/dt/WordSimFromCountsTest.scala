@@ -1,4 +1,4 @@
-package dt
+package de.tudarmstadt.lt.jst.dt
 
 import java.io.File
 import java.nio.file.{FileSystems, Files, Paths}

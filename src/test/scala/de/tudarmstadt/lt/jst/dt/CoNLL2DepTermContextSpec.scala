@@ -1,9 +1,9 @@
-package dt
+package de.tudarmstadt.lt.jst.dt
 
 import com.holdenkarau.spark.testing.DatasetSuiteBase
 import org.scalatest.FlatSpec
 import de.tudarmstadt.lt.conll.CoNLLParser
-import dt.CoNLL2DepTermContext.TermContext
+import de.tudarmstadt.lt.jst.dt.CoNLL2DepTermContext.TermContext
 
 import scala.io.Source
 
