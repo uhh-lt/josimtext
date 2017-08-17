@@ -11,6 +11,7 @@ spark_gb=64 #8
 export HADOOP_CONF_DIR=/etc/hadoop/conf/
 export YARN_CONF_DIR=/etc/hadoop/conf/
 queue=default
+num_executors=2000
 
 bin_spark=`ls ../bin/spark/jo*.jar`
 bin_hadoop="../bin/hadoop/"
