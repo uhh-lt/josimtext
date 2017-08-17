@@ -9,6 +9,7 @@ yarn_conf_dir=/etc/hadoop/conf.cloudera.yarn/
 mwe_dict_path="voc/voc.txt" # "voc/voc-mwe6446031-dbpedia-babelnet-wordnet-dela.csv" #"voc/voc-mwe-dela-wiki-druid-wordnet-babelnet-8m.csv" 
 queue=default
 master=yarn
+num_executors=2000
 
 bin_spark=`ls ../bin/spark/jo*.jar`
 bin_hadoop="../bin/hadoop/"
