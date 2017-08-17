@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 if [ -z "$1" ] || [ -z "$3" ] ; then
-    echo "Compute a distributional thesaurus (DT) from an input corpus, a CoNLL file, or a term-context CSV file."
+    echo "Compute a distributional thesaurus (DT) from a directory containing three CSV files: W- (word freqs), F- (feature freqs), WF- (word-feature freqs)"
+    #this is what the script needs to do: echo "Compute a distributional thesaurus (DT) from an input corpus, a CoNLL file, or a term-context CSV file."
     echo "parameters: <input-directory> <output-directory> <config.sh>"
     exit
 fi
