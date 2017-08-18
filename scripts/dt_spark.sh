@@ -1,55 +1,52 @@
 #!/usr/bin/env bash
 
-if [ -z "$1" ] || [ -z "$3" ] ; then
-    echo "Compute a distributional thesaurus (DT) from a directory containing three CSV files: W- (word freqs), F- (feature freqs), WF- (word-feature freqs)"
-    #this is what the script needs to do: echo "Compute a distributional thesaurus (DT) from an input corpus, a CoNLL file, or a term-context CSV file."
-    echo "parameters: <input-directory> <output-directory> <config.sh>"
+set -o nounset # Error on referencing undefined variables, shorthand: set -n
+set -o errexit # Abort on error, shorthand: set -e
+
+if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ] || [ -z "$4" ]; then
+    echo "Compute a DT from different input formats (conll, corpus, termcontext)"
+    echo "parameters: <format> <input-directory> <output-directory> <config.sh>"
     exit
 fi
 
+
+format=${1}
+input=${2}
+output=${3}
+
 # System parameters
-source $3
+source $4
 
-# Term similarity
-WordsPerFeature=1000 # 100 1000 10000
-FeaturesPerWord=2000 # 100 1000 10000
-MinWordFreq=5
-MinFeatureFreq=5
-MinWordFeatureFreq=2
-Significance=LMI
-MinFeatureSignif=0.0
-NearestNeighboursNum=200
-
-# Process input params
-input=$1
-output=$2
-wordFeatureCountsFile=$input/WF.*
-wordCountsFile=$input/W.*
-featureCountsFile=$input/F.*
-wordsim="${output}/sign-${Significance}_wpf-${WordsPerFeature}_fpw-${FeaturesPerWord}_minw-${MinWordFreq}_minf-${MinFeatureFreq}_minwf-${MinWordFeatureFreq}_minsign-${MinFeatureSignif}_nnn-${NearestNeighboursNum}"
-
+echo "Format: $format"
 echo "Input: $input"
-echo "Output: $wordsim"
+echo "Output: $output"
 echo "To start press any key, to stop press Ctrl+C"
 read -n 2
 
-$spark \
-    --class=de.uhh.lt.jst.dt.WordSimFromCounts \
+if [ "$format" = "conll" ];
+ then
+    $spark \
+    --class=de.uhh.lt.jst.dt.CoNLL2DepTermContext \
     --master=$master \
     --queue=$queue \
     --num-executors $num_executors \
     --driver-memory ${spark_gb}g \
     --executor-memory ${spark_gb}g \
     $bin_spark \
-    $wordCountsFile \
-    $featureCountsFile \
-    $wordFeatureCountsFile \
-    $wordsim \
-    $WordsPerFeature \
-    $FeaturesPerWord \
-    $MinWordFreq \
-    $MinFeatureFreq \
-    $MinWordFeatureFreq \
-    $MinFeatureSignif \
-    $Significance \
-    $NearestNeighboursNum
+    $input \
+    $output
+elif [ "$format" = "corpus" ]
+then
+    $spark \
+    --class=de.uhh.lt.jst.dt.Text2TrigramTermContext \
+    --master=$master \
+    --queue=$queue \
+    --num-executors $num_executors \
+    --driver-memory ${spark_gb}g \
+    --executor-memory ${spark_gb}g \
+    $bin_spark \
+    $input \
+    $output
+else
+    echo "Format $format, currently not implemented"
+fi
