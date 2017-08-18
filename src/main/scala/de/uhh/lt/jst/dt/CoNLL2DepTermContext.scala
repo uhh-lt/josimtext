@@ -1,9 +1,9 @@
 package de.uhh.lt.jst.dt
 
 import de.uhh.lt.conll.{CoNLLParser, Row, Sentence}
-import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
-import org.apache.spark.sql.functions.{explode, udf}
 import de.uhh.lt.spark.corpus._
+import org.apache.spark.sql.functions.udf
+import org.apache.spark.sql.{Dataset, SparkSession}
 
 object CoNLL2DepTermContext {
 
@@ -54,7 +54,7 @@ object CoNLL2DepTermContext {
   def extractDepTermContextPairs(rows: Seq[Row]): Seq[TermContext] = {
     rows.flatMap { row =>
       val id = row.id.toInt
-      if(row.deps == "_") {
+      if (row.deps == "_") {
         None
       } else {
         val dep = extractDepTermContextForId(rows, id)
@@ -78,7 +78,7 @@ object CoNLL2DepTermContext {
         val headLemma = rows(headId.toInt).lemma
         val depLemma = depRow.lemma
 
-        if (! inverse)
+        if (!inverse)
           TermContext(depLemma, s"$depRel#$headLemma")
         else
           TermContext(headLemma, s"-$depRel#$depLemma")

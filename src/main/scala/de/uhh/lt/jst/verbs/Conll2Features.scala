@@ -1,12 +1,12 @@
 package de.uhh.lt.jst.verbs
 
 import de.uhh.lt.jst.corpus.ReformatConll
+import de.uhh.lt.jst.utils.{Const, Util}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.rdd.RDD
-import de.uhh.lt.jst.utils.{Const, Util}
+import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.mutable.ListBuffer
 import scala.util.Try

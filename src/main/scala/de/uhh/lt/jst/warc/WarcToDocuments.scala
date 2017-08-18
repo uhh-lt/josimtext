@@ -1,12 +1,10 @@
 package de.uhh.lt.jst.warc
 
+import de.uhh.lt.jst.utils.Util
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.spark.{SparkConf, SparkContext}
-import de.uhh.lt.jst.utils.Util
-import de.uhh.lt.jst.verbs.Conll2Features.conllRecordDelimiter
-import scala.util.matching.Regex
 
 object WarcToDocuments {
 
@@ -31,18 +29,18 @@ object WarcToDocuments {
     run(sc, inputPath, outputPath)
   }
 
-  def getBody(document:String) = {
+  def getBody(document: String) = {
     document
-      .replace("\r","")
+      .replace("\r", "")
       .split("\n")
-      .filter{ line => warcHeaderRegex.findFirstIn(line).isEmpty }
+      .filter { line => warcHeaderRegex.findFirstIn(line).isEmpty }
       .map { line => line.replaceAll("\\s+", " ") }
       .mkString("   ")
 
 
   }
 
-  def run(sc: SparkContext, inputDir:String, outputDir:String) = {
+  def run(sc: SparkContext, inputDir: String, outputDir: String) = {
     val conf = new Configuration
     conf.set("textinputformat.record.delimiter", warcDocumentDelimiter)
 
@@ -52,7 +50,7 @@ object WarcToDocuments {
 
     val unaggregatedFeatures = sc
       .newAPIHadoopFile(inputDir, classOf[TextInputFormat], classOf[LongWritable], classOf[Text], conf)
-      .map{ documentText =>
+      .map { documentText =>
 
         val document = documentText._2.toString
 
@@ -73,7 +71,7 @@ object WarcToDocuments {
         if (body.length > 1) s"$url\t$s3\t$body"
         else "-1"
       }
-      .filter{ line => line != "-1"}
+      .filter { line => line != "-1" }
       .saveAsTextFile(outputDir)
   }
 }

@@ -1,8 +1,8 @@
 package de.uhh.lt.jst.dt
 
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.rdd.RDD
 import de.uhh.lt.jst.utils.Util
+import org.apache.spark.rdd.RDD
+import org.apache.spark.{SparkConf, SparkContext}
 
 
 object FreqFilter {
@@ -11,7 +11,7 @@ object FreqFilter {
       println("Usage: FreqFilter <freq-csv> <vocabulary-csv> <output-freq-csv> <keep-single-words>")
       println("<freq-csv>\tpath to a csv with word counts 'word<TAB>freq'")
       println("<vocabulary-csv>\tpath to a list of words that will be kept in the output (word must be in the list). " +
-      "words in all registers will be kept if present in the vocabulary.")
+        "words in all registers will be kept if present in the vocabulary.")
       println("<output-freq-csv>\tpath to output with the filtered word counts")
       println("<keep-single-words>\tif 'true' then all single words are kept even if they are not in the <vocabulary-csv>. default -- 'true'.")
       return
@@ -41,7 +41,7 @@ object FreqFilter {
 
     // Save the result
     freqFiltered
-      .map({case (word, freq) => word + "\t" + freq})
+      .map({ case (word, freq) => word + "\t" + freq })
       .saveAsTextFile(outPath)
   }
 

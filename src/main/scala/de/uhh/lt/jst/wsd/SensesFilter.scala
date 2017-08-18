@@ -1,8 +1,8 @@
 package de.uhh.lt.jst.wsd
 
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.rdd.RDD
 import de.uhh.lt.jst.utils.{Const, Util}
+import org.apache.spark.rdd.RDD
+import org.apache.spark.{SparkConf, SparkContext}
 
 object SensesFilter {
   def main(args: Array[String]) {
@@ -32,7 +32,7 @@ object SensesFilter {
   }
 
   def runCli(sc: SparkContext, inSensesPath: String, inVocPath: String, outSensesPath: String,
-             lowercase: Boolean, lowerOrFirstUpper:Boolean) = {
+             lowercase: Boolean, lowerOrFirstUpper: Boolean) = {
     val outVocPath = inVocPath + "-voc.csv"
     println("Input senses: " + inSensesPath)
     println("Input vocabulary:" + inVocPath)
@@ -54,15 +54,16 @@ object SensesFilter {
       .saveAsTextFile(outVocPath)
   }
 
-  def run(inSensesPath: String, voc: Set[String], sc: SparkContext, lowercase: Boolean = true, lowerOrFirstUpper:Boolean = true): (RDD[(String, String, String)], RDD[String]) = {
+  def run(inSensesPath: String, voc: Set[String], sc: SparkContext, lowercase: Boolean = true, lowerOrFirstUpper: Boolean = true): (RDD[(String, String, String)], RDD[String]) = {
     val senses: RDD[(String, String, String)] = sc.textFile(inSensesPath)
       .map { line => line.split("\t") }
       .map {
         case Array(target, sense_id, cluster) => (target, sense_id, cluster)
         case Array(target, sense_id, cluster, isas) => (target, sense_id, cluster)
-        case _ => ("?", "0", "") }
+        case _ => ("?", "0", "")
+      }
       .filter { case (target, sense_id, cluster) => voc.contains(if (lowercase) target.toLowerCase() else target) }
-      .filter {case (target, sense_id, cluster) => !lowerOrFirstUpper || target.length <= 1 || target.substring(1).toLowerCase() == target.substring(1)}
+      .filter { case (target, sense_id, cluster) => !lowerOrFirstUpper || target.length <= 1 || target.substring(1).toLowerCase() == target.substring(1) }
     val clusterVoc = senses
       .map { case (target, sense_id, cluster) => (cluster) }
       .flatMap { case (cluster) => cluster.split(Const.LIST_SEP) }

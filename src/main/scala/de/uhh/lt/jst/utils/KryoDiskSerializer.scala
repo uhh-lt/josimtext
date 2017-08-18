@@ -13,73 +13,73 @@ import scala.reflect.ClassTag
 
 /**
   * Adapted from https://github.com/phatak-dev/blog/blob/master/code/kryoexample/src/main/scala/com/madhu/spark/kryo/KryoExample.scala
-  * */
+  **/
 
 object KryoDiskSerializer {
 
-    def main(args: Array[String]) {
-        if (args.length < 1) {
-            println("Usage: <output-path>")
-            return
-        }
-        val outputPath = args(0)
-
-        val conf = new SparkConf().setMaster("local").setAppName("kryoexample")
-        conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-        val sc = new SparkContext(conf)
-
-        //create some dummy data
-        val personList = 1 to 10000 map (value => new Person(value + ""))
-        val personRDD = sc.makeRDD(personList)
-
-        saveAsObjectFile(personRDD, outputPath)
-        val rdd = objectFile[Person](sc, outputPath)
-        println(rdd.map(person => person.name).collect().toList)
+  def main(args: Array[String]) {
+    if (args.length < 1) {
+      println("Usage: <output-path>")
+      return
     }
+    val outputPath = args(0)
 
-    /*
-     * Used to write as Object file using kryo serialization
-     */
-    def saveAsObjectFile[T: ClassTag](rdd: RDD[T], path: String) {
-        val kryoSerializer = new KryoSerializer(rdd.context.getConf)
+    val conf = new SparkConf().setMaster("local").setAppName("kryoexample")
+    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+    val sc = new SparkContext(conf)
 
-        rdd.mapPartitions(iter => iter.grouped(10)
-            .map(_.toArray))
-            .map(splitArray => {
-                //initializes kyro and calls your registrator class
-                val kryo = kryoSerializer.newKryo()
+    //create some dummy data
+    val personList = 1 to 10000 map (value => new Person(value + ""))
+    val personRDD = sc.makeRDD(personList)
 
-                //convert data to bytes
-                val bao = new ByteArrayOutputStream()
-                val output = kryoSerializer.newKryoOutput()
-                output.setOutputStream(bao)
-                kryo.writeClassAndObject(output, splitArray)
-                output.close()
+    saveAsObjectFile(personRDD, outputPath)
+    val rdd = objectFile[Person](sc, outputPath)
+    println(rdd.map(person => person.name).collect().toList)
+  }
 
-                // we are ignoring key field of sequence file
-                val byteWritable = new BytesWritable(bao.toByteArray)
-                (NullWritable.get(), byteWritable)
-            }).saveAsSequenceFile(path)
-    }
+  /*
+   * Used to write as Object file using kryo serialization
+   */
+  def saveAsObjectFile[T: ClassTag](rdd: RDD[T], path: String) {
+    val kryoSerializer = new KryoSerializer(rdd.context.getConf)
 
-    /*
-     * Method to read from object file which is saved kryo format.
-     */
-    def objectFile[T](sc: SparkContext, path: String, minPartitions: Int = 1)(implicit ct: ClassTag[T]) = {
-        val kryoSerializer = new KryoSerializer(sc.getConf)
+    rdd.mapPartitions(iter => iter.grouped(10)
+      .map(_.toArray))
+      .map(splitArray => {
+        //initializes kyro and calls your registrator class
+        val kryo = kryoSerializer.newKryo()
 
-        sc.sequenceFile(path, classOf[NullWritable], classOf[BytesWritable], minPartitions)
-            .flatMap(x => {
-                val kryo = kryoSerializer.newKryo()
-                val input = new Input()
-                input.setBuffer(x._2.getBytes)
-                val data = kryo.readClassAndObject(input)
-                val dataObject = data.asInstanceOf[Array[T]]
-                dataObject
-            })
-    }
+        //convert data to bytes
+        val bao = new ByteArrayOutputStream()
+        val output = kryoSerializer.newKryoOutput()
+        output.setOutputStream(bao)
+        kryo.writeClassAndObject(output, splitArray)
+        output.close()
 
-    // user defined class that need to serialized
-    class Person(val name: String)
+        // we are ignoring key field of sequence file
+        val byteWritable = new BytesWritable(bao.toByteArray)
+        (NullWritable.get(), byteWritable)
+      }).saveAsSequenceFile(path)
+  }
+
+  /*
+   * Method to read from object file which is saved kryo format.
+   */
+  def objectFile[T](sc: SparkContext, path: String, minPartitions: Int = 1)(implicit ct: ClassTag[T]) = {
+    val kryoSerializer = new KryoSerializer(sc.getConf)
+
+    sc.sequenceFile(path, classOf[NullWritable], classOf[BytesWritable], minPartitions)
+      .flatMap(x => {
+        val kryo = kryoSerializer.newKryo()
+        val input = new Input()
+        input.setBuffer(x._2.getBytes)
+        val data = kryo.readClassAndObject(input)
+        val dataObject = data.asInstanceOf[Array[T]]
+        dataObject
+      })
+  }
+
+  // user defined class that need to serialized
+  class Person(val name: String)
 
 }

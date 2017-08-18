@@ -45,8 +45,8 @@ object Text2TrigramTermContext {
 
     val text2Trigram = (text: String) => CoNLLParser.parseSingleSentence(text).comments
 
-   val ds = spark.read.text(path)
-        .flatMap(text => text2TrigramTermContext(text.getAs("value")))
+    val ds = spark.read.text(path)
+      .flatMap(text => text2TrigramTermContext(text.getAs("value")))
 
     ds
   }

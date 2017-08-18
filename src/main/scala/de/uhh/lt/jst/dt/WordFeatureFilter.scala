@@ -1,8 +1,8 @@
 package de.uhh.lt.jst.dt
 
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.rdd.RDD
 import de.uhh.lt.jst.utils.Util
+import org.apache.spark.rdd.RDD
+import org.apache.spark.{SparkConf, SparkContext}
 
 
 object WordFeatureFilter {
@@ -42,7 +42,7 @@ object WordFeatureFilter {
       .saveAsTextFile(outFeatureVocPath)
 
     wordFeatureFreq
-      .map({case (word, feature, freq) => word + "\t" + feature + "\t" + freq})
+      .map({ case (word, feature, freq) => word + "\t" + feature + "\t" + freq })
       .saveAsTextFile(outputPath)
   }
 
