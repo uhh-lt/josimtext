@@ -70,7 +70,7 @@ object CoNLL2DepTermContext {
 
     assert(depRow.deps != "_")
 
-    val depRegex = raw"(\d+):(\w+)".r
+    val depRegex = raw"(\d+):(.+)".r
 
     depRow.deps match {
       case depRegex(headId, depRel) =>

@@ -1,35 +1,8 @@
 package de.uhh.lt.conll
 
-import java.io.{Reader, StringReader}
-
-import com.univocity.parsers.csv._
-
 object CoNLLParser {
-  private val parser: CsvParser = {
-    val NULL_CHAR = '\u0000'
-    val quoteChar: Char = NULL_CHAR
-    val escapeChar: Char = NULL_CHAR
-    val delimiter: Char = '\t'
-    val lineSeparator: String = "\n" // ?
 
-    val settings = new CsvParserSettings()
-    val format = settings.getFormat
-    format.setDelimiter(delimiter)
-    format.setQuote(quoteChar)
-    format.setQuoteEscape(escapeChar)
-    format.setLineSeparator(lineSeparator)
-    //format.setComment(NULL_CHAR) ?
-    //settings.setIgnoreLeadingWhitespaces(true) ?
-    //settings.setIgnoreTrailingWhitespaces(true) ?
-    settings.setReadInputOnSeparateThread(false)
-    //settings.setInputBufferSize(128) ?
-    //settings.setMaxColumns(20480) ?
-    settings.setNullValue("")
-    //settings.setMaxCharsPerColumn(-1) ?
-    //settings.setUnescapedQuoteHandling(UnescapedQuoteHandling.STOP_AT_DELIMITER)
-
-    new CsvParser(settings)
-  }
+  case class CoNLLSchemaError(msg: String) extends Exception(msg)
 
   def parseSingleSentence(text: String): Sentence = {
     val lines = text.lines.buffered
@@ -39,12 +12,18 @@ object CoNLLParser {
     val commentLines = takeFromIteratorWhile(lines, isComment)
     val sentenceLines = takeFromIteratorWhile(lines, isNotComment)
 
-    val rows = sentenceLines.map(parser.parseLine).map(readRow)
+    // Split without -1 would remove empty values: https://stackoverflow.com/a/14602089
+    val rows = sentenceLines.map(_.split("\t", -1)).map(readRow)
 
     Sentence(comments = commentLines, rows = rows)
   }
 
   private def readRow(row: Array[String]): Row = {
+    if (row.length != 10)
+      throw CoNLLSchemaError(
+        s"Row has not 10 columns but ${row.length}, content: ${row.mkString("-t-")}"
+      )
+
     Row(
       id = row(0),
       form = row(1),

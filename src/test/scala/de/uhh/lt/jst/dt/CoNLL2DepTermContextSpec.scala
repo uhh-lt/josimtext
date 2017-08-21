@@ -2,7 +2,7 @@ package de.uhh.lt.jst.dt
 
 import com.holdenkarau.spark.testing.DatasetSuiteBase
 import org.scalatest.FlatSpec
-import de.uhh.lt.conll.CoNLLParser
+import de.uhh.lt.conll.{CoNLLParser, Row, Sentence}
 import de.uhh.lt.jst.dt.CoNLL2DepTermContext.TermContext
 
 import scala.io.Source
@@ -26,6 +26,8 @@ class CoNLL2DepTermContextSpec extends FlatSpec with DatasetSuiteBase {
     ("Tips", "-punct#.")
   ).map(TermContext.apply _ tupled _)
 
+
+
   it should "extract dependency term context pairs from CoNLL file" in {
     val path = Option(this.getClass.getResource("/conll.csv")).map(_.getPath).get
     val text = Source.fromFile(path).mkString
@@ -46,5 +48,27 @@ class CoNLL2DepTermContextSpec extends FlatSpec with DatasetSuiteBase {
     val expected = sc.parallelize(expectedTermContextPairs).toDS
 
     assertDatasetEquals(expected, result)
+  }
+
+  it should "extract correctly from deps with non alphanum tokens" in {
+    val rows: Seq[Row] = Seq(Row(
+      id = "0",
+      form = "usr/lib/fglrx",
+      lemma = "usr/lib/fglrx",
+      upostag = "NN",
+      xpostag = "NN",
+      feats = "",
+      head = "0",
+      deprel = "pobj",
+      deps = "0:prep_usr/", // slashes do appear in the data
+      misc = "O"
+    ))
+
+    val deps = CoNLL2DepTermContext.extractDepTermContextPairs(rows)
+    val expected = Seq(
+      TermContext("usr/lib/fglrx","prep_usr/#usr/lib/fglrx"),
+      TermContext("usr/lib/fglrx","-prep_usr/#usr/lib/fglrx")
+    )
+    assert(deps, expected)
   }
 }

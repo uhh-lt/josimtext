@@ -43,8 +43,6 @@ object Text2TrigramTermContext {
   def convertWithSpark(path: String)(implicit spark: SparkSession): Dataset[TermContext] = {
     import spark.implicits._
 
-    val text2Trigram = (text: String) => CoNLLParser.parseSingleSentence(text).comments
-
     val ds = spark.read.text(path)
       .flatMap(text => text2TrigramTermContext(text.getAs("value")))
 
