@@ -1,4 +1,5 @@
-# requires git, mvn, sbt, scala 
+#!/usr/bin/env bash
+# requires git, mvn, sbt, scala
 
 mkdir JoSimText
 cd JoSimText

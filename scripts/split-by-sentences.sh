@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 if [ -z "$1" ] || [ -z "$3" ] ; then
     echo "Split input corpus into one sentence per line, make the sentences unique, remove html."
     echo "parameters: <corpus-directory> <output-directory> <queue>"
@@ -18,7 +19,7 @@ jars=`echo $bin/*.jar | tr " " ","`
 path=`echo $bin/*.jar | tr " " ":"`
 
 HADOOP_CLASSPATH=$path hadoop \
-    de.tudarmstadt.lt.jst.SentenceSplitter.HadoopMain \
+    de.uhh.lt.jst.SentenceSplitter.HadoopMain \
     -libjars $jars \
     -Dmapreduce.reduce.failures.maxpercent=10 \
     -Dmapreduce.map.failures.maxpercent=10 \

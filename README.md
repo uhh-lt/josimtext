@@ -84,7 +84,7 @@ these frequencies are used both for DT computation, as well as for contextualiza
 Run the class "JoBimExtractAndCount" using Hadoop:
 
 ```
-mvn-hadoop de.tudarmstadt.lt.wsi.JoBimExtractAndCount
+mvn-hadoop de.uhh.lt.wsi.JoBimExtractAndCount
 -Dmapreduce.map.memory.mb=4096 
 -Dmapreduce.task.io.sort.mb=1028
 -Dmapreduce.local.map.tasks.maximum=4
@@ -142,7 +142,7 @@ hadoop fs -text WSI_OUT/wordsim/SimPruned/part* > DATA_DIR/dt
 ```
 
 ```
-mvn-run de.tudarmstadt.lt.wsi.WSI
+mvn-run de.uhh.lt.wsi.WSI
 -clustering mcl
 -in DATA_DIR/dt
 -out DATA_DIR/dt_Clusters__e0__N010__n010-mcl
