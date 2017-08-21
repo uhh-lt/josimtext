@@ -3,12 +3,11 @@
 set -o nounset # Error on referencing undefined variables, shorthand: set -n
 set -o errexit # Abort on error, shorthand: set -e
 
-if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ] || [ -z "$4" ]; then
+if [ $# -lt 4 ]; then
     echo "Compute a DT from different input formats (conll, corpus, termcontext)"
     echo "parameters: <format> <input-directory> <output-directory> <config.sh>"
     exit
 fi
-
 
 format=${1}
 input=${2}
