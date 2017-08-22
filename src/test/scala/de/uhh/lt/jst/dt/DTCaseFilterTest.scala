@@ -1,7 +1,6 @@
 package de.uhh.lt.jst.dt
 
 import com.holdenkarau.spark.testing.SharedSparkContext
-import de.uhh.lt.testtags.NeedsMissingFiles
 import org.scalatest._
 
 class DTCaseFilterTest extends FlatSpec with Matchers with SharedSparkContext {
@@ -12,9 +11,9 @@ class DTCaseFilterTest extends FlatSpec with Matchers with SharedSparkContext {
     DTCaseFilter.run(sc, dtPath, outputPath)
   }
 
-  ignore should "filter DT by vocabulary" taggedAs NeedsMissingFiles in {
-    //val senses =  getClass.getResource(Const.PRJ.SENSES).getPath()
-    run(dtPath = "/Users/alex/Desktop/w2v-jbt-nns/dt-text.csv")
+  it should "filter DT by vocabulary" in {
+    val dtPath =  getClass.getResource("/dt-tiny.csv").getPath()
+    run(dtPath)
   }
 }
 

@@ -3,13 +3,13 @@ package de.uhh.lt.jst.corpus
 import java.nio.file.Paths
 
 import com.holdenkarau.spark.testing.SharedSparkContext
-import de.uhh.lt.testtags.BrokenTest
 import org.scalatest._
 
 import scala.io.Source
 
 class FilterSentencesTest extends FlatSpec with Matchers with SharedSparkContext {
-  lazy val SENTENCES_PATH = getClass.getResource("/noisy-sentences.txt.gz").getPath
+  val inputPath = getClass.getResource("/noisy-sentences.txt.gz").getPath
+  val outputPath =  inputPath + "-output"
 
   def run(inputPath: String) = {
     val outputPath = inputPath + "-output"
@@ -17,12 +17,9 @@ class FilterSentencesTest extends FlatSpec with Matchers with SharedSparkContext
     outputPath
   }
 
-  // Aborted with message:
-  // java.lang.NullPointerException
-  // at de.uhh.lt.jst.corpus.FilterSentencesTest.<init>(FilterSentencesTest.scala:11)
-  ignore should "filter noisy sentences" taggedAs BrokenTest in {
-    val outputPath = run(SENTENCES_PATH)
-    val lines = Source.fromFile(Paths.get(outputPath, "part-00000").toString).getLines.toList
+  it should "filter noisy sentences" in {
+    val outputPath = run(inputPath)
+    val lines = Source.fromFile(Paths.get(outputPath, "/part-00000").toString).getLines.toList
     lines.length should equal(942) // out of 1000
   }
 }

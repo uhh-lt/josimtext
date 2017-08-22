@@ -12,7 +12,7 @@ object Const {
   val PRIOR_PROB = 0.000010
 
   object FeatureExtractionTests {
-    val conll = "/conll.csv.gz"
+    val conll = "/conll-large.csv.gz"
     val warc = "/cc-test.warc.gz"
   }
 
@@ -27,16 +27,15 @@ object Const {
     val WORDS = "/prj-w.csv"
     val WORD_FEATURES = "/prj-wf.csv"
 
+    // these large files can downloaded from http://panchenko.me/data/joint/josimtext/
+    // and placed into the src/test/resources/wsd-test-data/
     object WSD_RES {
-      val dir = "/Users/alex/Desktop/prj/test-res" // can be downloaded from http://panchenko.me/data/joint/jst/test-res.tar.gz
+      val dir = "/wsd-test-data"
       val clusters = dir + "/clusters.csv"
       val coocs = dir + "/depwords.csv"
       val trigrams = dir + "/trigrams.csv"
       val deps = dir + "/deps.csv"
       val contexts = dir + "/contexts.csv"
-      val wordsTrigram = dir + "/W-trigram"
-      val featuresTrigram = dir + "/F-trigram"
-      val wordsFeaturesTrigram = dir + "/WF-trigram"
     }
 
   }
