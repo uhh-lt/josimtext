@@ -2,7 +2,7 @@ package de.uhh.lt.jst.wsd
 
 
 import com.holdenkarau.spark.testing.SharedSparkContext
-import de.uhh.lt.testtags.NeedsMissingFiles
+import de.uhh.lt.testing.tags.NeedsMissingFiles
 import org.scalatest._
 import de.uhh.lt.jst.utils.Const
 

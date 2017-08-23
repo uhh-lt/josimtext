@@ -3,7 +3,7 @@ package de.uhh.lt.jst.verbs
 import com.holdenkarau.spark.testing.SharedSparkContext
 import org.scalatest._
 import de.uhh.lt.jst.utils.Const
-import de.uhh.lt.testtags.NeedsMissingFiles
+import de.uhh.lt.testing.tags.NeedsMissingFiles
 
 class Conll2FeaturesTest extends FlatSpec with Matchers  with SharedSparkContext {
 
