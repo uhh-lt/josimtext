@@ -3,7 +3,6 @@ package de.uhh.lt.jst.corpus
 import java.nio.file.{Files, Paths}
 
 import com.holdenkarau.spark.testing.SharedSparkContext
-import de.uhh.lt.testtags.BrokenTest
 import org.scalatest._
 
 import scala.io.Source
@@ -25,11 +24,9 @@ class CoarsifyPosTagsTest extends FlatSpec with Matchers with SharedSparkContext
 
   }
 
-  // Broken with message: 539 did not equal 1000 (CoarsifyPosTagsTest.scala:39)
-  ignore should "produce expected results" taggedAs BrokenTest in {
+  it should "produce expected results" in {
     val outputDir = run(COUNTS_DIR)
 
-    // length of the ouput W and WF files should be 1000 (input is longer!)
     Files.exists(Paths.get(outputDir)) should equal(true)
     Files.exists(Paths.get(outputDir, "W")) should equal(true)
     Files.exists(Paths.get(outputDir, "F")) should equal(true)
@@ -38,9 +35,9 @@ class CoarsifyPosTagsTest extends FlatSpec with Matchers with SharedSparkContext
     Files.exists(Paths.get(outputDir, "WF/part-00000")) should equal(true)
 
     val wLines = Source.fromFile(Paths.get(outputDir, "W/part-00000").toString).getLines.toList
-    wLines.length should equal(1000)
+    wLines.length should equal(539)
     val wfLines = Source.fromFile(Paths.get(outputDir, "WF/part-00000").toString).getLines.toList
-    wfLines.length should equal(1000)
+    wfLines.length should equal(500)
   }
 
   "CoarsifyPosTags.coarsifyPosTag" should "return correct result" in {

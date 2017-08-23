@@ -1,9 +1,9 @@
 package de.uhh.lt.jst.wsd
 
 import com.holdenkarau.spark.testing.SharedSparkContext
-import de.uhh.lt.testtags.NeedsMissingFiles
 import org.scalatest._
 import de.uhh.lt.jst.utils.Const
+import de.uhh.lt.testtags.NeedsMissingFiles
 
 class SenseFeatureAggregatorTest extends FlatSpec with Matchers with SharedSparkContext {
   "The SenseFeatureAggregatorTest object" should "skip wrong trigrams" in {
@@ -14,23 +14,17 @@ class SenseFeatureAggregatorTest extends FlatSpec with Matchers with SharedSpark
 
   def agg(senses: String) = {
     val output = senses + "-output"
-    val words = Const.PRJ_TEST.WSD_RES.wordsTrigram
-    val features = Const.PRJ_TEST.WSD_RES.featuresTrigram
-    val wordFeatures = Const.PRJ_TEST.WSD_RES.wordsFeaturesTrigram
+    val words = Const.PRJ_TEST.WORDS
+    val features = Const.PRJ_TEST.FEATURES
+    val wordFeatures = Const.PRJ_TEST.WORD_FEATURES
     val featureType = "trigrams"
     println(s"Senses: $senses")
     println(s"Output: $output")
-
     SenseFeatureAggregator.run(sc, senses, words, features, wordFeatures, output, featureType)
   }
 
   ignore should "run Aggregate PRJ" taggedAs NeedsMissingFiles in {
     val senses = getClass.getResource(Const.PRJ_TEST.SENSES).getPath()
-    agg(senses)
-  }
-
-  ignore should "run Aggregate WordNet" taggedAs NeedsMissingFiles in {
-    val senses = "/Users/alex/Desktop/topic_signatures_kb_semeval_16/inventory/senses.csv"
     agg(senses)
   }
 }

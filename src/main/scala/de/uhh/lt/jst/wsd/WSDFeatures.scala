@@ -2,9 +2,6 @@ package de.uhh.lt.jst.wsd
 
 import scala.util.Try
 
-/**
-  * Created by sasha on 13/06/17.
-  */
 object WSDFeatures extends Enumeration {
   type WSDFeatures = Value
   val Depstarget, Depsall, Coocs, Clusters, DepsallCoocsClusters, DepstargetCoocsClusters,

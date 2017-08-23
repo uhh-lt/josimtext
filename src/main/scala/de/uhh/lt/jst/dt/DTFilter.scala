@@ -46,9 +46,10 @@ object DTFilter {
 
     val dt = sc.textFile(dtPath)
       .map(line => line.split("\t"))
-      .map { case Array(word_i, word_j, sim_ij, features_ij) => (word_i, word_j, sim_ij, features_ij)
-      case Array(word_i, word_j, sim_ij) => (word_i, word_j, sim_ij, "?")
-      case _ => ("?", "?", "?", "?")
+      .map {
+        case Array(word_i, word_j, sim_ij, features_ij) => (word_i, word_j, sim_ij, features_ij)
+        case Array(word_i, word_j, sim_ij) => (word_i, word_j, sim_ij, "")
+        case _ => ("?", "?", "?", "?")
       }
 
     val dt_filter =

@@ -1,7 +1,7 @@
 package de.uhh.lt.jst.wsd
 
 import com.holdenkarau.spark.testing.SharedSparkContext
-import de.uhh.lt.testtags.NeedsMissingFiles
+import de.uhh.lt.jst.utils.Const
 import org.scalatest._
 
 class SenseFilterTest extends FlatSpec with Matchers  with SharedSparkContext {
@@ -12,9 +12,9 @@ class SenseFilterTest extends FlatSpec with Matchers  with SharedSparkContext {
     SensesFilter.runCli(sc, sensesPath, vocPath, outputPath, lowercase = true, lowerOrFirstUpper = true)
   }
 
-  ignore should "filter sense clusters by vocabulary" taggedAs NeedsMissingFiles in {
-    //val senses =  getClass.getResource(Const.PRJ.SENSES).getPath()
-    run(sensesPath="/Users/sasha/Desktop/w2v-jbt-nns/senses-test.csv",
-      vocPath="/Users/sasha/Desktop/w2v-jbt-nns/voc.csv")
+  it should "filter sense clusters by vocabulary" in {
+    val sensesPath = getClass.getResource(Const.PRJ_TEST.SENSES).getPath()
+    val vocPath = getClass.getResource("/voc-tiny.csv").getPath()
+    run(sensesPath, vocPath)
   }
 }
