@@ -12,7 +12,7 @@ config=$3
 source $config
 
 spark-submit \
-    --class ReformatConll \
+    --class de.uhh.lt.jst.corpus.ReformatConll \
     --master=$master \
     --queue=$queue \
     --driver-memory 8g \
