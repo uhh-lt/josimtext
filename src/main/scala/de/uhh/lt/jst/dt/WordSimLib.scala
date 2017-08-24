@@ -1,6 +1,5 @@
 package de.uhh.lt.jst.dt
 
-import de.uhh.lt.jst.dt.SimMeasures
 import org.apache.hadoop.io.compress.GzipCodec
 import org.apache.spark.rdd.RDD
 

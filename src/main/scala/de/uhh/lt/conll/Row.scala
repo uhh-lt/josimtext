@@ -14,4 +14,6 @@ case class Row(
   // or a defined language-specific subtype of one.
   deps: String, // Enhanced dependency graph in the form of a list of head-deprel pairs.
   misc: String // Any other annotation.
-)
+) {
+  def depsIsEmpty: Boolean = Seq("_", "") contains deps
+}

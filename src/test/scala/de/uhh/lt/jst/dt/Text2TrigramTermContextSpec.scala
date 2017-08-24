@@ -1,7 +1,7 @@
 package de.uhh.lt.jst.dt
 
 import com.holdenkarau.spark.testing.DatasetSuiteBase
-import de.uhh.lt.jst.dt.Text2TrigramTermContext.TermContext
+import de.uhh.lt.jst.dt.entities.TermContext
 import org.scalatest._
 
 import scala.io.Source
