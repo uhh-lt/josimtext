@@ -6,7 +6,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 object DTFilter {
   def main(args: Array[String]) {
     if (args.size < 4) {
-      println("Usage: DTFilter <de.uhh.ltdt-path.csv> <mwe-vocabulary.csv> <output-dt-directory> <keep-single-words>")
+      println("Usage: DTFilter <dt-path.csv> <mwe-vocabulary.csv> <output-dt-directory> <keep-single-words>")
       println("<dt>\tis a distributional thesaurus in the format 'word_i<TAB>word_j<TAB>similarity_ij<TAB>features_ij'")
       println("<vocabulary>\tis a list of words that the program will keep (word_i and word_j must be in the list)")
       println("<output-dt-directory>\toutput directory with the filtered distributional thesaurus")
