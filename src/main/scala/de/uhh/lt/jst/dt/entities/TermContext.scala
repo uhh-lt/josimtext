@@ -7,6 +7,6 @@ case class TermContext(term: String, context: String)
 object TermContext {
   val schema = StructType(Array(
     StructField("term", StringType, nullable = false),
-    StructField("context", StringType, nullable = false),
+    StructField("context", StringType, nullable = false)
   ))
 }
