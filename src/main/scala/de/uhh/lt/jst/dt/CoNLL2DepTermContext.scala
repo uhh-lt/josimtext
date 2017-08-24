@@ -77,12 +77,17 @@ object CoNLL2DepTermContext {
   def isSentenceWithoutEnhancedDeps(sentence: Sentence): Boolean = sentence.rows.forall(_.depsIsEmpty)
 
   def extractNormalDepsForSentence(sentence: Sentence): Seq[TermContext] = {
-    sentence.rows.flatMap { row =>
-      val id = row.id.toInt
-      val dep = extractNormalDepForId(sentence, id)
-      val invDep = extractNormalDepForId(sentence, id, inverse = true)
-      Seq(dep, invDep)
-    }
+    val isIgnoredDepType = (row: Row) => Set("ROOT") contains row.deprel
+    val rows = sentence.rows
+
+    rows
+      .filterNot(isIgnoredDepType)
+      .flatMap { row =>
+        val id = row.id.toInt
+        val dep = extractNormalDepForId(sentence, id)
+        val invDep = extractNormalDepForId(sentence, id, inverse = true)
+        Seq(dep, invDep)
+      }
   }
 
   def extractNormalDepForId(sentence: Sentence, id: Int, inverse: Boolean = false): TermContext = {
@@ -100,16 +105,24 @@ object CoNLL2DepTermContext {
   }
 
   def extractEnhancedDepForRows(sentence: Sentence): Seq[TermContext] = {
-    sentence.rows.flatMap { row =>
-      val id = row.id.toInt
-      if (row.deps == "_") {
-        None
-      } else {
-        val dep = extractEnhancedDepForId(sentence, id)
-        val invDep = extractEnhancedDepForId(sentence, id, inverse = true)
-        Some(Seq(dep, invDep))
+    val isIgnoredDepType = (row: Row) => Set("ROOT") contains row.deprel
+
+    val rows = sentence.rows
+
+    val optDeps = rows
+      .filterNot(isIgnoredDepType)
+      .flatMap { row =>
+        val id = row.id.toInt
+        if (row.deps == "_") {
+          None
+        } else {
+          val dep = extractEnhancedDepForId(sentence, id)
+          val invDep = extractEnhancedDepForId(sentence, id, inverse = true)
+          Some(Seq(dep, invDep))
+        }
       }
-    }.flatten
+
+    optDeps.flatten
   }
 
 
@@ -131,6 +144,5 @@ object CoNLL2DepTermContext {
         else
           TermContext(headLemma, s"-$depRel#$depLemma")
     }
-
   }
 }
