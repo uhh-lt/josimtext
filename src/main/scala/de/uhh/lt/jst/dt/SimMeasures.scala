@@ -1,5 +1,8 @@
 package de.uhh.lt.jst.dt
 
+/**
+  * Similarity measures as proposed in Biemann C., Text: now in 2D!, 2013
+  */
 object SimMeasures {
 
   def log2(n: Double): Double = {
@@ -29,10 +32,6 @@ object SimMeasures {
       - (n - n_A) * log2(n - n_A + epsilon)
       - (n - n_B) * log2(n - n_B + epsilon))
     if ((n * n_AB) < (n_A * n_B)) -res.toDouble else res.toDouble
-  }
-
-  def descriptivity(n_A: Long, n_B: Long, n_AB: Long): Double = {
-    n_AB.toDouble * n_AB.toDouble / (n_A.toDouble * n_B.toDouble)
   }
 
   /**
