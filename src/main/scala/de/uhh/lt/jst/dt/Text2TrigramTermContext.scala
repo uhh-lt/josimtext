@@ -29,7 +29,16 @@ object Text2TrigramTermContext {
   }
 
   def text2TrigramTermContext(text: String): Seq[TermContext] = {
-    val tokens = text.toLowerCase.split("\\s+").toSeq
+
+    val removeTrailingPunctuations = (str: String) =>
+        Set(",", ";", ".").fold(str){ (res, char) => res.stripSuffix(char)}
+
+    val tokens = text
+      .toLowerCase
+      .split("\\s+")
+      .map(s => if (s.length > 1) removeTrailingPunctuations(s) else s)
+      .toSeq
+
     tokens.sliding(3).flatMap {
       case Seq(w1, w2, w3) => Some(TermContext(w2, w1 + "_@_" + w3))
       case _ => None // If we have less than three tokens, sliding(3) will provide a
