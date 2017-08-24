@@ -1,4 +1,6 @@
-hadoop=hadoop 
+# Please copy this script to env.sh
+
+hadoop=hadoop
 hadoop_xmx_mb=8192 #4096
 hadoop_mb=8000 #4000
 spark=spark-submit 
