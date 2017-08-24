@@ -1,6 +1,7 @@
 package de.uhh.lt.jst.dt
 
 import de.uhh.lt.conll.CoNLLParser
+import de.uhh.lt.jst.dt.entities.TermContext
 import org.apache.spark.sql.{Dataset, SparkSession}
 
 object Text2TrigramTermContext {
@@ -27,9 +28,6 @@ object Text2TrigramTermContext {
       .text(outputDir)
 
   }
-
-  // Note: `type TermContext = (String, String)` didn't work because of SPARK-12777
-  case class TermContext(term: String, context: String)
 
   def text2TrigramTermContext(text: String): Seq[TermContext] = {
     val tokens = text.toLowerCase.split("\\s+").toSeq

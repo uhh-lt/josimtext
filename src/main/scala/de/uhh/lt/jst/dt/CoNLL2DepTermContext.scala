@@ -1,6 +1,7 @@
 package de.uhh.lt.jst.dt
 
 import de.uhh.lt.conll.{CoNLLParser, Row, Sentence}
+import de.uhh.lt.jst.dt.entities.TermContext
 import de.uhh.lt.spark.corpus._
 import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.{Dataset, SparkSession}
@@ -29,9 +30,6 @@ object CoNLL2DepTermContext {
       .text(outputDir)
 
   }
-
-  // Note: `type TermContext = (String, String)` didn't work because of SPARK-12777
-  case class TermContext(term: String, context: String)
 
   def convertWithSpark(path: String)(implicit spark: SparkSession): Dataset[TermContext] = {
     import spark.implicits._
