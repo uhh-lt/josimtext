@@ -1,6 +1,5 @@
 package de.uhh.lt.jst.dt
 
-import de.uhh.lt.conll.CoNLLParser
 import de.uhh.lt.jst.dt.entities.TermContext
 import org.apache.spark.sql.{Dataset, SparkSession}
 
