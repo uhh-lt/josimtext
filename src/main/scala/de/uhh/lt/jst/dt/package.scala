@@ -26,7 +26,7 @@ package object dt {
     *  header: false
     */
   implicit class JBTDataFrameReader(reader: DataFrameReader) {
-    def jbt: String => DataFrame = reader.options(JoBimTextCSVDialect.options).load
+    def jbt: String => DataFrame = reader.options(JoBimTextCSVDialect.options).csv
   }
 
 
