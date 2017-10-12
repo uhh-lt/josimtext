@@ -1,6 +1,7 @@
 package de.uhh.lt.jst.corpus
 
 import de.uhh.lt.jst.utils.Util
+import org.apache.hadoop.io.compress.GzipCodec
 import org.apache.spark.{SparkConf, SparkContext}
 
 object Conll2Texts {
@@ -38,6 +39,6 @@ object Conll2Texts {
       .filter { line => line.startsWith("# ")}
       .filter{ line => !line.startsWith("# parser") && !line.startsWith("# sent_id")}
       .map{ line => getText(line)}
-      .saveAsTextFile(outputConllDir)
+      .saveAsTextFile(outputConllDir, classOf[GzipCodec])
   }
 }
