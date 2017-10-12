@@ -4,7 +4,6 @@ import de.uhh.lt.jst.utils.Util
 import org.apache.spark.{SparkConf, SparkContext}
 
 object Conll2Texts {
-
   def main(args: Array[String]) {
     if (args.size < 2) {
       println("Parameters: <input-dir> <output-dir>")
@@ -21,6 +20,14 @@ object Conll2Texts {
     run(sc, inputPath, outputPath)
   }
 
+  val textRegex = """# text = (.*)""".r
+
+  def getText(line:String): String = {
+    val textMatch = textRegex.findFirstMatchIn(line)
+    if (textMatch.isDefined) textMatch.get.group(1).trim
+    else line
+  }
+
   def run(sc: SparkContext, inputConllDir: String, outputConllDir: String) = {
     println("Input dir.: " + inputConllDir)
     println("Output dir.: " + outputConllDir)
@@ -28,7 +35,9 @@ object Conll2Texts {
 
     sc
       .textFile(inputConllDir)
-      .map { line => line }
+      .filter { line => line.startsWith("# ")}
+      .filter{ line => !line.startsWith("# parser") && !line.startsWith("# sent_id")}
+      .map{ line => getText(line)}
       .saveAsTextFile(outputConllDir)
   }
 }
