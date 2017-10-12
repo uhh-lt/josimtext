@@ -12,7 +12,7 @@ config=$3
 source $config
 
 spark-submit \
-    --class Conll2Texts \
+    --class de.uhh.lt.jst.corpus.Conll2Texts \
     --master=$master \
     --queue=$queue \
     --driver-memory 8g \
