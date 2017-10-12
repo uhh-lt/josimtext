@@ -24,7 +24,6 @@ object Conll2Texts {
   val textRegex = """# text = (.*)""".r
   val newdocRegex = """# newdoc""".r
 
-
   def getText(line:String): String = {
     val textMatch = textRegex.findFirstMatchIn(line)
     if (textMatch.isDefined) textMatch.get.group(1).trim
@@ -47,7 +46,7 @@ object Conll2Texts {
       .filter { line => line.startsWith("# ")}
       .filter{ line => !line.startsWith("# parser") && !line.startsWith("# sent_id")}
       .map{ line => getText(line)}
-      .map{ line => addDocumentBreaks(line)} // replace newdocs
+      .map{ line => addDocumentBreaks(line)}
       .saveAsTextFile(outputConllDir, classOf[GzipCodec])
   }
 }
