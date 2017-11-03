@@ -1,7 +1,7 @@
 package de.uhh.lt.jst.dt
 
 import com.holdenkarau.spark.testing.DatasetSuiteBase
-import de.uhh.lt.jst.dt.Text2TrigramTermContext.TermContext
+import de.uhh.lt.jst.dt.entities.TermContext
 import org.scalatest._
 
 import scala.io.Source
@@ -10,12 +10,12 @@ class Text2TrigramTermContextSpec extends FlatSpec with Matchers with DatasetSui
 
   val expectedTermContextPairsPerLine: Seq[Seq[TermContext]] = Seq(
     Seq(
-      TermContext("world,","hello_@_we"),
-      TermContext("we","world,_@_have"),
+      TermContext("world","hello_@_we"),
+      TermContext("we","world_@_have"),
       TermContext("have","we_@_a"),
       TermContext("a","have_@_few"),
       TermContext("few","a_@_trigrams"),
-      TermContext("trigrams","few_@_here.")
+      TermContext("trigrams","few_@_here")
     ),
     Seq()
   )

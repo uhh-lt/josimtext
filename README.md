@@ -38,7 +38,6 @@ Requirements
 - Git
 - Maven
 - Java >= 1.7
-- SBT (for Scala project)
 - Spark (if you want to run spark code from command line)
 
 Download Code & Prepare Data

@@ -12,7 +12,7 @@ config=$3
 source $config
 
 spark-submit \
-    --class verbs.Conll2Features \
+    --class de.uhh.lt.jst.verbs.Conll2Features \
     --master=$master \
     --num-executors 2000 \
     --queue=$queue \

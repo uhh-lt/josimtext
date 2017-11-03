@@ -22,10 +22,10 @@ object Const {
   }
 
   object PRJ_TEST {
-    val FEATURES = "/prj-f.csv"
-    val SENSES = "/prj-senses.csv"
-    val WORDS = "/prj-w.csv"
-    val WORD_FEATURES = "/prj-wf.csv"
+    val FEATURES = "/prj/dt/F.csv"
+    val SENSES = "/prj/senses.csv"
+    val WORDS = "/prj/dt/W.csv"
+    val WORD_FEATURES = "/prj/WF.csv"
 
     // these large files can downloaded from http://panchenko.me/data/joint/josimtext/
     // and placed into the src/test/resources/wsd-test-data/

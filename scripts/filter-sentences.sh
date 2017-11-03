@@ -13,7 +13,7 @@ config=$3
 source $config
 
 $spark \
-    --class FilterSentences \
+    --class de.uhh.lt.jst.corpus.FilterSentences \
     --master=$master \
     --queue=$queue \
     --driver-memory 8g \

@@ -13,7 +13,7 @@ config=$3
 source $config 
 
 spark-submit \
-    --class corpus.CoarsifyPosTags \
+    --class de.uhh.lt.jst.corpus.CoarsifyPosTags \
     --master=yarn \
     --queue=$queue \
     --num-executors 100 \

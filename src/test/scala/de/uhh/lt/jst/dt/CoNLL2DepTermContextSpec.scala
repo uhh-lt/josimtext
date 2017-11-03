@@ -1,21 +1,29 @@
 package de.uhh.lt.jst.dt
 
+import java.io.FileNotFoundException
+
 import com.holdenkarau.spark.testing.DatasetSuiteBase
-import org.scalatest.FlatSpec
+import org.scalatest.{FlatSpec, Matchers}
 import de.uhh.lt.conll.{CoNLLParser, Row, Sentence}
-import de.uhh.lt.jst.dt.CoNLL2DepTermContext.TermContext
+import de.uhh.lt.jst.dt.entities.TermContext
 
 import scala.io.Source
 
-class CoNLL2DepTermContextSpec extends FlatSpec with DatasetSuiteBase {
+class CoNLL2DepTermContextSpec extends FlatSpec with Matchers with DatasetSuiteBase {
 
-  val expectedTermContextPairs: Seq[TermContext] = Seq(
+  def getResourcePath(var1: String): String = {
+    val someResource = Option(this.getClass.getResource(var1))
+    someResource match {
+      case Some(resource) => resource.getPath
+      case None => throw new FileNotFoundException(s"Resource not found: $var1")
+    }
+  }
+
+  val expectedEnhancedDeps: Seq[TermContext] = Seq(
     ("Website", "nn#Tips"),
     ("Tips", "-nn#Website"),
     ("Usability", "nn#Tips"),
     ("Tips", "-nn#Usability"),
-    ("Tips", "ROOT#Tips"),
-    ("Tips", "-ROOT#Tips"),
     (",", "punct#Tips"),
     ("Tips", "-punct#,"),
     ("Tricks", "conj_and#Tips"),
@@ -26,27 +34,64 @@ class CoNLL2DepTermContextSpec extends FlatSpec with DatasetSuiteBase {
     ("Tips", "-punct#.")
   ).map(TermContext.apply _ tupled _)
 
+  val expectedNormalDeps: Seq[TermContext] = Seq(
+    ("Website", "nn#Tips"),
+    ("Tips", "-nn#Website"),
+    ("Usability", "nn#Tips"),
+    ("Tips", "-nn#Usability"),
+    (",", "punct#Tips"),
+    ("Tips", "-punct#,"),
+    ("Tricks", "conj#Tips"),
+    ("Tips", "-conj#Tricks"),
+    ("and", "cc#Tips"),
+    ("Tips", "-cc#and"),
+    ("Mistakes", "conj#Tips"),
+    ("Tips", "-conj#Mistakes"),
+    (".", "punct#Tips"),
+    ("Tips", "-punct#.")
+  ).map(TermContext.apply _ tupled _)
+
 
 
   it should "extract dependency term context pairs from CoNLL file" in {
-    val path = Option(this.getClass.getResource("/conll.csv")).map(_.getPath).get
+
+    val path = getResourcePath("/conll.csv")
     val text = Source.fromFile(path).mkString
 
     val sentence = CoNLLParser.parseSingleSentence(text)
-    val deps = CoNLL2DepTermContext.extractDepTermContextPairs(sentence.rows)
+    val deps = CoNLL2DepTermContext.extractEnhancedDepForRows(sentence)
 
-    assert(deps, expectedTermContextPairs)
+    assert(deps, expectedEnhancedDeps)
+  }
+
+  it should "detect that CoNLL file does not contain enhanced dependencies" in {
+    val path = getResourcePath("/conll-wo-enhanced-deps.csv")
+    val text = Source.fromFile(path).mkString
+
+    val sentence = CoNLLParser.parseSingleSentence(text)
+
+    CoNLL2DepTermContext.isSentenceWithoutEnhancedDeps(sentence) should be (true)
   }
 
   "Spark" should "read a CoNLL file and convert it to dependency term context pairs" in {
 
     import spark.implicits._
+    val path = getResourcePath("/conll.csv")
+    val result = CoNLL2DepTermContext.convertWithSpark(spark, path)
 
-    val path = this.getClass.getResource("/conll.csv").getPath
-    val result = CoNLL2DepTermContext.convertWithSpark(path)(spark)
+    val expected = sc.parallelize(expectedEnhancedDeps).toDS
+    assertDatasetEquals(expected, result)
+  }
 
-    val expected = sc.parallelize(expectedTermContextPairs).toDS
 
+  "Spark" should "detect that a CoNLL file misses enhanced deps and extract normal deps" in {
+
+    import spark.implicits._
+
+    val path = getResourcePath("/conll-wo-enhanced-deps.csv")
+    val result = CoNLL2DepTermContext.convertWithSpark(spark, path)
+
+    val expected = sc.parallelize(expectedNormalDeps).toDS
     assertDatasetEquals(expected, result)
   }
 
@@ -64,7 +109,7 @@ class CoNLL2DepTermContextSpec extends FlatSpec with DatasetSuiteBase {
       misc = "O"
     ))
 
-    val deps = CoNLL2DepTermContext.extractDepTermContextPairs(rows)
+    val deps = CoNLL2DepTermContext.extractEnhancedDepForRows(Sentence(Seq.empty, rows))
     val expected = Seq(
       TermContext("usr/lib/fglrx","prep_usr/#usr/lib/fglrx"),
       TermContext("usr/lib/fglrx","-prep_usr/#usr/lib/fglrx")
