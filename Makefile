@@ -1,5 +1,8 @@
 install:
-	./sbt/sbt assembly
+	./sbt/sbt clean assembly
+
+assembly-without-tests:
+	./sbt/sbt 'set test in assembly := {}' assembly
 
 test:
-	./sbt/sbt test
+	./sbt/sbt clean test

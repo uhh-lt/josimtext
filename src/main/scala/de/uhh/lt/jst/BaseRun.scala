@@ -2,7 +2,8 @@ package de.uhh.lt.jst
 
 
 trait BaseRun {
-  val jobs: List[Job]
+  type JobGroup = (String, List[Job])
+  val jobGroups: List[JobGroup]
   val appName: String
   val appDescription: String
 
@@ -13,8 +14,11 @@ trait BaseRun {
     }
   }
 
+  private def allJobs = jobGroups.flatMap(_._2)
+
   def runCommand(command: String, args: Array[String]): Unit = {
-    jobs.find( _.command == command ) match {
+
+    allJobs.find( _.command == command ) match {
       case None => println(s"$appName: '$command' is not a command.")
       case Some(job: Job) => if (job.checkArgs(args)) job.main(args) else job.printHelp()
     }
@@ -22,12 +26,16 @@ trait BaseRun {
 
   def printHelp(): Unit = {
     println(s"\nUsage: $appName COMMAND\n")
-    println(s"$appDescription\n") // TODO
-    println("Commands:")
-    val maxLength = jobs.map(_.command.length).max
-    jobs.foreach { j =>
-      println(s" ${j.command.padTo(maxLength, ' ')}   ${j.description}")
+    println(s"$appDescription\n")
+
+    val maxLength = allJobs.map(_.command.length).max
+
+    jobGroups.foreach { case (name, jobs) =>
+      println(s"$name:")
+      jobs.foreach { j => println(s" ${j.command.padTo(maxLength, ' ')}   ${j.description}") }
+      println("")
     }
-    println(s"\nRun '$appName COMMAND --help' for more information on a command.")
+
+    println(s"Run '$appName COMMAND --help' for more information on a command.")
   }
 }

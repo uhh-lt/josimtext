@@ -1,8 +1,131 @@
 package de.uhh.lt.jst.dt
 
+import de.uhh.lt.jst.Job
 import org.apache.spark.{SparkConf, SparkContext}
+import scopt.{OptionDef, Read}
 
-object WordSimFromCounts {
+
+object WordSimFromCounts extends Job {
+
+  case class Config(
+    wordCountsCSV: String = "",
+    featureCountsCSV: String = "",
+    wordFeatureCountsCSV: String = "",
+    outputDir: String = "",
+    parameters: Parameters = Parameters()
+  )
+
+  case class Parameters (
+    wordsPerFeatureNum: Int = 1000,
+    significanceMin: Double = 0.0,
+    wordFeatureMinCount: Int = 2,
+    wordMinCount: Int = 2,
+    featureMinCount: Int = 2,
+    significanceType: String = "LMI",
+    featuresPerWordNum: Int = 1000,
+    similarWordsMaxNum: Int = 200
+  )
+
+  type ConfigType = Config
+  override val config = Config()
+
+  override val command: String = "WordSimFromCounts"
+  override val description = "[DEPRECATED] Compute a Distributional Thesaurus from count files"
+
+  override val parser = new Parser {
+
+    arg[String]("WORD_COUNT_FILE").action( (x, c) =>
+      c.copy(wordCountsCSV = x) ).required().hidden()
+
+    arg[String]("FEATURE_COUNT_FILE").action( (x, c) =>
+      c.copy(featureCountsCSV = x) ).required().hidden()
+
+    arg[String]("WORD_FEATURE_COUNT_FILE").action( (x, c) =>
+      c.copy(wordFeatureCountsCSV = x) ).required().hidden()
+
+    arg[String]("OUTPUT_DIR").action( (x, c) =>
+      c.copy(outputDir = x) ).required().hidden()
+
+    /*
+    import scopt.Read
+    import scopt.Read.reads
+    implicit val paramsRead: Read[Parameters] = reads { str =>
+      val paramsMap = implicitly[Read[Map[String, String]]].reads(str)
+      try {
+        Parameters() // FIXME complete me
+      }
+    }
+    opt[Parameters]("params").action( (x, c) => c.copy(parameters = x) ) // FIXME EITHER compelete implicit and delete below OR remove it
+  */
+
+    opt[Int]("wpf").action( (x, c) =>
+      c.copy(parameters = c.parameters.copy(wordsPerFeatureNum = x))).
+      valueName("integer").
+      text(s"Number of words per features (default ${config.parameters.wordsPerFeatureNum})")
+
+    opt[Int]("fpw").action( (x, c) =>
+      c.copy(parameters = c.parameters.copy(featuresPerWordNum = x))).
+      valueName("integer").
+      text(s"Number of features per word (default ${config.parameters.featuresPerWordNum})")
+
+    opt[Int]("minw").action( (x, c) =>
+      c.copy(parameters = c.parameters.copy(wordMinCount = x))).
+      valueName("integer").
+      text(s"Minimum word count (default ${config.parameters.wordMinCount})")
+
+    opt[Int]("minf").action( (x, c) =>
+      c.copy(parameters = c.parameters.copy(featureMinCount = x))).
+      valueName("integer").
+      text(s"Minimum feature count (default ${config.parameters.featureMinCount})")
+
+    opt[Int]("minwf").action( (x, c) =>
+      c.copy(parameters = c.parameters.copy(wordFeatureMinCount = x))).
+      valueName("integer").
+      text(s"Minimum word feature count (default ${config.parameters.wordFeatureMinCount})")
+
+    opt[Double]("minsign").action( (x, c) =>
+      c.copy(parameters = c.parameters.copy(significanceMin = x))).
+      valueName("double").
+      text(s"Minimum significance measure (default ${config.parameters.significanceMin})")
+
+    opt[String]("sign").action( (x, c) =>
+      c.copy(parameters = c.parameters.copy(significanceType = x))).
+      valueName("string").
+      text(s"Set the significance measures (LMI, COV, FREQ) (default ${config.parameters.significanceType})")
+
+    // Sometimes this seems to be called NearestNeighboursNum, TODO is using the nnn abbr. good?
+    opt[Int]("nnn").action( (x, c) =>
+      c.copy(parameters = c.parameters.copy(similarWordsMaxNum = x))).
+      valueName("integer").
+      text(s"Number of nearest neighbours, .i.e maximum similar words (default ${config.parameters.similarWordsMaxNum})")
+  }
+
+  def run(config: Config): Unit = oldMain(
+    config.productIterator.flatMap {
+      case product: Product => product.productIterator.map(_.toString).toList
+      case x => List(x.toString)
+    }.toArray
+  )
+
+  /*
+    Array(
+      config.wordCountsCSV,
+      config.featureCountsCSV,
+      config.wordFeatureCountsCSV,
+      config.outputDir,
+      config.parameters.wordsPerFeatureNum.toString,
+      config.parameters.featuresPerWordNum.toString,
+      config.parameters.wordMinCount.toString,
+      config.parameters.featureMinCount.toString,
+      config.parameters.wordFeatureMinCount.toString,
+      config.parameters.significanceMin.toString,
+      config.parameters.significanceType,
+      config.parameters.similarWordsMaxNum.toString
+    )
+  */
+
+  // ------ unchanged old logic ------- //
+
   val wordsPerFeatureNumDefault = 1000
   val significanceMinDefault = 0.0
   val wordFeatureMinCountDefault = 2
@@ -12,7 +135,7 @@ object WordSimFromCounts {
   val featuresPerWordNumDefault = 1000
   val similarWordsMaxNumDefault = 200
 
-  def main(args: Array[String]) {
+  def oldMain(args: Array[String]) {
     if (args.size < 4) {
       println("Usage: word-counts feature-counts word-feature-counts output-dir [parameters]")
       println("parameters: wordsPerFeatureNum featuresPerWordNum wordMinCount featureMinCount wordFeatureMinCount significanceMin significanceType similarWordsMaxNum")
