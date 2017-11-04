@@ -1,20 +1,55 @@
 package de.uhh.lt.jst.dt
 
+import de.uhh.lt.jst.Job
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
-object WordSimFromTermContext {
+object WordSimFromTermContext extends Job {
+
+  case class Config(input: String = "", output: String = "")
+
+  type ConfigType = Config
+  override val config = Config()
+
+  override val command: String = "WordSimFromTermContext"
+  override val description = "Compute a Distributional Thesaurus from a Term Context file."
+
+  override val parser = new Parser {
+    arg[String]("TERM_CONTEXT_FILE").action( (x, c) =>
+      c.copy(input = x) ).required().hidden()
+
+    arg[String]("OUTPUT_DIR").action( (x, c) =>
+      c.copy(output = x) ).required().hidden()
+  }
+
+  def run(config: Config): Unit = oldMain(config.productIterator.map(_.toString).toArray)
+
+  // WordsPerFeature=1000 # 100 1000 10000
   val wordsPerFeatureNumDefault = 1000
+  // MinFeatureSignif=0.0
   val significanceMinDefault = 0.0
+  // FIXME MinWordFreq=5
   val wordFeatureMinCountDefault = 2
+  // FIXME MinFeatureFreq=5
   val wordMinCountDefault = 2
+  // MinWordFeatureFreq=2
   val featureMinCountDefault = 2
+  // Significance=LMI
   val significanceTypeDefault = "LMI"
+  // FIXME FeaturesPerWord=2000 # 100 1000 10000
   val featuresPerWordNumDefault = 1000
+  // NearestNeighboursNum=200
   val similarWordsMaxNumDefault = 200
 
 
-  def main(args: Array[String]) {
+
+
+
+
+
+  // ------ unchanged old logic ------- //
+
+  def oldMain(args: Array[String]) {
     if (args.size < 2) {
       println("Usage: term-context-pairs output-dir [parameters]")
       println("parameters: wordsPerFeatureNum featuresPerWordNum wordMinCount featureMinCount wordFeatureMinCount significanceMin significanceType similarWordsMaxNum")

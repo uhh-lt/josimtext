@@ -3,6 +3,11 @@ package de.uhh.lt.jst
 import de.uhh.lt.jst.dt.entities.DTEntry
 import org.apache.spark.sql.{DataFrame, DataFrameReader}
 
+// TODO clarifiy
+// - data model vs data format: https://www.coursera.org/learn/big-data-management/lecture/xZmuD/data-model-vs-data-format
+// - Naming of files: freq vs count
+// - Should we rename feature to context? Or at least put some note somewhere?
+
 package object dt {
 
   // TODO: clarify whether one should refer to this CSV dialect as 'JoBimText CSV dialect' or something else?
@@ -16,7 +21,6 @@ package object dt {
 
   /**
     * Adds a method, `jbt`, to DataFrameReader that allows you to read a CSV file in JoBimText format
-    * using the DataFileReader
     *
     * The JoBimText format is a CSV dialect:
     *
@@ -32,7 +36,6 @@ package object dt {
 
   /**
     * Adds a method, `dt`, to DataFrameReader that allows you to read a Distributional Thesaurus
-    * file using the DataFileReader
     */
   implicit class DTDataFrameReader(reader: DataFrameReader) {
     def dt: String => DataFrame = (path: String) => reader
