@@ -1,33 +1,10 @@
 package de.uhh.lt.jst.dt
 
-import de.uhh.lt.jst.{Job, utils}
+import de.uhh.lt.jst.utils
 import org.apache.spark.{SparkConf, SparkContext}
 
-object DTCaseFilter extends Job {
-
-  case class Config(dt: String = "", outputDTDirectory: String = "")
-
-  type ConfigType = Config
-  override val config = Config()
-
-  override val command: String = "DTCaseFilter"
-  override val description = "Filter out target words " +
-    "that at not all small caps or first capital + all small caps"
-
-  override val parser = new Parser {
-    arg[String]("DT_FILE").action( (x, c) =>
-      c.copy(dt = x) ).required().hidden()
-
-    arg[String]("OUTPUT_DIR").action( (x, c) =>
-      c.copy(outputDTDirectory = x) ).required().hidden()
-  }
-
-  def run(config: Config): Unit =
-    oldMain(config.productIterator.map(_.toString).toArray)
-
-  // ------ unchanged old logic ------- //
-
-  def oldMain(args: Array[String]) {
+object DTCaseFilter {
+  def main(args: Array[String]) {
     if (args.size < 2) {
       println("Filters out target words that at not all small caps or first capital + all small caps")
       println("Usage: DTCaseFilter <dt-path.csv> <output-dt-directory>")
