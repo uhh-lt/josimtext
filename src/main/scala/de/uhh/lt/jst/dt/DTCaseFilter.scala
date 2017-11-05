@@ -22,31 +22,16 @@ object DTCaseFilter extends Job {
       c.copy(outputDTDirectory = x) ).required().hidden()
   }
 
-  def run(config: Config): Unit =
-    oldMain(config.productIterator.map(_.toString).toArray)
-
-  // ------ unchanged old logic ------- //
-
-  def oldMain(args: Array[String]) {
-    if (args.size < 2) {
-      println("Filters out target words that at not all small caps or first capital + all small caps")
-      println("Usage: DTCaseFilter <dt-path.csv> <output-dt-directory>")
-      println("<dt>\tis a distributional thesaurus in the format 'word_i<TAB>word_j<TAB>similarity_ij[<TAB>features_ij]'")
-      println("<output-dt-directory>\toutput directory with the filtered distributional thesaurus")
-      return
-    }
-
-    val dtPath = args(0)
-    val outPath = args(1)
+  def run(config: Config): Unit = {
 
     val conf = new SparkConf().setAppName("DTFilter")
     conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
     val sc = new SparkContext(conf)
 
-    run(sc, dtPath, outPath)
+    run(sc, config.dt, config.outputDTDirectory)
   }
 
-  def run(sc: SparkContext, dtPath: String, outPath: String) = {
+  def run(sc: SparkContext, dtPath: String, outPath: String): Unit = {
     println("Input DT: " + dtPath)
     println("Output DT: " + outPath)
     utils.Util.delete(outPath)
@@ -59,9 +44,12 @@ object DTCaseFilter extends Job {
         case _ => ("?", "?", "?", "?")
       }
 
-    val dt_filter = dt
-      .filter { case (word_i, word_j, sim_ij, features_ij) => (word_i.length <= 1) || (word_i.substring(1).toLowerCase() == word_i.substring(1)) }
-      .map { case (word_i, word_j, sim_ij, features_ij) => word_i + "\t" + word_j + "\t" + sim_ij }
-      .saveAsTextFile(outPath)
+    dt.filter {
+      case (word_i, word_j, sim_ij, features_ij) =>
+        (word_i.length <= 1) || (word_i.substring(1).toLowerCase() == word_i.substring(1))
+    }.map {
+      case (word_i, word_j, sim_ij, features_ij) =>
+        word_i + "\t" + word_j + "\t" + sim_ij
+    }.saveAsTextFile(outPath)
   }
 }

@@ -5,6 +5,8 @@ package de.uhh.lt.jst.dt
   */
 object SimMeasures {
 
+  type SimMeasureFunc = (Long, Long, Long, Long) => Double
+
   def log2(n: Double): Double = {
     math.log(n) / math.log(2)
   }

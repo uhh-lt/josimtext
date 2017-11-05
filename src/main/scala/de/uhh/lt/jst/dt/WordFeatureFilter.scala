@@ -10,9 +10,9 @@ object WordFeatureFilter  extends Job {
 
   case class Config(
     wordFeatureCSV: String = "",
-    wordsCSV: String = "",
+    vocCSV: String = "",
     outputWordFeatureCSV: String = ""
-    )
+  )
 
   type ConfigType = Config
   override val config = Config()
@@ -25,37 +25,13 @@ object WordFeatureFilter  extends Job {
       c.copy(wordFeatureCSV = x)).required().hidden()
 
     arg[String]("VOC_FILE").action((x, c) =>
-      c.copy(wordsCSV = x)).required().hidden()
+      c.copy(vocCSV = x)).required().hidden()
 
     arg[String]("OUTPUT_DIR").action((x, c) =>
       c.copy(outputWordFeatureCSV = x)).required().hidden()
   }
 
-  def run(config: Config): Unit = oldMain(config.productIterator.map(_.toString).toArray)
-
-  // ------ unchanged old logic ------- //
-
-  def oldMain(args: Array[String]) {
-    if (args.size < 3) {
-      println("Usage: WordFeatureFilter <word-feature-csv> <words-csv> <output-word-feature-csv>")
-      println("<word-feature-csv>\tpath to a csv with word counts 'word<TAB>feature<TAB>freq'")
-      println("<words-csv>\tpath to a list of words that will be kept in the output. " +
-        "words in all registers will be kept if present in the vocabulary.")
-      println("<output-word-feature-csv>\tpath to output with the filtered word counts")
-      return
-    }
-
-    // Input parameters
-    val inputPath = args(0)
-    val inputWordVocPath = args(1)
-    val outputPath = args(2)
-    val outFeatureVocPath = outputPath + "-voc.csv"
-    println("Input word-features: " + inputPath)
-    println("Input word vocabulary:" + inputWordVocPath)
-    println("Output word-features: " + outputPath)
-    println("Output feature vocabulary: " + outFeatureVocPath)
-    Util.delete(outputPath)
-    Util.delete(outFeatureVocPath)
+  def run(config: Config): Unit = {
 
     // Set Spark configuration
     val conf = new SparkConf().setAppName("FreqFilter")
@@ -63,16 +39,17 @@ object WordFeatureFilter  extends Job {
     val sc: SparkContext = new SparkContext(conf)
 
     // Filter
-    val voc = Util.loadVocabulary(sc, inputWordVocPath)
-    val (wordFeatureFreq, featureVoc) = run(inputPath, voc, sc)
+    val voc = Util.loadVocabulary(sc, config.vocCSV)
+    val (wordFeatureFreq, featureVoc) = run(config.wordFeatureCSV, voc, sc)
 
+    val outFeatureVocPath = config.outputWordFeatureCSV + "-voc.csv"
     // Save result
     featureVoc
       .saveAsTextFile(outFeatureVocPath)
 
     wordFeatureFreq
       .map({ case (word, feature, freq) => word + "\t" + feature + "\t" + freq })
-      .saveAsTextFile(outputPath)
+      .saveAsTextFile(config.outputWordFeatureCSV)
   }
 
   def run(inputPath: String, voc: Set[String], sc: SparkContext): (RDD[(String, String, String)], RDD[String]) = {

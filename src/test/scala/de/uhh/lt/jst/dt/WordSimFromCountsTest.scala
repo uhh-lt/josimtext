@@ -4,6 +4,8 @@ import java.io.File
 import java.nio.file.{FileSystems, Files, Paths}
 
 import com.holdenkarau.spark.testing.SharedSparkContext
+import de.uhh.lt.jst.dt.WordSimFromCounts.Config
+import de.uhh.lt.jst.dt.WordSimLib.WordSimParameters
 import org.scalatest._
 import org.scalatest.tagobjects.Slow
 import de.uhh.lt.jst.utils.Util.gzip
@@ -25,7 +27,19 @@ class WordSimFromCountsTest extends FlatSpec with Matchers with SharedSparkConte
     Util.delete(outputDir)
     println(s"Output: $outputDir")
 
-    WordSimFromCounts.run(sc, words, features, wordFeatures, outputDir, wordMinCount = 1, featureMinCount = 1, wordFeatureMinCount = 1, significanceMin = 0.0)
+    val config = Config(
+      wordCountsCSV = words,
+      featureCountsCSV = features,
+      wordFeatureCountsCSV = wordFeatures,
+      outputDir = outputDir,
+      parameters = WordSimParameters(
+        minWordFeatureCount = 1,
+        minWordCount = 1,
+        minFeatureCount = 1,
+        minSignificance = 0.0
+      )
+    )
+    WordSimFromCounts.run(sc, config)
   }
 
   ignore should "DefaultConf produce default results" taggedAs Slow in {

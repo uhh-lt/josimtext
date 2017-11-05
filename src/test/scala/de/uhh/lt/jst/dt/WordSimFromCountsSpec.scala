@@ -1,8 +1,7 @@
 package de.uhh.lt.jst.dt
 
 import com.holdenkarau.spark.testing.{DataFrameSuiteBase, RDDComparisons, Utils}
-import de.uhh.lt.jst.utils.Util
-import org.apache.spark.rdd.RDD
+import de.uhh.lt.jst.dt.WordSimLib.{TermCountRDD, TermTermCountRDD, TermTermScoresRDD, WordSimParameters}
 import org.apache.spark.sql.DataFrame
 import org.scalatest._
 
@@ -17,20 +16,17 @@ import org.scalatest._
   */
 // TODO: Use synthetic data to be make tests more compact.
 class WordSimFromCountsSpec extends FlatSpec with Matchers with DataFrameSuiteBase with RDDComparisons {
-  type TermTermCountRDD = RDD[(String, (String, Int))]
-  type TermCountRDD =  RDD[(String, Int)]
-  type TermTermScoresRDD = RDD[(String, Array[(String, Double)])]
 
-  val wordsPerFeatureNum: Int = 1000
-  val featuresPerWordNum: Int = 2000
-
-  val wordMinCount: Int = 1
-  val featureMinCount: Int = 1
-  val wordFeatureMinCount: Int = 1
-
-  val significanceMin: Double = 0.0
-  val significanceType: String = "LMI"
-  val similarWordsMaxNum: Int = 200
+  val params = WordSimParameters(
+    wordsPersFeature = 1000, // val wordsPerFeatureNum: Int = 1000
+    minSignificance = 0.0,  // val significanceMin: Double = 0.0
+    minWordFeatureCount = 1, // val wordFeatureMinCount: Int = 1
+    minWordCount = 1, // val wordMinCount: Int = 1
+    minFeatureCount = 1, // val featureMinCount: Int = 1
+    significanceType = "LMI", // val significanceType: String = "LMI"
+    featuresPerWord = 2000, // val featuresPerWordNum: Int = 2000
+    maxSimilarWords = 200 // val similarWordsMaxNum: Int = 200
+  )
 
   val outputDir: String = Utils.createTempDir().getCanonicalPath
 
@@ -39,15 +35,14 @@ class WordSimFromCountsSpec extends FlatSpec with Matchers with DataFrameSuiteBa
     val inputDir = Option(this.getClass.getResource("/prj/counts")).map(_.getPath).get
     val (wordFeatureCountsRDD, wordCountsRDD, featureCountsRDD) = readCountsRDD(inputDir)
 
-    val sig = WordSimLib.getSignificance(significanceType)
-
     val resultRDD: TermTermScoresRDD =
       WordSimLib.computeFeatureScores(
-        wordFeatureCountsRDD, wordCountsRDD, featureCountsRDD,
+        wordFeatureCountsRDD,
+        wordCountsRDD,
+        featureCountsRDD,
         outputDir,
-        wordsPerFeatureNum, featuresPerWordNum,
-        wordMinCount, featureMinCount, wordFeatureMinCount,
-        significanceMin, sig)
+        params
+      )
 
       import spark.implicits._
       val expectedRDD: DataFrame = spark.sparkContext.parallelize(
@@ -82,14 +77,7 @@ class WordSimFromCountsSpec extends FlatSpec with Matchers with DataFrameSuiteBa
         wordCountsRDD,
         featureCountsRDD,
         outputDir,
-        wordsPerFeatureNum,
-        featuresPerWordNum,
-        wordMinCount,
-        featureMinCount,
-        wordFeatureMinCount,
-        significanceMin,
-        similarWordsMaxNum,
-        significanceType
+        params
       )
 
     val expectedFolder = Option(getClass.getResource("/prj/dt")).map(_.getPath).get
