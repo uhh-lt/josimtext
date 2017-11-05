@@ -5,4 +5,4 @@ assembly-without-tests:
 	./sbt/sbt 'set test in assembly := {}' assembly
 
 test:
-	./sbt/sbt clean test
+	./sbt/sbt "testOnly -- -l NeedsMissingFiles"
