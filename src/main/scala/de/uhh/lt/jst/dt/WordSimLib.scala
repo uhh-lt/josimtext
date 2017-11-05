@@ -6,7 +6,6 @@ import org.apache.spark.rdd.RDD
 object WordSimLib {
   val DEBUG = false
 
-  // TODO delete
   def computeWordFeatureCounts(file: RDD[String],
                                outDir: String)
   : (RDD[(String, (String, Int))], RDD[(String, Int)], RDD[(String, Int)]) = {

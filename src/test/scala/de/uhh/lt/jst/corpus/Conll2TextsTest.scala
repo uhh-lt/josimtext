@@ -1,7 +1,6 @@
 package de.uhh.lt.jst.corpus
 
 import com.holdenkarau.spark.testing.SharedSparkContext
-import de.uhh.lt.testing.tags.NeedsMissingFiles
 import org.scalatest._
 
 class Conll2TextsTest extends FlatSpec with Matchers  with SharedSparkContext {
@@ -21,5 +20,5 @@ class Conll2TextsTest extends FlatSpec with Matchers  with SharedSparkContext {
     Conll2Texts.getText("# text = ") shouldEqual("")
     Conll2Texts.getText("# text = a") shouldEqual("a")
     Conll2Texts.getText("# text = This is some text. ") shouldEqual("This is some text.")
-
+  }  
 }

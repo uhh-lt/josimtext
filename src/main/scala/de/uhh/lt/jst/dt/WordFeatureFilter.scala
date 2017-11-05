@@ -1,41 +1,12 @@
 package de.uhh.lt.jst.dt
 
-import de.uhh.lt.jst.Job
 import de.uhh.lt.jst.utils.Util
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
 
-object WordFeatureFilter  extends Job {
-
-  case class Config(
-    wordFeatureCSV: String = "",
-    wordsCSV: String = "",
-    outputWordFeatureCSV: String = ""
-    )
-
-  type ConfigType = Config
-  override val config = Config()
-
-  override val command: String = "WordFeatureFilter"
-  override val description = "Remove all rows where the word is not in the VOC_FILE"
-
-  override val parser = new Parser {
-    arg[String]("WORD_FEATURE_COUNT_FILE").action((x, c) =>
-      c.copy(wordFeatureCSV = x)).required().hidden()
-
-    arg[String]("VOC_FILE").action((x, c) =>
-      c.copy(wordsCSV = x)).required().hidden()
-
-    arg[String]("OUTPUT_DIR").action((x, c) =>
-      c.copy(outputWordFeatureCSV = x)).required().hidden()
-  }
-
-  def run(config: Config): Unit = oldMain(config.productIterator.map(_.toString).toArray)
-
-  // ------ unchanged old logic ------- //
-
-  def oldMain(args: Array[String]) {
+object WordFeatureFilter {
+  def main(args: Array[String]) {
     if (args.size < 3) {
       println("Usage: WordFeatureFilter <word-feature-csv> <words-csv> <output-word-feature-csv>")
       println("<word-feature-csv>\tpath to a csv with word counts 'word<TAB>feature<TAB>freq'")

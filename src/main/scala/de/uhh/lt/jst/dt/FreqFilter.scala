@@ -1,47 +1,12 @@
 package de.uhh.lt.jst.dt
 
-import de.uhh.lt.jst.Job
 import de.uhh.lt.jst.utils.Util
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
 
-object FreqFilter extends Job {
-
-  case class Config(
-    freqCSV: String = "",
-    vocabularyCSV: String = "",
-    outputFreqCSV: String = "",
-    keepSingleWords: String = "true"
-  )
-
-  type ConfigType = Config
-  override val config = Config()
-
-  override val command: String = "FreqFilter"
-  override val description = "Remove all rows where the term is not in the VOC_FILE"
-
-  override val parser = new Parser {
-
-    opt[Unit]('s', "remove-single").action( (x, c) =>
-      c.copy(keepSingleWords = "false") ).
-      text("remove all single word terms")
-
-    arg[String]("TERM_REPR_FILE").action( (x, c) =>
-      c.copy(freqCSV = x) ).required().hidden()
-
-    arg[String]("VOC_FILE").action( (x, c) =>
-      c.copy(vocabularyCSV = x) ).required().hidden()
-
-    arg[String]("OUTPUT_DIR").action( (x, c) =>
-      c.copy(outputFreqCSV = x) ).required().hidden()
-  }
-
-  def run(config: Config): Unit = oldMain(config.productIterator.map(_.toString).toArray)
-
-  // ------ unchanged old logic ------- //
-
-  def oldMain(args: Array[String]) {
+object FreqFilter {
+  def main(args: Array[String]) {
     if (args.size < 4) {
       println("Usage: FreqFilter <freq-csv> <vocabulary-csv> <output-freq-csv> <keep-single-words>")
       println("<freq-csv>\tpath to a csv with word counts 'word<TAB>freq'")
