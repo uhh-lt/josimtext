@@ -21,11 +21,5 @@ class Conll2TextsTest extends FlatSpec with Matchers  with SharedSparkContext {
     Conll2Texts.getText("# text = ") shouldEqual("")
     Conll2Texts.getText("# text = a") shouldEqual("a")
     Conll2Texts.getText("# text = This is some text. ") shouldEqual("This is some text.")
-  }
-
-  it should "extract text from a large conll file" taggedAs NeedsMissingFiles in {
-    val conllPath = "/Users/sasha/Desktop/part-m-10144.gz"
-    run(conllPath)
-  }
 
 }
