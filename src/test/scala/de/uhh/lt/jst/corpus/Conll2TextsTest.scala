@@ -1,6 +1,7 @@
 package de.uhh.lt.jst.corpus
 
 import com.holdenkarau.spark.testing.SharedSparkContext
+import de.uhh.lt.testing.tags.NeedsMissingFiles
 import org.scalatest._
 
 class Conll2TextsTest extends FlatSpec with Matchers  with SharedSparkContext {
@@ -22,7 +23,7 @@ class Conll2TextsTest extends FlatSpec with Matchers  with SharedSparkContext {
     Conll2Texts.getText("# text = This is some text. ") shouldEqual("This is some text.")
   }
 
-  it should "extract text from a large conll file" in {
+  it should "extract text from a large conll file" taggedAs NeedsMissingFiles in {
     val conllPath = "/Users/sasha/Desktop/part-m-10144.gz"
     run(conllPath)
   }
