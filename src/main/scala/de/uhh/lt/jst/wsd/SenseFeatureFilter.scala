@@ -53,7 +53,7 @@ object SenseFeatureFilter {
       .saveAsTextFile(sensesOutPath)
 
     val clusterVoc = clusterVocRDD.collect().toSet.union(voc)
-    val words = FreqFilter.run(wordsPath, clusterVoc, false, sc)
+    val words = FreqFilter.run(sc, wordsPath, clusterVoc, keepSingleWords = false)
     words
       .map({ case (word, freq) => word + "\t" + freq })
       .saveAsTextFile(wordsOutPath)
@@ -64,7 +64,7 @@ object SenseFeatureFilter {
       .map({ case (word, feature, freq) => word + "\t" + feature + "\t" + freq })
       .saveAsTextFile(wordFeaturesOutPath)
 
-    val features = FreqFilter.run(featuresPath, featureVoc, false, sc)
+    val features = FreqFilter.run(sc, featuresPath, featureVoc, keepSingleWords = false)
     features
       .map({ case (feature, freq) => feature + "\t" + freq })
       .saveAsTextFile(featuresOutPath)

@@ -1,34 +1,43 @@
 package de.uhh.lt.jst.dt
 
 import de.uhh.lt.conll.{CoNLLParser, Row, Sentence}
+import de.uhh.lt.jst.Job
 import de.uhh.lt.jst.dt.entities.TermContext
 import de.uhh.lt.spark.corpus._
 import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.{Dataset, SparkSession}
 
-object CoNLL2DepTermContext {
 
-  def main(args: Array[String]): Unit = {
 
-    if (args.length < 2) {
-      println("Usage: input-file output-dir")
-      return
-    }
+object CoNLL2DepTermContext extends Job {
+  case class Config(input: String = "", output: String = "")
+
+  override type ConfigType = Config
+  override val config = Config()
+
+  override val command: String = "CoNLL2DepTermContext"
+  override val description = "Extract dependencies from a CoNLL file and converts into Term Context files"
+
+  override val parser = new Parser {
+    arg[String]("CONLL_FILE").action( (x, c) =>
+      c.copy(input = x) ).required().hidden()
+
+    arg[String]("OUTPUT_DIR").action( (x, c) =>
+      c.copy(output = x) ).required().hidden()
+  }
+
+  def run(config: Config): Unit =  {
 
     implicit val spark: SparkSession = SparkSession.builder()
       .appName(this.getClass.getSimpleName)
       .getOrCreate()
     import spark.implicits._
 
-    val input = args(0)
-    val outputDir = args(1)
-
-    val df = convertWithSpark(spark, input)
+    val df = convertWithSpark(spark, config.input)
 
     df.map(tc => s"${tc.term}\t${tc.context}")
       .write
-      .text(outputDir)
-
+      .text(config.output)
   }
 
   def convertWithSpark(
@@ -145,4 +154,5 @@ object CoNLL2DepTermContext {
           TermContext(headLemma, s"-$depRel#$depLemma")
     }
   }
+
 }

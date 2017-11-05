@@ -1,10 +1,49 @@
 package de.uhh.lt.jst.dt
 
-import de.uhh.lt.jst.utils
+import de.uhh.lt.jst.{Job, utils}
 import org.apache.spark.{SparkConf, SparkContext}
 
-object DTFilter {
-  def main(args: Array[String]) {
+object DTFilter extends Job {
+
+  case class Config(
+    dt: String = "",
+    vocabulary: String = "",
+    outputDTDirectory: String = "",
+    keepSingleWords: String = "true",
+    filterOnlyTarget: String = "false"
+  )
+
+  type ConfigType = Config
+  override val config = Config()
+
+  override val command: String = "DTFilter"
+  override val description = "Remove all target and related words which are not in the VOC_FILE."
+
+  val parser = new Parser {
+
+    opt[Unit]('s', "remove-single").action( (x, c) =>
+      c.copy(keepSingleWords = "false") ).
+      text("remove all rows with single words")
+
+    opt[Unit]('t', "only-target").action( (x, c) =>
+      c.copy(filterOnlyTarget = "true") ).
+      text("only remove target words not related words")
+
+    arg[String]("DT_FILE").action( (x, c) =>
+      c.copy(dt = x) ).required().hidden()
+
+    arg[String]("VOC_FILE").action( (x, c) =>
+      c.copy(vocabulary = x) ).required().hidden()
+
+    arg[String]("OUTPUT_DIR").action( (x, c) =>
+      c.copy(outputDTDirectory = x) ).required().hidden()
+  }
+
+  override def run(config: Config): Unit = oldMain(config.productIterator.map(_.toString).toArray)
+
+  // ------ unchanged old logic ------- //
+
+  def oldMain(args: Array[String]) {
     if (args.size < 4) {
       println("Usage: DTFilter <dt-path.csv> <mwe-vocabulary.csv> <output-dt-directory> <keep-single-words>")
       println("<dt>\tis a distributional thesaurus in the format 'word_i<TAB>word_j<TAB>similarity_ij<TAB>features_ij'")
@@ -67,4 +106,5 @@ object DTFilter {
       .map { case (word_i, word_j, sim_ij, features_ij) => word_i + "\t" + word_j + "\t" + sim_ij }
       .saveAsTextFile(outPath)
   }
+
 }
