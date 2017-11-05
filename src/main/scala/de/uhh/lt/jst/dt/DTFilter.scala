@@ -19,7 +19,7 @@ object DTFilter extends Job {
   override val command: String = "DTFilter"
   override val description = "Remove all target and related words which are not in the VOC_FILE."
 
-  override val parser = new Parser {
+  val parser = new Parser {
 
     opt[Unit]('s', "remove-single").action( (x, c) =>
       c.copy(keepSingleWords = "false") ).

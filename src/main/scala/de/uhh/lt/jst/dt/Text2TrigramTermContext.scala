@@ -22,31 +22,18 @@ object Text2TrigramTermContext  extends Job {
       c.copy(output = x) ).required().hidden()
   }
 
-  def run(config: Config): Unit =
-    oldMain(config.productIterator.map(_.toString).toArray)
-
-  // ------ unchanged old logic ------- //
-
-  def oldMain(args: Array[String]): Unit = {
-
-    if (args.length < 2) {
-      println("Usage: input-file output-dir")
-      return
-    }
+  def run(config: Config): Unit = {
 
     implicit val spark: SparkSession = SparkSession.builder()
       .appName(this.getClass.getSimpleName)
       .getOrCreate()
     import spark.implicits._
 
-    val input = args(0)
-    val outputDir = args(1)
-
-    val df = convertWithSpark(input)
+    val df = convertWithSpark(config.input)
 
     df.map(tc => s"${tc.term}\t${tc.context}")
       .write
-      .text(outputDir)
+      .text(config.output)
 
   }
 

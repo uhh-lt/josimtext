@@ -12,7 +12,7 @@ object FreqFilter extends Job {
     freqCSV: String = "",
     vocabularyCSV: String = "",
     outputFreqCSV: String = "",
-    keepSingleWords: String = "true"
+    keepSingleWords: Boolean = true
   )
 
   type ConfigType = Config
@@ -24,7 +24,7 @@ object FreqFilter extends Job {
   override val parser = new Parser {
 
     opt[Unit]('s', "remove-single").action( (x, c) =>
-      c.copy(keepSingleWords = "false") ).
+      c.copy(keepSingleWords = false) ).
       text("remove all single word terms")
 
     arg[String]("TERM_REPR_FILE").action( (x, c) =>
@@ -37,50 +37,26 @@ object FreqFilter extends Job {
       c.copy(outputFreqCSV = x) ).required().hidden()
   }
 
-  def run(config: Config): Unit = oldMain(config.productIterator.map(_.toString).toArray)
-
-  // ------ unchanged old logic ------- //
-
-  def oldMain(args: Array[String]) {
-    if (args.size < 4) {
-      println("Usage: FreqFilter <freq-csv> <vocabulary-csv> <output-freq-csv> <keep-single-words>")
-      println("<freq-csv>\tpath to a csv with word counts 'word<TAB>freq'")
-      println("<vocabulary-csv>\tpath to a list of words that will be kept in the output (word must be in the list). " +
-        "words in all registers will be kept if present in the vocabulary.")
-      println("<output-freq-csv>\tpath to output with the filtered word counts")
-      println("<keep-single-words>\tif 'true' then all single words are kept even if they are not in the <vocabulary-csv>. default -- 'true'.")
-      return
-    }
-
-    // Input parameters
-    val freqPath = args(0)
-    val vocPath = args(1)
-    val outPath = args(2)
-    val keepSingleWords = args(3).toBoolean
-    println("Input frequency dictionary: " + freqPath)
-    println("Vocabulary:" + vocPath)
-    println("Output frequency dictionary: " + outPath)
-    println("Keep single words: " + keepSingleWords)
-    Util.delete(outPath)
+  def run(config: Config): Unit = {
 
     // Set Spark configuration
-    val conf = new SparkConf().setAppName("FreqFilter")
-    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+    val sparkConf = new SparkConf().setAppName("FreqFilter")
+    sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
     //conf.set("spark.dynamicAllocation.enabled", "true")
     //conf.set("spark.shuffle.service.enabled", "true") // required to enable dynamicAllocation
-    val sc = new SparkContext(conf)
+    val sc = new SparkContext(sparkConf)
 
     // Filter
-    val voc = Util.loadVocabulary(sc, vocPath)
-    val freqFiltered = run(freqPath, voc, keepSingleWords, sc)
+    val voc = Util.loadVocabulary(sc, config.vocabularyCSV)
+    val freqFiltered = run(sc, config.freqCSV, voc, config.keepSingleWords)
 
     // Save the result
     freqFiltered
       .map({ case (word, freq) => word + "\t" + freq })
-      .saveAsTextFile(outPath)
+      .saveAsTextFile(config.outputFreqCSV)
   }
 
-  def run(freqPath: String, voc: Set[String], keepSingleWords: Boolean, sc: SparkContext): RDD[(String, String)] = {
+  def run(sc: SparkContext, freqPath: String, voc: Set[String], keepSingleWords: Boolean): RDD[(String, String)] = {
     val freq = sc.textFile(freqPath)
       .map(line => line.split("\t"))
       .map({ case Array(word, freq) => (word, freq) case _ => ("?", "?") })
