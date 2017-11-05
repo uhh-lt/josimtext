@@ -16,14 +16,14 @@ object WordSimFromCounts extends Job {
   )
 
   case class Parameters (
-    wordsPerFeatureNum: Int = 1000,
-    significanceMin: Double = 0.0,
-    wordFeatureMinCount: Int = 2,
-    wordMinCount: Int = 2,
-    featureMinCount: Int = 2,
+    wordsPersFeature: Int = 1000,
+    minSignificance: Double = 0.0,
+    minWordFeatureCount: Int = 2,
+    minWordCount: Int = 5,
+    minFeatureCount: Int = 5,
     significanceType: String = "LMI",
-    featuresPerWordNum: Int = 1000,
-    similarWordsMaxNum: Int = 200
+    featuresPerWord: Int = 2000,
+    maxSimilarWords: Int = 200
   )
 
   type ConfigType = Config
@@ -59,34 +59,34 @@ object WordSimFromCounts extends Job {
   */
 
     opt[Int]("wpf").action( (x, c) =>
-      c.copy(parameters = c.parameters.copy(wordsPerFeatureNum = x))).
+      c.copy(parameters = c.parameters.copy(wordsPersFeature = x))).
       valueName("integer").
-      text(s"Number of words per features (default ${config.parameters.wordsPerFeatureNum})")
+      text(s"Number of words per features (default ${config.parameters.wordsPersFeature})")
 
     opt[Int]("fpw").action( (x, c) =>
-      c.copy(parameters = c.parameters.copy(featuresPerWordNum = x))).
+      c.copy(parameters = c.parameters.copy(featuresPerWord = x))).
       valueName("integer").
-      text(s"Number of features per word (default ${config.parameters.featuresPerWordNum})")
+      text(s"Number of features per word (default ${config.parameters.featuresPerWord})")
 
     opt[Int]("minw").action( (x, c) =>
-      c.copy(parameters = c.parameters.copy(wordMinCount = x))).
+      c.copy(parameters = c.parameters.copy(minWordCount = x))).
       valueName("integer").
-      text(s"Minimum word count (default ${config.parameters.wordMinCount})")
+      text(s"Minimum word count (default ${config.parameters.minWordCount})")
 
     opt[Int]("minf").action( (x, c) =>
-      c.copy(parameters = c.parameters.copy(featureMinCount = x))).
+      c.copy(parameters = c.parameters.copy(minFeatureCount = x))).
       valueName("integer").
-      text(s"Minimum feature count (default ${config.parameters.featureMinCount})")
+      text(s"Minimum feature count (default ${config.parameters.minFeatureCount})")
 
     opt[Int]("minwf").action( (x, c) =>
-      c.copy(parameters = c.parameters.copy(wordFeatureMinCount = x))).
+      c.copy(parameters = c.parameters.copy(minWordFeatureCount = x))).
       valueName("integer").
-      text(s"Minimum word feature count (default ${config.parameters.wordFeatureMinCount})")
+      text(s"Minimum word feature count (default ${config.parameters.minWordFeatureCount})")
 
     opt[Double]("minsign").action( (x, c) =>
-      c.copy(parameters = c.parameters.copy(significanceMin = x))).
+      c.copy(parameters = c.parameters.copy(minSignificance = x))).
       valueName("double").
-      text(s"Minimum significance measure (default ${config.parameters.significanceMin})")
+      text(s"Minimum significance measure (default ${config.parameters.minSignificance})")
 
     opt[String]("sign").action( (x, c) =>
       c.copy(parameters = c.parameters.copy(significanceType = x))).
@@ -95,9 +95,9 @@ object WordSimFromCounts extends Job {
 
     // Sometimes this seems to be called NearestNeighboursNum, TODO is using the nnn abbr. good?
     opt[Int]("nnn").action( (x, c) =>
-      c.copy(parameters = c.parameters.copy(similarWordsMaxNum = x))).
+      c.copy(parameters = c.parameters.copy(maxSimilarWords = x))).
       valueName("integer").
-      text(s"Number of nearest neighbours, .i.e maximum similar words (default ${config.parameters.similarWordsMaxNum})")
+      text(s"Number of nearest neighbours, .i.e maximum similar words (default ${config.parameters.maxSimilarWords})")
   }
 
   def run(config: Config): Unit = oldMain(
