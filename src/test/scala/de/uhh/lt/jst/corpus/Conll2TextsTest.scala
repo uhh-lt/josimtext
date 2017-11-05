@@ -21,5 +21,5 @@ class Conll2TextsTest extends FlatSpec with Matchers  with SharedSparkContext {
     Conll2Texts.getText("# text = ") shouldEqual("")
     Conll2Texts.getText("# text = a") shouldEqual("a")
     Conll2Texts.getText("# text = This is some text. ") shouldEqual("This is some text.")
-
+  }
 }
