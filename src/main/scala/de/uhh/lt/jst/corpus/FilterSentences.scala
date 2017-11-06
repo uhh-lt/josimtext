@@ -3,6 +3,7 @@ package de.uhh.lt.jst.corpus
 
 import de.uhh.lt.jst.SparkJob
 import org.apache.spark.SparkContext
+import org.apache.spark.sql.SparkSession
 
 object FilterSentences extends SparkJob {
 
@@ -27,8 +28,8 @@ object FilterSentences extends SparkJob {
       text("Directory with output filtered sentences one per line.")
   }
 
-  override def run(sc: SparkContext, config: Config): Unit = {
-
+  override def run(spark: SparkSession, config: Config): Unit = {
+    val sc = spark.sparkContext
     val urlRegex = "(http://|www\\.|[a-z0-9]\\.com)".r
     val htmlRegex = "<[a-z ='\"/:0-9]+[^>]*>".r
     val latinTextRegex = "^[#±§-‒–—―©®™½¾@€£$¥&\u20BD\u00A0\u00AD%\\[\\])(（）;:,\\..?!\"'×Þß÷þøA-zÀ-ÿćęłńóśźżĄĆĘŁŃÓŚŹŻ0-9\\s-\\t/+α-ωΑ-Ω-]+$".r

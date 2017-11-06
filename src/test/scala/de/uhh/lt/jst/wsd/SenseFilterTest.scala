@@ -1,15 +1,15 @@
 package de.uhh.lt.jst.wsd
 
-import com.holdenkarau.spark.testing.SharedSparkContext
+import com.holdenkarau.spark.testing.DatasetSuiteBase
 import de.uhh.lt.jst.utils.Const
 import org.scalatest._
 
-class SenseFilterTest extends FlatSpec with Matchers  with SharedSparkContext {
+class SenseFilterTest extends FlatSpec with Matchers  with DatasetSuiteBase {
 
   def run(sensesPath:String, vocPath:String) = {
     val outputPath = sensesPath + "-output"
     val config = SensesFilter.Config(sensesPath, vocPath, outputPath, lowerCase = true, lowerOrFirstUpper = true)
-    SensesFilter.run(sc, config)
+    SensesFilter.run(spark, config)
   }
 
   it should "filter sense clusters by vocabulary" in {

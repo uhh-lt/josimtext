@@ -1,10 +1,10 @@
 package de.uhh.lt.jst.dt
 
-import com.holdenkarau.spark.testing.{RDDComparisons, SharedSparkContext}
+import com.holdenkarau.spark.testing.{RDDComparisons, DatasetSuiteBase}
 import org.scalatest._
 
 
-class WordSimFromTermContextSpec extends FlatSpec with Matchers with SharedSparkContext with RDDComparisons {
+class WordSimFromTermContextSpec extends FlatSpec with Matchers with DatasetSuiteBase with RDDComparisons {
 
   it should "calculate count RDDs" in {
 

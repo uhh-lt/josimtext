@@ -1,7 +1,7 @@
 package de.uhh.lt.jst.wsd
 
 import de.uhh.lt.jst.SparkJob
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.SparkSession
 
 
 object Clusters2Features  extends SparkJob {
@@ -23,8 +23,8 @@ object Clusters2Features  extends SparkJob {
       c.copy(outputDir = x)).required().hidden()
   }
 
-  def run(sc: SparkContext, config: Config): Unit = {
-    sc
+  def run(spark: SparkSession, config: Config): Unit = {
+    spark.sparkContext
       .textFile(config.inputDir)
       .map(line => line.split("\t"))
       .map { case Array(target, sense_id, keyword, cluster) => (target, sense_id, cluster) case _ => ("?", "-1", "") }

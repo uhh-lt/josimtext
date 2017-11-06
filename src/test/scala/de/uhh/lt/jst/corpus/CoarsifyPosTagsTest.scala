@@ -2,17 +2,18 @@ package de.uhh.lt.jst.corpus
 
 import java.nio.file.{Files, Paths}
 
-import com.holdenkarau.spark.testing.SharedSparkContext
+import com.holdenkarau.spark.testing.DatasetSuiteBase
 import org.scalatest._
 
 import scala.io.Source
 
-class CoarsifyPosTagsTest extends FlatSpec with Matchers with SharedSparkContext {
+class CoarsifyPosTagsTest extends FlatSpec with Matchers with DatasetSuiteBase {
   val COUNTS_DIR = getClass.getResource("/counts").getPath
 
   def run(inputDir: String) = {
     val outputDir = inputDir + "-output"
-    CoarsifyPosTags.run(sc, inputDir, outputDir)
+    val config = CoarsifyPosTags.Config(inputDir, outputDir)
+    CoarsifyPosTags.run(spark, config)
     outputDir
   }
 

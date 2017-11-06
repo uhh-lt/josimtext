@@ -2,8 +2,9 @@ package de.uhh.lt.jst.dt
 
 import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.utils.Util
+import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.SparkSession
 
 
 object WordFeatureFilter  extends SparkJob {
@@ -31,8 +32,8 @@ object WordFeatureFilter  extends SparkJob {
       c.copy(outputWordFeatureCSV = x)).required().hidden()
   }
 
-  def run(sc: SparkContext, config: Config): Unit = {
-
+  def run(spark: SparkSession, config: Config): Unit = {
+    val sc = spark.sparkContext
     // Filter
     val voc = Util.loadVocabulary(sc, config.vocCSV)
     val (wordFeatureFreq, featureVoc) = calculate(config.wordFeatureCSV, voc, sc)

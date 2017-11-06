@@ -3,6 +3,7 @@ package de.uhh.lt.jst.corpus
 import de.uhh.lt.jst.SparkJob
 import org.apache.hadoop.io.compress.GzipCodec
 import org.apache.spark.SparkContext
+import org.apache.spark.sql.SparkSession
 
 object Conll2Texts extends SparkJob {
 
@@ -43,8 +44,9 @@ object Conll2Texts extends SparkJob {
     else line
   }
 
-  override def run(sc: SparkContext, config: Config): Unit = {
-    sc.textFile(config.inputDir)
+  override def run(spark: SparkSession, config: Config): Unit = {
+    spark.sparkContext
+      .textFile(config.inputDir)
       .filter { line => line.startsWith("# ")}
       .filter{ line => !line.startsWith("# parser") && !line.startsWith("# sent_id")}
       .map{ line => getText(line)}

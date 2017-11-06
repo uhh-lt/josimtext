@@ -4,6 +4,7 @@ import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.utils.{Const, KryoDiskSerializer, Util}
 import de.uhh.lt.jst.wsd.WSDFeatures.WSDFeatures
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.{HashPartitioner, SparkConf, SparkContext}
 import scopt.Read
 import scopt.Read.reads
@@ -271,8 +272,8 @@ object WSD extends SparkJob {
   type IndexedTermScores = Map[Int, Map[String, Double]]
   type FiveColumns[T] = (T, T, T, T, T)
 
-  def buildFeatures(sc: SparkContext, config: Config): RDD[(String, FiveColumns[IndexedTermScores])] = {
-
+  def buildFeatures(spark: SparkSession, config: Config): RDD[(String, FiveColumns[IndexedTermScores])] = {
+    val sc = spark.sparkContext
     val featuresPath = config.clusterDir + FEATURES_POSTFIX
     val fs = org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration)
     val featuresExist = fs.exists(new org.apache.hadoop.fs.Path(featuresPath))
@@ -355,8 +356,9 @@ object WSD extends SparkJob {
 
   type TwelveColumns[T] = (T, T, T, T, T, T, T, T, T, T, T, T)
 
-  def run(sc: SparkContext, config: Config): Unit = {
+  def run(spark: SparkSession, config: Config): Unit = {
 
+    val sc = spark.sparkContext
     // Load lexical sample
     // target, (dataset, features)
     // dataset: context_id	target	target_pos	target_position	gold_sense_ids	predict_sense_ids	golden_related	predict_related	context word_features	holing_features	target_holing_features
@@ -371,7 +373,7 @@ object WSD extends SparkJob {
       .cache()
     println(s"# lexical samples: ${lexSample.count()}")
 
-    val features = buildFeatures(sc, config)
+    val features = buildFeatures(spark, config)
 
     val result = lexSample
       .join(features)

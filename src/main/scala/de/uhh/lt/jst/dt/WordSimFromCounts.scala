@@ -2,7 +2,7 @@ package de.uhh.lt.jst.dt
 
 import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.dt.WordSimLib.WordSimParameters
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.SparkSession
 
 
 object WordSimFromCounts extends SparkJob {
@@ -77,8 +77,8 @@ object WordSimFromCounts extends SparkJob {
       text(s"Number of nearest neighbours, .i.e maximum similar words (default ${config.parameters.maxSimilarWords})")
   }
 
-  override def run(sc: SparkContext, config: Config): Unit = {
-
+  override def run(spark: SparkSession, config: Config): Unit = {
+    val sc = spark.sparkContext
     val wordFeatureCounts = sc.textFile(config.wordFeatureCountsCSV)
       .map(line => line.split("\t"))
       .map {

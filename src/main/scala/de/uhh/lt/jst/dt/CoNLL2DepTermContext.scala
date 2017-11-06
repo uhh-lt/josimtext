@@ -1,7 +1,7 @@
 package de.uhh.lt.jst.dt
 
 import de.uhh.lt.conll.{CoNLLParser, Row, Sentence}
-import de.uhh.lt.jst.Job
+import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.dt.entities.TermContext
 import de.uhh.lt.spark.corpus._
 import org.apache.spark.sql.functions.udf
@@ -9,7 +9,7 @@ import org.apache.spark.sql.{Dataset, SparkSession}
 
 
 
-object CoNLL2DepTermContext extends Job {
+object CoNLL2DepTermContext extends SparkJob {
   case class Config(input: String = "", output: String = "")
 
   override type ConfigType = Config
@@ -26,17 +26,8 @@ object CoNLL2DepTermContext extends Job {
       c.copy(output = x) ).required().hidden()
   }
 
-  def run(config: Config): Unit =  {
-    val spark: SparkSession = SparkSession.builder()
-      .appName(this.getClass.getSimpleName)
-      .getOrCreate()
-
-    run(spark, config)
-  }
-
-  def run(spark: SparkSession, config: Config): Unit = {
+  override def run(spark: SparkSession, config: Config): Unit = {
     import spark.implicits._
-
     val df = convertWithSpark(spark, config.input)
 
     df.map(tc => s"${tc.term}\t${tc.context}")

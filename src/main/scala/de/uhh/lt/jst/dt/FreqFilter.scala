@@ -2,8 +2,9 @@ package de.uhh.lt.jst.dt
 
 import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.utils.Util
+import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.SparkSession
 
 
 object FreqFilter extends SparkJob {
@@ -37,7 +38,8 @@ object FreqFilter extends SparkJob {
       c.copy(outputFreqCSV = x) ).required().hidden()
   }
 
-  override def run(sc: SparkContext, config: Config): Unit = {
+  override def run(spark: SparkSession, config: Config): Unit = {
+    val sc = spark.sparkContext
     // Filter
     val voc = Util.loadVocabulary(sc, config.vocabularyCSV)
     val freqFiltered = calculate(sc, config.freqCSV, voc, config.keepSingleWords)

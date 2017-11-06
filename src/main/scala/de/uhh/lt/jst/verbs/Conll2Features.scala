@@ -1,19 +1,19 @@
 package de.uhh.lt.jst.verbs
 
-import de.uhh.lt.jst.Job
+import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.corpus.ReformatConll
 import de.uhh.lt.jst.utils.{Const, Util}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.spark.rdd.RDD
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.SparkSession
 
 import scala.collection.mutable.ListBuffer
 import scala.util.Try
 
 
-object Conll2Features extends Job {
+object Conll2Features extends SparkJob {
 
   case class Config(
     inputDir: String = "",
@@ -33,15 +33,6 @@ object Conll2Features extends Job {
 
     opt[Unit]("verbs-only").abbr("vo").action( (x, c) =>
       c.copy(verbsOnly = true) ).text("only consider features for verbs")
-  }
-
-  override def run(config: Config): Unit = {
-
-    val conf = new SparkConf().setAppName(this.getClass.getSimpleName)
-    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val sc = new SparkContext(conf)
-
-    run(sc, config)
   }
 
   /* CoNLL format: for each dependency output a field with ten columns ending with the bio named entity: http://universaldependencies.org/docs/format.html
@@ -102,8 +93,8 @@ object Conll2Features extends Job {
     //CoarsifyPosTags.full2coarse(fullPos)
   }
 
-  def run(sc: SparkContext, config: Config) = {
-
+  def run(spark: SparkSession, config: Config) = {
+    val sc = spark.sparkContext
     // Initialization
     val conf = new Configuration
     conf.set("textinputformat.record.delimiter", conllRecordDelimiter)

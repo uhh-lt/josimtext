@@ -1,10 +1,10 @@
 package de.uhh.lt.jst.dt
 
-import de.uhh.lt.jst.Job
+import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.dt.entities.TermContext
 import org.apache.spark.sql.{Dataset, SparkSession}
 
-object Text2TrigramTermContext  extends Job {
+object Text2TrigramTermContext  extends SparkJob {
 
   case class Config(input: String = "", output: String = "")
 
@@ -22,14 +22,11 @@ object Text2TrigramTermContext  extends Job {
       c.copy(output = x) ).required().hidden()
   }
 
-  def run(config: Config): Unit = {
+  override def run(spark: SparkSession, config: Config): Unit = {
 
-    implicit val spark: SparkSession = SparkSession.builder()
-      .appName(this.getClass.getSimpleName)
-      .getOrCreate()
     import spark.implicits._
 
-    val df = convertWithSpark(config.input)
+    val df = convertWithSpark(spark, config.input)
 
     df.map(tc => s"${tc.term}\t${tc.context}")
       .write
@@ -55,7 +52,7 @@ object Text2TrigramTermContext  extends Job {
     }.toSeq
   }
 
-  def convertWithSpark(path: String)(implicit spark: SparkSession): Dataset[TermContext] = {
+  def convertWithSpark(spark: SparkSession, path: String): Dataset[TermContext] = {
     import spark.implicits._
 
     val ds = spark.read.text(path)

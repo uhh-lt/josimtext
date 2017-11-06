@@ -2,6 +2,7 @@ package de.uhh.lt.jst.corpus
 
 import de.uhh.lt.jst.SparkJob
 import org.apache.spark.SparkContext
+import org.apache.spark.sql.SparkSession
 
 object ReformatConll extends SparkJob {
 
@@ -28,8 +29,8 @@ object ReformatConll extends SparkJob {
       text("Directory with a parsed corpus in the CoNLL format: delimiter='$newConllRecordDelimiter'.")
   }
 
-  override def run(sc: SparkContext, config: Config): Unit = {
-    sc
+  override def run(spark: SparkSession, config: Config): Unit = {
+    spark.sparkContext
       .textFile(config.inputDir)
       .map { line => oldConllRecordDelimiter.replaceAllIn(line, newConllRecordDelimiter) }
       .saveAsTextFile(config.outputDir)

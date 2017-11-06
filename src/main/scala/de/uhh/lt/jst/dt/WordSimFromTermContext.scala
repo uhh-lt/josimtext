@@ -2,7 +2,8 @@ package de.uhh.lt.jst.dt
 
 import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.dt.WordSimLib.{TermCountRDD, TermTermCountRDD, WordSimParameters}
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.SparkContext
+import org.apache.spark.sql.SparkSession
 
 object WordSimFromTermContext extends SparkJob {
 
@@ -92,8 +93,8 @@ object WordSimFromTermContext extends SparkJob {
     (termFeatureCountRDD, termCountRDD, featureCountRDD)
   }
 
-  def run(sc: SparkContext, config: Config): Unit = {
-
+  def run(spark: SparkSession, config: Config): Unit = {
+    val sc = spark.sparkContext
     val (wordFeatureCounts, wordCounts, featureCounts) = calculateCountRDDsFromTextContext(sc, config.input)
 
     val (simsPath, simsWithFeaturesPath, featuresPath) =

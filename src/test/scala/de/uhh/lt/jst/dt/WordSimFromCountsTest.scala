@@ -3,7 +3,7 @@ package de.uhh.lt.jst.dt
 import java.io.File
 import java.nio.file.{FileSystems, Files, Paths}
 
-import com.holdenkarau.spark.testing.SharedSparkContext
+import com.holdenkarau.spark.testing.DatasetSuiteBase
 import de.uhh.lt.jst.dt.WordSimFromCounts.Config
 import de.uhh.lt.jst.dt.WordSimLib.WordSimParameters
 import org.scalatest._
@@ -14,7 +14,7 @@ import de.uhh.lt.jst.utils.{Const, Util}
 import scala.io.Source
 
 
-class WordSimFromCountsTest extends FlatSpec with Matchers with SharedSparkContext {
+class WordSimFromCountsTest extends FlatSpec with Matchers with DatasetSuiteBase {
 
   /**
     * This function and thus each test case run about about 2 minutes on a core i5 cpu with 8gb of ram
@@ -39,7 +39,7 @@ class WordSimFromCountsTest extends FlatSpec with Matchers with SharedSparkConte
         minSignificance = 0.0
       )
     )
-    WordSimFromCounts.run(sc, config)
+    WordSimFromCounts.run(spark, config)
   }
 
   ignore should "DefaultConf produce default results" taggedAs Slow in {

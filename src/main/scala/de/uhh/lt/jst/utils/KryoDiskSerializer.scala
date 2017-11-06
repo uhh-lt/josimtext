@@ -4,9 +4,9 @@ import java.io.ByteArrayOutputStream
 
 import com.esotericsoftware.kryo.io.Input
 import org.apache.hadoop.io.{BytesWritable, NullWritable}
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.serializer.KryoSerializer
-import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.reflect.ClassTag
 

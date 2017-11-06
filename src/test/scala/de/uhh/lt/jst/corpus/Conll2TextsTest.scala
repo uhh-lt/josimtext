@@ -1,15 +1,15 @@
 package de.uhh.lt.jst.corpus
 
-import com.holdenkarau.spark.testing.SharedSparkContext
+import com.holdenkarau.spark.testing.DatasetSuiteBase
 import de.uhh.lt.testing.tags.NeedsMissingFiles
 import org.scalatest._
 
-class Conll2TextsTest extends FlatSpec with Matchers  with SharedSparkContext {
+class Conll2TextsTest extends FlatSpec with Matchers  with DatasetSuiteBase {
 
   def run(inputPath:String): Unit = {
     val outputPath = inputPath + "-output"
     val config = Conll2Texts.Config(inputPath, outputPath)
-    Conll2Texts.run(sc, config)
+    Conll2Texts.run(spark, config)
   }
 
   it should "extract text from a conll file" in {

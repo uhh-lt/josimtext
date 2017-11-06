@@ -2,19 +2,19 @@ package de.uhh.lt.jst.corpus
 
 import java.nio.file.Paths
 
-import com.holdenkarau.spark.testing.SharedSparkContext
+import com.holdenkarau.spark.testing.DatasetSuiteBase
 import org.scalatest._
 
 import scala.io.Source
 
-class FilterSentencesTest extends FlatSpec with Matchers with SharedSparkContext {
+class FilterSentencesTest extends FlatSpec with Matchers with DatasetSuiteBase {
   val inputPath: String = getClass.getResource("/noisy-sentences.txt.gz").getPath
   val outputPath: String =  inputPath + "-output"
 
   def run(inputPath: String): String = {
     val outputPath = inputPath + "-output"
     val config = FilterSentences.Config(inputPath, outputPath)
-    FilterSentences.run(sc, config)
+    FilterSentences.run(spark, config)
     outputPath
   }
 
