@@ -18,9 +18,9 @@ class Conll2TextsTest extends FlatSpec with Matchers  with SharedSparkContext {
   }
 
   it should "extract text from line" in {
-    Conll2Texts.getText("") shouldEqual ("")
-    Conll2Texts.getText("# text = ") shouldEqual ("")
-    Conll2Texts.getText("# text = a") shouldEqual ("a")
-    Conll2Texts.getText("# text = This is some text. ") shouldEqual ("This is some text.")
+    Conll2Texts.getText("") shouldEqual("")
+    Conll2Texts.getText("# text = ") shouldEqual("")
+    Conll2Texts.getText("# text = a") shouldEqual("a")
+    Conll2Texts.getText("# text = This is some text. ") shouldEqual("This is some text.")
   }
 }
