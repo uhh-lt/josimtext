@@ -1,11 +1,11 @@
 package de.uhh.lt.jst.dt
 
-import de.uhh.lt.jst.Job
+import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.dt.WordSimLib.WordSimParameters
 import org.apache.spark.{SparkConf, SparkContext}
 
 
-object WordSimFromCounts extends Job {
+object WordSimFromCounts extends SparkJob {
 
   case class Config(
     wordCountsCSV: String = "",
@@ -77,17 +77,7 @@ object WordSimFromCounts extends Job {
       text(s"Number of nearest neighbours, .i.e maximum similar words (default ${config.parameters.maxSimilarWords})")
   }
 
-  def run(config: Config): Unit = oldMain(config)
-
-  def oldMain(config: Config) {
-    val sparkConf = new SparkConf().setAppName("JST: WordSimFromCounts")
-    sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val sc = new SparkContext(sparkConf)
-
-    run(sc, config)
-  }
-
-  def run(sc: SparkContext, config: Config): Unit = {
+  override def run(sc: SparkContext, config: Config): Unit = {
 
     val wordFeatureCounts = sc.textFile(config.wordFeatureCountsCSV)
       .map(line => line.split("\t"))

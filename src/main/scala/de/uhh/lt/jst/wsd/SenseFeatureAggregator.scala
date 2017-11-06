@@ -1,29 +1,96 @@
 package de.uhh.lt.jst.wsd
 
+import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.utils.{Const, Util}
-import org.apache.log4j.{Level, Logger}
 import org.apache.spark.rdd._
 import org.apache.spark.{SparkConf, SparkContext}
+import scopt.Read
+import scopt.Read.reads
 
 import scala.util.Try
 
-object SenseFeatureAggregator {
-  Logger.getLogger("org").setLevel(Level.OFF)
-  Logger.getLogger("akka").setLevel(Level.OFF)
+object SenseFeatureAggregator  extends SparkJob {
 
-  val MAX_SIM_WORDS_NUM = 50
-  val MAX_FEATURE_NUM = 10000
-  val MIN_WORD_FEATURE_COUNT = 0
+  object FeatureType extends Enumeration {
+    type FeatureType = Value
+    val words, deps, depwords, trigrams = Value
+  }
+  import FeatureType._
+
+
+  object FeatureNorm extends Enumeration {
+    type FeatureNorm = Value
+    val wc, lmi = Value
+  }
+  import FeatureNorm.FeatureNorm
+
+
   val PRIOR_FEATURE_PROB = 0.000001
-  val FEATURE_TYPES = List("words", "deps", "depwords", "trigrams")
   val LOWERCASE_WORDS_FROM_DEPS = true
-  val FEATURE_SCORE_NORMS = List("wc", "lmi")
   val MIN_WORD_LEN = 3
   val _stopwords = Util.getStopwords()
   val _numbersRegex = """\d+""".r
 
-  def keepFeature(feature: String, featureType: String) = {
-    if (featureType == "deps" || featureType == "depwords") {
+  case class Config(
+    sensesPath: String = "",
+    wordsPath: String = "",
+    featuresPath: String = "",
+    wordFeaturesPath: String = "",
+    outputPath: String = "",
+    numSimWords: Int = 50,
+    featureType: FeatureType = words,
+    maxFeatureNum: Int = 10000,
+    minWordFeatureCount: Int = 0,
+    featureScoreNorm: FeatureNorm = FeatureNorm.lmi,
+    vocFile: Option[String] = None
+  )
+
+  override type ConfigType = Config
+  override val config = Config()
+  override val description = "Aggregates clues of word sense cluster."
+  override val parser = new Parser {
+
+    implicit val readFeatureType: Read[FeatureType] = reads { FeatureType.withName }
+    implicit val readFeatureNorm: Read[FeatureNorm.FeatureNorm] = reads { FeatureNorm.withName }
+
+    arg[String]("SENSES_FILE").action( (x, c) =>
+      c.copy(sensesPath = x) ).required().hidden()
+
+    arg[String]("WORDS_FILE").action( (x, c) =>
+      c.copy(wordsPath = x) ).required().hidden()
+
+    arg[String]("FEATURES_FILE").action( (x, c) =>
+      c.copy(featuresPath = x) ).required().hidden()
+
+    arg[String]("WORD_FEATURES_FILE").action( (x, c) =>
+      c.copy(wordFeaturesPath = x) ).required().hidden()
+
+    arg[String]("OUTPUT_FOLDER").action( (x, c) =>
+      c.copy(outputPath = x) ).required().hidden()
+
+    opt[Int]('w', "numSimWords").action( (x, c) =>
+      c.copy(numSimWords = x) ).
+      text(s"Number of similar words. (default: ${config.numSimWords}")
+
+    opt[FeatureType]('t', "featureType").action( (x, c) =>
+      c.copy(featureType = x) ).
+      text(s"Feature type: ${FeatureType.values.mkString(", ")}. (default ${config.featureType})")
+
+    opt[Int]('f', "maxFeatureNum").action( (x, c) =>
+      c.copy(maxFeatureNum = x) ).
+      text(s"Maximal number of features. (default ${config.maxFeatureNum}")
+
+    opt[FeatureNorm]('s', "featureScoreNorm").action( (x, c) =>
+      c.copy(featureScoreNorm = x) ).
+      text(s"Feature norm for scoring: ${FeatureNorm.values.mkString(", ")}. (default ${config.featureScoreNorm})")
+
+    opt[String]('v', "vocFile").action( (x, c) =>
+      c.copy(vocFile = Some(x)) ).
+      text(s"Vocabulary file of target words")
+  }
+
+  def keepFeature(feature: String, featureType: FeatureType): Boolean = {
+    if (featureType == deps || featureType == depwords) {
       // dependency features
       val (depType, srcWord, dstWord) = Util.parseDep(feature)
       if (Const.Resources.STOP_DEPENDENCIES.contains(depType) || _stopwords.contains(srcWord) || _stopwords.contains(dstWord)) {
@@ -31,7 +98,7 @@ object SenseFeatureAggregator {
       } else {
         true
       }
-    } else if (featureType == "trigrams") {
+    } else if (featureType == trigrams) {
       val (left, right) = Util.parseTrigram(feature)
       val noNumbers = !_numbersRegex.findFirstIn(left).isDefined && !_numbersRegex.findFirstIn(right).isDefined
       val leftOK = !(_stopwords.contains(left) || left.length == 1)
@@ -43,9 +110,9 @@ object SenseFeatureAggregator {
     }
   }
 
-  def transformFeature(feature: String, featureType: String, lowercase: Boolean = LOWERCASE_WORDS_FROM_DEPS) = {
+  def transformFeature(feature: String, featureType: FeatureType, lowercase: Boolean = LOWERCASE_WORDS_FROM_DEPS): String = {
     var res: String = ""
-    if (featureType == "depwords") {
+    if (featureType == depwords) {
       val (depType, srcWord, dstWord) = Util.parseDep(feature)
       if (srcWord == Const.HOLE || srcWord == Const.HOLE_DEPRECATED) {
         res = dstWord
@@ -60,14 +127,20 @@ object SenseFeatureAggregator {
     res
   }
 
-  def formatFeatures(featureList: List[(String, Double)], maxFeatureNum: Int, featureType: String, target: String) = {
+  def formatFeatures(
+                      featureList: List[(String, Double)],
+                      maxFeatureNum: Int,
+                      featureType: FeatureType,
+                      target: String
+                    ): List[(String, Double)] = {
+
     val filteredFeatureList = featureList
       .filter { case (feature, prob) => keepFeature(feature, featureType) }
       .map { case (feature, prob) => (transformFeature(feature, featureType), prob) }
       .sortBy(_._2)
       .reverse
 
-    if (featureType == "depwords") {
+    if (featureType == depwords) {
       // this feature after transformation will be just a word
       filteredFeatureList
         .groupBy(_._1)
@@ -82,8 +155,8 @@ object SenseFeatureAggregator {
     }
   }
 
-  def featureScore(sim: Double, wc: Long, fc: Long, wfc: Long, featureScoreNorm: String): Double = {
-    if (featureScoreNorm.toLowerCase() == "lmi") {
+  def featureScore(sim: Double, wc: Long, fc: Long, wfc: Long, featureScoreNorm: FeatureNorm): Double = {
+    if (featureScoreNorm == FeatureNorm.lmi) {
       if (wc.toDouble * fc.toDouble == 1) {
         PRIOR_FEATURE_PROB
       } else {
@@ -94,58 +167,15 @@ object SenseFeatureAggregator {
     }
   }
 
-  def main(args: Array[String]) {
-    if (args.length < 5) {
-      println("Aggregates clues of word sense cluster.")
-      println("Usage: ClusterContextClueAggregator <senses> <word-counts> <feature-counts> <word-feature-counts> <output> [cluser-words-num] [dependency-features] [max-feature-num] [min-word-feature-count] [target-words]")
-      return
-    }
+  def run(sc: SparkContext, config: Config): Unit = {
 
-    // Initialization
-    val conf = new SparkConf().setAppName("ClusterContextClueAggregator")
-    val sc = new SparkContext(conf)
-
-    val sensesPath = args(0)
-    val wordsPath = args(1)
-    val featuresPath = args(2)
-    val wordFeaturesPath = args(3)
-    val outputPath = args(4)
-    val numSimWords = if (args.length > 5) args(5).toInt else MAX_SIM_WORDS_NUM
-    var featureType = if (args.length > 6) args(6) else FEATURE_TYPES(0)
-    if (!FEATURE_TYPES.contains(featureType)) {
-      println("Warning: wrong feature type. Using 'words' feature type.")
-      featureType = "words"
-    }
-    val maxFeatureNum = if (args.length > 7) args(7).toInt else MAX_FEATURE_NUM
-    val minWordFeatureCount = if (args.length > 8) args(8).toInt else MIN_WORD_FEATURE_COUNT
-    val featureScoreNorm = if (args.length > 9) args(9) else FEATURE_SCORE_NORMS(1)
-    val targetWords: Set[String] = if (args.length > 10) Util.loadVocabulary(sc, args(10)) else Set()
-
-    println("Senses: " + sensesPath)
-    println("Words: " + wordsPath)
-    println("Word features: " + wordFeaturesPath)
-    println("Features: " + featuresPath)
-    println("Output: " + outputPath)
-    println("Number of similar words from cluster: " + numSimWords)
-    println("Feature type: " + featureType)
-    println("Maximum number of features: " + maxFeatureNum)
-    println("Minimum word feature count: " + minWordFeatureCount)
-    println("Feature score normalization: " + featureScoreNorm)
-    println("Target words: " + targetWords)
-
-    run(sc, sensesPath, wordsPath, featuresPath, wordFeaturesPath, outputPath, featureType, numSimWords,
-      maxFeatureNum, minWordFeatureCount, featureScoreNorm, targetWords)
-  }
-
-  def run(sc: SparkContext, sensesPath: String, wordsPath: String, featuresPath: String, wordFeaturesPath: String, outputPath: String, featureType: String,
-          numSimWords: Int = MAX_SIM_WORDS_NUM, maxFeatureNum: Int = MAX_FEATURE_NUM, minWordFeatureCount: Int = MIN_WORD_FEATURE_COUNT,
-          featureScoreNorm: String = "wc", targetWords: Set[String] = Set()) = {
-
-    Util.delete(outputPath)
+    val targetWords = config.vocFile
+      .map(Util.loadVocabulary(sc, _))
+      .getOrElse(Set())
 
     // Action
     val clusterSimWords: RDD[((String, String), (Array[(String, Double)], Double))] = sc // (target, sense_id), [((word, sim), sum_sum)]
-      .textFile(sensesPath)
+      .textFile(config.sensesPath)
       .map(line => line.split("\t"))
       .map { case Array(target, sense_id, cluster) => (target, sense_id, cluster)
       case Array(target, sense_id) => (target, sense_id, "")
@@ -155,7 +185,7 @@ object SenseFeatureAggregator {
       .map { case (target, sense_id, cluster) => (
         (target, sense_id),
         cluster.split(Const.LIST_SEP)
-          .take(numSimWords)
+          .take(config.numSimWords)
           .map(wordWithSim => Util.splitLastN(wordWithSim, Const.SCORE_SEP, 2))
           .map { case Array(word, sim) => if (Try(sim.toDouble).isSuccess) (word.trim(), sim.toDouble) else (word.trim(), 0.0) case _ => ("?", 0.0) }
           .filter({ case (word, sim) => !_stopwords.contains(word) && !_stopwords.contains(word.toLowerCase) && word.length >= MIN_WORD_LEN }))
@@ -169,12 +199,12 @@ object SenseFeatureAggregator {
       .cache()
 
     val wordCounts: RDD[(String, Long)] = sc // word, freq
-      .textFile(wordsPath)
+      .textFile(config.wordsPath)
       .map(line => line.split("\t"))
       .map({ case Array(word, freq) => (word, freq.toLong) })
 
     val featureCounts: RDD[(String, Long)] = sc // feature, freq
-      .textFile(featuresPath)
+      .textFile(config.featuresPath)
       .map(line => line.split("\t"))
       .map({ case Array(word, freq) => (word, freq.toLong) })
 
@@ -182,10 +212,10 @@ object SenseFeatureAggregator {
       .flatMap({ case ((word, sense), (simWordsWithSim, simSum)) => for ((simWord, sim) <- simWordsWithSim) yield (simWord, (word, sim, sense, simSum)) })
 
     val wordFeatures: RDD[(String, (String, Long, Long, Long))] = sc // word, (feature, wc, fc, wfc)
-      .textFile(wordFeaturesPath)
+      .textFile(config.wordFeaturesPath)
       .map(line => line.split("\t"))
       .map(cols => (cols(1), (cols(0), cols(2).toLong))) // (feature, (word, wfc))
-      .filter({ case (feature, (word, wfc)) => wfc >= minWordFeatureCount })
+      .filter({ case (feature, (word, wfc)) => wfc >= config.minWordFeatureCount })
       .join(featureCounts)
       .map({ case (feature, ((word, wfc), fc)) => (word, (feature, wfc, fc)) })
       .join(wordCounts)
@@ -193,7 +223,7 @@ object SenseFeatureAggregator {
 
     val result: RDD[((String, String), (List[(String, Double)], (Array[(String, Double)], Double)))] = clusterWords
       .join(wordFeatures)
-      .map { case (simWord, ((word, sim, sense, simSum), (feature, wc, fc, wfc))) => ((word, sense, feature), featureScore(sim, wc, fc, wfc, featureScoreNorm)) }
+      .map { case (simWord, ((word, sim, sense, simSum), (feature, wc, fc, wfc))) => ((word, sense, feature), featureScore(sim, wc, fc, wfc, config.featureScoreNorm)) }
       .reduceByKey(_ + _)
       .map { case ((word, sense, feature), pSum) => ((word, sense), (feature, pSum)) }
       .join(clusterSimSums)
@@ -212,11 +242,11 @@ object SenseFeatureAggregator {
           simWordSim
             .map({ case (simWord, sim) => "%s%s%.6f".format(simWord, Const.SCORE_SEP, sim) })
             .mkString(Const.LIST_SEP) + "\t" +
-          formatFeatures(senseFeatureProbs, maxFeatureNum, featureType, word)
+          formatFeatures(senseFeatureProbs, config.maxFeatureNum, config.featureType, word)
             .map({ case (feature, prob) => "%s%s%.6f".format(feature, Const.SCORE_SEP, prob) })
             .mkString(Const.LIST_SEP)
       }
 
-      .saveAsTextFile(outputPath)
+      .saveAsTextFile(config.outputPath)
   }
 }

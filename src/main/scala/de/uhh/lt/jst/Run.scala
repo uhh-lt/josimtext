@@ -4,6 +4,9 @@ import de.uhh.lt.jst.dt._
 
 object Run extends BaseRun {
 
+  override val appDescription =
+    "A system for word sense induction and disambiguation based on JoBimText approach"
+
   override val appName = "./jst"
 
   val jobGroups = List(
@@ -33,10 +36,34 @@ object Run extends BaseRun {
         // Count Filter
         WordFeatureFilter
       )
+    ),
+    new JobGroup(
+      "WSD Commands",
+      List(
+        wsd.Clusters2Features,
+        wsd.SenseFeatureAggregator,
+        wsd.SenseFeatureFilter,
+        wsd.SensesFilter,
+        wsd.WSD
+      )
+    ),
+    new JobGroup(
+      "Corpus Commands",
+      List(
+        corpus.CoarsifyPosTags,
+        corpus.Conll2Texts,
+        corpus.FilterSentences,
+        corpus.ReformatConll
+      )
+    ),
+    new JobGroup(
+      "Miscellaneous Commands",
+      List(
+        verbs.Conll2Features,
+        warc.WarcToDocuments
+      )
     )
   )
 
-  override val appDescription =
-    "A tool to compute term similarities (.i.e a Distributional Thesaurus (DT))"
 }
 

@@ -1,9 +1,9 @@
 package de.uhh.lt.jst.dt
 
-import de.uhh.lt.jst.{Job, utils}
+import de.uhh.lt.jst.{SparkJob, utils}
 import org.apache.spark.{SparkConf, SparkContext}
 
-object DTCaseFilter extends Job {
+object DTCaseFilter extends SparkJob {
 
   case class Config(dt: String = "", outputDTDirectory: String = "")
 
@@ -22,21 +22,10 @@ object DTCaseFilter extends Job {
       c.copy(outputDTDirectory = x) ).required().hidden()
   }
 
-  def run(config: Config): Unit = {
 
-    val conf = new SparkConf().setAppName("DTFilter")
-    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val sc = new SparkContext(conf)
+  def run(sc: SparkContext, config: Config): Unit = {
 
-    run(sc, config.dt, config.outputDTDirectory)
-  }
-
-  def run(sc: SparkContext, dtPath: String, outPath: String): Unit = {
-    println("Input DT: " + dtPath)
-    println("Output DT: " + outPath)
-    utils.Util.delete(outPath)
-
-    val dt = sc.textFile(dtPath)
+    val dt = sc.textFile(config.dt)
       .map(line => line.split("\t"))
       .map {
         case Array(word_i, word_j, sim_ij, features_ij) => (word_i, word_j, sim_ij, features_ij)
@@ -50,6 +39,6 @@ object DTCaseFilter extends Job {
     }.map {
       case (word_i, word_j, sim_ij, features_ij) =>
         word_i + "\t" + word_j + "\t" + sim_ij
-    }.saveAsTextFile(outPath)
+    }.saveAsTextFile(config.outputDTDirectory)
   }
 }
