@@ -1,35 +1,38 @@
 package de.uhh.lt.jst.warc
 
-import de.uhh.lt.jst.utils.Util
+import de.uhh.lt.jst.SparkJob
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.spark.{SparkConf, SparkContext}
 
-object WarcToDocuments {
+object WarcToDocuments extends SparkJob {
 
   val warcDocumentDelimiter = "WARC/1.0"
   val warcHeaderRegex = "^(WARC|c4_|Content-)".r
   val urlRegex = """WARC-Target-URI:\s+(.*)""".r
   val s3Regex = """c4_originalLocation:\s+(.*)""".r
 
-  def main(args: Array[String]) {
-    if (args.size < 2) {
-      println("Parameters: <input-dir> <output-dir>")
-      println(s"<input-dir>\tDirectory with the WARC archives containing the documents: delimiter='$warcDocumentDelimiter'.")
-      println(s"<output-dir>\tDirectory with documents (one document per line) in the format" +
+  case class Config(
+    inputDir: String = "",
+    outputDir: String = ""
+  )
+  override type ConfigType = Config
+  override val config = Config()
+  override val description = ""
+  override val parser = new Parser {
+
+    arg[String]("INPUT_DIR").action( (x, c) =>
+      c.copy(inputDir = x) ).required()
+      .text(s"Directory with the WARC archives containing the documents: " +
+        s"delimiter='$warcDocumentDelimiter'.")
+    arg[String]("OUTPUT_DIR").action( (x, c) =>
+      c.copy(outputDir = x) ).required().
+      text(s"Directory with documents (one document per line) in the format" +
         s" '<url>\t<s3>\t<document-html>'.")
-      return
-    }
-    val inputPath = args(0)
-    val outputPath = args(1)
-    val conf = new SparkConf().setAppName(this.getClass.getSimpleName)
-    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val sc = new SparkContext(conf)
-    run(sc, inputPath, outputPath)
   }
 
-  def getBody(document: String) = {
+  def getBody(document: String): String = {
     document
       .replace("\r", "")
       .split("\n")
@@ -40,16 +43,12 @@ object WarcToDocuments {
 
   }
 
-  def run(sc: SparkContext, inputDir: String, outputDir: String) = {
+  override def run(sc: SparkContext, config: Config): Unit = {
     val conf = new Configuration
     conf.set("textinputformat.record.delimiter", warcDocumentDelimiter)
 
-    println("Input dir.: " + inputDir)
-    println("Output dir.: " + outputDir)
-    Util.delete(outputDir) // a convinience for the local tests
-
-    val unaggregatedFeatures = sc
-      .newAPIHadoopFile(inputDir, classOf[TextInputFormat], classOf[LongWritable], classOf[Text], conf)
+    val unaggregatedFeatures: Unit = sc
+      .newAPIHadoopFile(config.inputDir, classOf[TextInputFormat], classOf[LongWritable], classOf[Text], conf)
       .map { documentText =>
 
         val document = documentText._2.toString
@@ -72,7 +71,8 @@ object WarcToDocuments {
         else "-1"
       }
       .filter { line => line != "-1" }
-      .saveAsTextFile(outputDir)
+      .saveAsTextFile(config.outputDir)
   }
+
 }
 

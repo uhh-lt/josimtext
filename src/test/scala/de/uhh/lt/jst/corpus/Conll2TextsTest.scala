@@ -6,13 +6,14 @@ import org.scalatest._
 
 class Conll2TextsTest extends FlatSpec with Matchers  with SharedSparkContext {
 
-  def run(inputPath:String) = {
+  def run(inputPath:String): Unit = {
     val outputPath = inputPath + "-output"
-    Conll2Texts.run(sc, inputPath, outputPath)
+    val config = Conll2Texts.Config(inputPath, outputPath)
+    Conll2Texts.run(sc, config)
   }
 
   it should "extract text from a conll file" in {
-    val conllPath = getClass.getResource("/conll-1000-tokens.csv.gz").getPath()
+    val conllPath = getClass.getResource("/conll-1000-tokens.csv.gz").getPath
     run(conllPath)
   }
 

@@ -4,9 +4,17 @@ import scala.util.Try
 
 object WSDFeatures extends Enumeration {
   type WSDFeatures = Value
-  val Depstarget, Depsall, Coocs, Clusters, DepsallCoocsClusters, DepstargetCoocsClusters,
-  DepstargetCoocsClustersTrigramstarget, DepsallCoocsClustersTrigramsall, Trigramsall,
-  Trigramstarget, TrigramstargetDepstarget = Value
+  val Depstarget,
+      Depsall,
+      Coocs,
+      Clusters,
+      DepsallCoocsClusters,
+      DepstargetCoocsClusters,
+      DepstargetCoocsClustersTrigramstarget,
+      DepsallCoocsClustersTrigramsall,
+      Trigramsall,
+      Trigramstarget,
+      TrigramstargetDepstarget = Value
 
   def trigramsNeeded(v: WSDFeatures): Boolean = v.toString.toLowerCase contains "trigram"
 

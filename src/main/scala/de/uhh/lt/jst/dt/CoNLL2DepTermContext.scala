@@ -27,10 +27,14 @@ object CoNLL2DepTermContext extends Job {
   }
 
   def run(config: Config): Unit =  {
-
-    implicit val spark: SparkSession = SparkSession.builder()
+    val spark: SparkSession = SparkSession.builder()
       .appName(this.getClass.getSimpleName)
       .getOrCreate()
+
+    run(spark, config)
+  }
+
+  def run(spark: SparkSession, config: Config): Unit = {
     import spark.implicits._
 
     val df = convertWithSpark(spark, config.input)

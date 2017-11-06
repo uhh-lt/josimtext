@@ -1,11 +1,10 @@
 package de.uhh.lt.jst.dt
 
-import de.uhh.lt.jst.Job
+import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.dt.WordSimLib.{TermCountRDD, TermTermCountRDD, WordSimParameters}
-import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
-object WordSimFromTermContext extends Job {
+object WordSimFromTermContext extends SparkJob {
 
   case class Config(
     input: String = "",
@@ -68,16 +67,6 @@ object WordSimFromTermContext extends Job {
       valueName("integer").
       text(s"Number of nearest neighbours, .i.e maximum similar words (default ${config.parameters.maxSimilarWords})")
   }
-
-  def run(config: Config): Unit = {
-
-    val sparkConf = new SparkConf().setAppName("JST: WordSimFromTermContext")
-    sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val sc = new SparkContext(sparkConf)
-
-    run(sc, config)
-  }
-
 
   def calculateCountRDDsFromTextContext(sc: SparkContext, path: String):
     (TermTermCountRDD, TermCountRDD, TermCountRDD) = {

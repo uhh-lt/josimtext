@@ -1,12 +1,12 @@
 package de.uhh.lt.jst.dt
 
-import de.uhh.lt.jst.Job
+import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.utils.Util
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
 
-object FreqFilter extends Job {
+object FreqFilter extends SparkJob {
 
   case class Config(
     freqCSV: String = "",
@@ -37,18 +37,10 @@ object FreqFilter extends Job {
       c.copy(outputFreqCSV = x) ).required().hidden()
   }
 
-  def run(config: Config): Unit = {
-
-    // Set Spark configuration
-    val sparkConf = new SparkConf().setAppName("FreqFilter")
-    sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    //conf.set("spark.dynamicAllocation.enabled", "true")
-    //conf.set("spark.shuffle.service.enabled", "true") // required to enable dynamicAllocation
-    val sc = new SparkContext(sparkConf)
-
+  override def run(sc: SparkContext, config: Config): Unit = {
     // Filter
     val voc = Util.loadVocabulary(sc, config.vocabularyCSV)
-    val freqFiltered = run(sc, config.freqCSV, voc, config.keepSingleWords)
+    val freqFiltered = calculate(sc, config.freqCSV, voc, config.keepSingleWords)
 
     // Save the result
     freqFiltered
@@ -56,7 +48,7 @@ object FreqFilter extends Job {
       .saveAsTextFile(config.outputFreqCSV)
   }
 
-  def run(sc: SparkContext, freqPath: String, voc: Set[String], keepSingleWords: Boolean): RDD[(String, String)] = {
+  def calculate(sc: SparkContext, freqPath: String, voc: Set[String], keepSingleWords: Boolean): RDD[(String, String)] = {
     val freq = sc.textFile(freqPath)
       .map(line => line.split("\t"))
       .map({ case Array(word, freq) => (word, freq) case _ => ("?", "?") })

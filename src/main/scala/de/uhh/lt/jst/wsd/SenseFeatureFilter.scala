@@ -1,70 +1,71 @@
 package de.uhh.lt.jst.wsd
 
+import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.dt.{FreqFilter, WordFeatureFilter}
 import de.uhh.lt.jst.utils.Util
 import org.apache.spark.{SparkConf, SparkContext}
 
 
-object SenseFeatureFilter {
+object SenseFeatureFilter  extends SparkJob {
+
+  case class Config(
+    vocFile: String = "",
+    senseFile: String = "",
+    wordsFile: String = "",
+    wordFeaturesFile: String = "",
+    featuresFile: String = ""
+  )
+
+  override type ConfigType = Config
+  override val config = Config()
+  override val description = "Creates words, features and word-features of the input vocabulary words."
+  override val parser = new Parser {
+
+    arg[String]("VOC_FILE").action( (x, c) =>
+      c.copy(vocFile = x) ).required().hidden()
+
+    arg[String]("SENSES_FILE").action( (x, c) =>
+      c.copy(senseFile = x) ).required().hidden()
+
+    arg[String]("WORDS_FILE").action( (x, c) =>
+      c.copy(wordsFile = x) ).required().hidden()
+
+    arg[String]("WORD_FEATURES_FILE").action( (x, c) =>
+      c.copy(wordFeaturesFile = x) ).required().hidden()
+
+    arg[String]("FEATURES_FILE").action( (x, c) =>
+      c.copy(featuresFile = x) ).required().hidden()
+
+  }
 
   val POSTFIX = "-voc"
 
-  def main(args: Array[String]) {
-    if (args.size < 5) {
-      println("Creates words, features and word-features only related to the senses of the input vocabulary words.")
-      println("Usage: WordFeatureFilter <vocabulary-csv> <senses-csv> <words-csv> <word-features-csv> <features-csv>")
-      return
-    }
+  def run(sc: SparkContext, config: Config): Unit = {
 
-    // Input parameters
-    val vocPath = args(0)
-    val sensesPath = args(1)
-    val wordsPath = args(2)
-    val wordFeaturesPath = args(3)
-    val featuresPath = args(4)
-    val sensesOutPath = sensesPath + POSTFIX
-    val wordsOutPath = wordsPath + POSTFIX
-    val wordFeaturesOutPath = wordFeaturesPath + POSTFIX
-    val featuresOutPath = featuresPath + POSTFIX
+    val sensesOutPath = config.senseFile + POSTFIX
+    val wordsOutPath = config.wordsFile + POSTFIX
+    val wordFeaturesOutPath = config.wordFeaturesFile + POSTFIX
+    val featuresOutPath = config.featuresFile + POSTFIX
 
-    println("Vocabulary: " + vocPath)
-    println("Input Senses: " + sensesPath)
-    println("Input Words:" + wordsPath)
-    println("Input Word-Features: " + wordFeaturesPath)
-    println("Input Features: " + featuresPath)
-    println("Output Senses:" + sensesOutPath)
-    println("Output Words:" + wordsOutPath)
-    println("Output Word-Features: " + wordFeaturesOutPath)
-    println("Output Features: " + featuresOutPath)
-    Util.delete(sensesOutPath)
-    Util.delete(wordsOutPath)
-    Util.delete(wordFeaturesOutPath)
-    Util.delete(featuresOutPath)
-
-    // Set Spark configuration
-    val conf = new SparkConf().setAppName("ClueAggFilter")
-    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val sc: SparkContext = new SparkContext(conf)
-
-    val voc = Util.loadVocabulary(sc, vocPath)
-    val (senses, clusterVocRDD) = SensesFilter.run(sensesPath, voc, sc)
+    val voc = Util.loadVocabulary(sc, config.vocFile)
+    val (senses, clusterVocRDD) = SensesFilter.run(config.senseFile, voc, sc)
     senses
       .map({ case (target, sense_id, cluster) => target + "\t" + sense_id + "\t" + cluster })
       .saveAsTextFile(sensesOutPath)
 
     val clusterVoc = clusterVocRDD.collect().toSet.union(voc)
-    val words = FreqFilter.run(sc, wordsPath, clusterVoc, keepSingleWords = false)
+    val words = FreqFilter.calculate(sc, config.wordsFile, clusterVoc, keepSingleWords = false)
     words
       .map({ case (word, freq) => word + "\t" + freq })
       .saveAsTextFile(wordsOutPath)
 
-    val (wordFeatures, featureVocRDD) = WordFeatureFilter.run(wordFeaturesPath, clusterVoc, sc)
+    val (wordFeatures, featureVocRDD) = WordFeatureFilter.calculate(config.wordFeaturesFile, clusterVoc, sc)
     val featureVoc = featureVocRDD.collect().toSet
     wordFeatures
       .map({ case (word, feature, freq) => word + "\t" + feature + "\t" + freq })
       .saveAsTextFile(wordFeaturesOutPath)
 
-    val features = FreqFilter.run(sc, featuresPath, featureVoc, keepSingleWords = false)
+    val features = FreqFilter.calculate(sc, config.featuresFile, featureVoc, keepSingleWords = false)
     features
       .map({ case (feature, freq) => feature + "\t" + freq })
       .saveAsTextFile(featuresOutPath)

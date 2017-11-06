@@ -1,29 +1,97 @@
 package de.uhh.lt.jst.wsd
 
+import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.utils.{Const, KryoDiskSerializer, Util}
-import org.apache.log4j.{Level, Logger}
+import de.uhh.lt.jst.wsd.WSDFeatures.WSDFeatures
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{HashPartitioner, SparkConf, SparkContext}
+import scopt.Read
+import scopt.Read.reads
 
 import scala.util.Random
 
 /**
   * Created by sasha on 13/06/17.
   */
-object WSD {
-  Logger.getLogger("org").setLevel(Level.OFF)
-  Logger.getLogger("akka").setLevel(Level.OFF)
+object WSD extends SparkJob {
 
-  val WSD_MODE = WSDFeatures.DepstargetCoocsClustersTrigramstarget
-  val USE_PRIOR_PROB = true
-  val MAX_FEATURE_NUM = 1000000
-  val PARTITIONS_NUM = 16
   val TARGET_FEATURES_BOOST = 3
   // boost strong but sparse target features
   val SYMMETRIZE_DEPS = true
   val DEBUG = false
   val FEATURES_POSTFIX = "-features"
   val SAVE_FEATURES = true
+
+  case class Config(
+    clusterDir: String = "",
+    coocsDir: String = "",
+    depsDir: String = "",
+    trigramsDir: String = "",
+    lexSamplePath: String = "",
+    outputDir: String = "",
+    usePriorProb: Boolean = true,
+    wsdMode: WSDFeatures = WSDFeatures.DepstargetCoocsClustersTrigramstarget,
+    maxNumFeatures: Int = 1000000,
+    partitionsNum: Int = 16
+  )
+
+  implicit val readWSDFeatures: Read[WSDFeatures] = reads { WSDFeatures.fromString }
+
+  override type ConfigType = Config
+
+  override val config = Config()
+  override val description = ""
+  override val parser = new Parser {
+
+    val validateDirExists = (dir: String) => {
+      if (Util.exists(dir))
+        success
+      else
+        failure(s"'$dir' does not exist.")
+    }
+
+    arg[String]("CLUSTER_DIR").action( (x, c) =>
+      c.copy(clusterDir = x) ).required().hidden()
+
+    arg[String]("COOCS_DIR").action( (x, c) =>
+      c.copy(coocsDir = x) ).required().hidden()
+
+    arg[String]("DEPS_DIR").action( (x, c) =>
+      c.copy(depsDir = x) ).required().hidden()
+
+    arg[String]("TRIGRAMS_DIR").action( (x, c) =>
+      c.copy(trigramsDir = x) ).required().hidden()
+
+    arg[String]("LEXSAMPLE_DIR").action( (x, c) =>
+      c.copy(trigramsDir = x) ).required().hidden()
+
+    arg[String]("OUTPUT_DIR").action( (x, c) =>
+      c.copy(lexSamplePath = x) ).required().hidden()
+
+    opt[Unit]('n', "noPrior").action( (x, c) =>
+      c.copy(usePriorProb = false) ).text("")
+
+    opt[WSDFeatures]('m', "wsdMode").action( (x, c) =>
+      c.copy(wsdMode = x) ).text("")
+
+    opt[Int]('f', "maxNumFeatures").action( (x, c) =>
+      c.copy(maxNumFeatures = x) ).text("")
+
+    opt[Int]('p', "paritionsNum").action( (x, c) =>
+      c.copy(partitionsNum = x) ).text("")
+
+    checkConfig( c =>
+      if (!Util.exists(c.coocsDir) && !Util.exists(c.depsDir)) {
+        failure("Either coocs or dependency features must exist.")
+      } else {
+        if (!Util.exists(c.coocsDir))
+          println("Warning: coocs features not available. Using only deps features.")
+        if (!Util.exists(c.depsDir))
+          println("Warning: deps features not available. Using only coocs features.")
+        success
+      }
+    )
+  }
 
   val _stopwords = Util.getStopwords()
 
@@ -43,7 +111,7 @@ object WSD {
   /**
     * Returns a map features->scores from a string representations e.g. "f:0.99  z:0.88".
     **/
-  def parseFeatures(word: String, featuresStr: String, maxFeaturesNum: Int = MAX_FEATURE_NUM): Map[String, Double] = {
+  def parseFeatures(word: String, featuresStr: String, maxFeaturesNum: Int = config.maxNumFeatures): Map[String, Double] = {
 
     val res = featuresStr
       .split(Const.LIST_SEP)
@@ -200,22 +268,23 @@ object WSD {
       .map { case Array(word, senseId, cluster, features) => (word, senseId.toInt, cluster, features) case _ => ("?", -1, "", "") }
   }
 
-  def buildFeatures(sc: SparkContext, clustersPath: String, coocsPath: String, depsPath: String, trigramsPath: String,
-                    wsdMode: WSDFeatures.Value, maxNumFeatures: Int, partitionsNum: Int):
-  RDD[(String, (Map[Int, Map[String, Double]], Map[Int, Map[String, Double]], Map[Int, Map[String, Double]], Map[Int, Map[String, Double]], Map[Int, Map[String, Double]]))] = {
+  type IndexedTermScores = Map[Int, Map[String, Double]]
+  type FiveColumns[T] = (T, T, T, T, T)
 
-    val featuresPath = clustersPath + FEATURES_POSTFIX
+  def buildFeatures(sc: SparkContext, config: Config): RDD[(String, FiveColumns[IndexedTermScores])] = {
+
+    val featuresPath = config.clusterDir + FEATURES_POSTFIX
     val fs = org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration)
     val featuresExist = fs.exists(new org.apache.hadoop.fs.Path(featuresPath))
     println(s"$featuresPath: $featuresExist")
 
     if (featuresExist) {
-      val loadedFeatures = KryoDiskSerializer.objectFile[(String, (Map[Int, Map[String, Double]], Map[Int, Map[String, Double]], Map[Int, Map[String, Double]], Map[Int, Map[String, Double]], Map[Int, Map[String, Double]]))](sc, featuresPath)
+      val loadedFeatures = KryoDiskSerializer.objectFile[(String, FiveColumns[IndexedTermScores])](sc, featuresPath)
       loadedFeatures
     } else {
       // Load clusters senses and the associated features (required)
       // senses and features are the format: (lemma, (sense -> (feature -> prob)))
-      val clustersCols = loadFile2Cols(sc, clustersPath).persist()
+      val clustersCols = loadFile2Cols(sc, config.clusterDir).persist()
 
       val inventory: RDD[(String, Map[Int, Map[String, Double]])] = clustersCols
         .map { case (word, senseId, cluster, features) => (word, (senseId, (parseFeatures(word, cluster)))) }
@@ -231,39 +300,39 @@ object WSD {
       println(s"#words (no features): ${noFeatures.count()}")
 
       val clusterFeatures: RDD[(String, Map[Int, Map[String, Double]])] =
-        if (WSDFeatures.clustersNeeded(wsdMode)) {
-          loadCols2Features(clustersCols, maxNumFeatures, partitionsNum)
+        if (WSDFeatures.clustersNeeded(config.wsdMode)) {
+          loadCols2Features(clustersCols, config.maxNumFeatures, config.partitionsNum)
         } else {
           noFeatures
         }
       println(s"#words (cluster features): ${clusterFeatures.count()}")
 
       val coocFeatures =
-        if (WSDFeatures.coocsNeeded(wsdMode) && Util.exists(coocsPath)) {
-          val cols = loadFile2Cols(sc, coocsPath)
-          loadCols2Features(cols, maxNumFeatures, partitionsNum)
+        if (WSDFeatures.coocsNeeded(config.wsdMode) && Util.exists(config.coocsDir)) {
+          val cols = loadFile2Cols(sc, config.coocsDir)
+          loadCols2Features(cols, config.maxNumFeatures, config.partitionsNum)
         } else {
-          if (WSDFeatures.coocsNeeded(wsdMode) && !Util.exists(coocsPath)) println(s"error: not found $coocsPath")
+          if (WSDFeatures.coocsNeeded(config.wsdMode) && !Util.exists(config.coocsDir)) println(s"error: not found ${config.coocsDir}")
           noFeatures
         }
       println(s"#words (coocs features): ${clusterFeatures.count()}")
 
       val depsFeatures =
-        if (WSDFeatures.depsNeeded(wsdMode) && Util.exists(depsPath)) {
-          val cols = loadFile2Cols(sc, depsPath)
-          loadCols2Features(cols, maxNumFeatures, partitionsNum)
+        if (WSDFeatures.depsNeeded(config.wsdMode) && Util.exists(config.depsDir)) {
+          val cols = loadFile2Cols(sc, config.depsDir)
+          loadCols2Features(cols, config.maxNumFeatures, config.partitionsNum)
         } else {
-          if (WSDFeatures.depsNeeded(wsdMode) && !Util.exists(depsPath)) println(s"error: not found $depsPath")
+          if (WSDFeatures.depsNeeded(config.wsdMode) && !Util.exists(config.depsDir)) println(s"error: not found ${config.depsDir}")
           noFeatures
         }
       println(s"#words (deps features): ${depsFeatures.count()}")
 
       val trigramFeatures =
-        if (WSDFeatures.trigramsNeeded(wsdMode) && Util.exists(trigramsPath)) {
-          val cols = loadFile2Cols(sc, trigramsPath)
-          loadCols2Features(cols, maxNumFeatures, partitionsNum)
+        if (WSDFeatures.trigramsNeeded(config.wsdMode) && Util.exists(config.trigramsDir)) {
+          val cols = loadFile2Cols(sc, config.trigramsDir)
+          loadCols2Features(cols, config.maxNumFeatures, config.partitionsNum)
         } else {
-          if (WSDFeatures.trigramsNeeded(wsdMode) && !Util.exists(trigramsPath)) println(s"error: not found $trigramsPath")
+          if (WSDFeatures.trigramsNeeded(config.wsdMode) && !Util.exists(config.trigramsDir)) println(s"error: not found ${config.trigramsDir}")
           noFeatures
         }
       println(s"#words (trigrams features): ${trigramFeatures.count()}")
@@ -284,34 +353,34 @@ object WSD {
     }
   }
 
-  def run(sc: SparkContext, lexSamplePath: String, outputPath: String, clustersPath: String, coocsPath: String = "",
-          depsPath: String = "", trigramsPath: String = "", usePriorProb: Boolean = USE_PRIOR_PROB, wsdMode: WSDFeatures.Value = WSD_MODE,
-          maxNumFeatures: Int = MAX_FEATURE_NUM, partitionsNum: Int = PARTITIONS_NUM) = {
+  type TwelveColumns[T] = (T, T, T, T, T, T, T, T, T, T, T, T)
+
+  def run(sc: SparkContext, config: Config): Unit = {
 
     // Load lexical sample
     // target, (dataset, features)
     // dataset: context_id	target	target_pos	target_position	gold_sense_ids	predict_sense_ids	golden_related	predict_related	context word_features	holing_features	target_holing_features
-    val lexSample: RDD[(String, (Array[String], (String, String, String, String, String, String, String, String, String, String, String, String)))] = sc.textFile(lexSamplePath)
+    val lexSample: RDD[(String, (Array[String], TwelveColumns[String]))] = sc.textFile(config.lexSamplePath)
       .map(line => line.split("\t", -1))
       .map { case Array(context_id, target, target_pos, target_position, gold_sense_ids, predict_sense_ids, golden_related, predict_related, context, word_features, holing_features, target_holing_features) =>
         (target, (
-          getContextFeatures(word_features, target_holing_features, holing_features, wsdMode),
+          getContextFeatures(word_features, target_holing_features, holing_features,  config.wsdMode),
           (context_id, target, target_pos, target_position, gold_sense_ids, predict_sense_ids, golden_related, predict_related, context, word_features, holing_features, target_holing_features)))
       case _ => ("", (Array[String](), ("", "", "", "", "", "", "", "", "", "", "", "")))
       }
       .cache()
     println(s"# lexical samples: ${lexSample.count()}")
 
-    val features = buildFeatures(sc, clustersPath, coocsPath, depsPath, trigramsPath, wsdMode, maxNumFeatures, partitionsNum)
+    val features = buildFeatures(sc, config)
 
     val result = lexSample
       .join(features)
       .map { case (target, ((contextT, dataset), (inventoryT, clustersT, coocsT, depsT, trigramsT))) =>
-        (dataset, predict(contextT, inventoryT, clustersT, coocsT, depsT, trigramsT, usePriorProb))
+        (dataset, predict(contextT, inventoryT, clustersT, coocsT, depsT, trigramsT, config.usePriorProb))
       }
 
     println(s"#classified lex samples: ${result.count()}")
-    Util.delete(outputPath)
+    Util.delete(config.outputDir)
 
     // Save results in the CSV format
     result
@@ -335,52 +404,6 @@ object WSD {
           prediction.usedFeatures.mkString(Const.LIST_SEP) + "\t" +
           prediction.allFeatures.mkString(Const.LIST_SEP)
       }
-      .saveAsTextFile(outputPath)
-  }
-
-  def main(args: Array[String]) {
-    if (args.size < 4) {
-      println("Usage: clusters coocs deps trigrams lexsample output [wsd-mode] [use-prior-prob] [max-num-features] [partitions-num]")
-      return
-    }
-
-    val conf = new SparkConf().setAppName("WSDEvaluation")
-    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val sc = new SparkContext(conf)
-
-    val clustersPath = args(0)
-    val coocsPath = args(1)
-    val depsPath = args(2)
-    val trigramsPath = args(3)
-    val lexSamplePath = args(4)
-    val outputPath = args(5)
-    val wsdMode = if (args.length > 6) WSDFeatures.fromString(args(6)) else WSD_MODE
-    val usePriorProb = if (args.length > 7) args(7).toLowerCase().equals("true") else USE_PRIOR_PROB
-    val maxNumFeatures = if (args.length > 8) args(8).toInt else MAX_FEATURE_NUM
-    val partitionsNum = if (args.length > 9) args(9).toInt else PARTITIONS_NUM
-
-    println("Cluster features: " + clustersPath)
-    println("Co-occurrence features: " + coocsPath)
-    println("Dependency features: " + depsPath)
-    println("Trigram features: " + trigramsPath)
-    println("Lexical sample dataset: " + lexSamplePath)
-    println("Output: " + outputPath)
-    println("WSD mode: " + wsdMode)
-    println("Use prior probs.: " + usePriorProb)
-    println("Max feature num: " + maxNumFeatures)
-    println("Number of partitions of sense features: " + partitionsNum)
-
-    if (!Util.exists(coocsPath) && !Util.exists(depsPath)) {
-      println("Error: either coocs or dependency features must exist.")
-      return
-    } else if (!Util.exists(coocsPath)) {
-      println("Warning: coocs features not available. Using only deps features.")
-    } else if (!Util.exists(depsPath)) {
-      println("Warning: deps features not available. Using only coocs features.")
-    }
-    Util.delete(outputPath)
-
-    run(sc, lexSamplePath, outputPath, clustersPath, coocsPath, depsPath, trigramsPath, usePriorProb, wsdMode,
-      maxNumFeatures, partitionsNum)
+      .saveAsTextFile(config.outputDir)
   }
 }

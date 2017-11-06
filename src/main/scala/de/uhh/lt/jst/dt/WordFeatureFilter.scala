@@ -1,12 +1,12 @@
 package de.uhh.lt.jst.dt
 
-import de.uhh.lt.jst.Job
+import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.utils.Util
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
 
-object WordFeatureFilter  extends Job {
+object WordFeatureFilter  extends SparkJob {
 
   case class Config(
     wordFeatureCSV: String = "",
@@ -31,16 +31,11 @@ object WordFeatureFilter  extends Job {
       c.copy(outputWordFeatureCSV = x)).required().hidden()
   }
 
-  def run(config: Config): Unit = {
-
-    // Set Spark configuration
-    val conf = new SparkConf().setAppName("FreqFilter")
-    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val sc: SparkContext = new SparkContext(conf)
+  def run(sc: SparkContext, config: Config): Unit = {
 
     // Filter
     val voc = Util.loadVocabulary(sc, config.vocCSV)
-    val (wordFeatureFreq, featureVoc) = run(config.wordFeatureCSV, voc, sc)
+    val (wordFeatureFreq, featureVoc) = calculate(config.wordFeatureCSV, voc, sc)
 
     val outFeatureVocPath = config.outputWordFeatureCSV + "-voc.csv"
     // Save result
@@ -52,7 +47,7 @@ object WordFeatureFilter  extends Job {
       .saveAsTextFile(config.outputWordFeatureCSV)
   }
 
-  def run(inputPath: String, voc: Set[String], sc: SparkContext): (RDD[(String, String, String)], RDD[String]) = {
+  def calculate(inputPath: String, voc: Set[String], sc: SparkContext): (RDD[(String, String, String)], RDD[String]) = {
     // Filter
 
     val wordFeatureFreq = sc.textFile(inputPath)

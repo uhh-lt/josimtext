@@ -5,14 +5,14 @@ import org.scalatest._
 
 class DTCaseFilterTest extends FlatSpec with Matchers with SharedSparkContext {
 
-  def run(dtPath: String) = {
+  def run(dtPath: String): Unit = {
     val outputPath = dtPath + "-output"
-
-    DTCaseFilter.run(sc, dtPath, outputPath)
+    val config = DTCaseFilter.Config(dtPath, outputPath)
+    DTCaseFilter.run(sc, config)
   }
 
   it should "filter DT by vocabulary" in {
-    val dtPath =  getClass.getResource("/dt-tiny.csv").getPath()
+    val dtPath =  getClass.getResource("/dt-tiny.csv").getPath
     run(dtPath)
   }
 }

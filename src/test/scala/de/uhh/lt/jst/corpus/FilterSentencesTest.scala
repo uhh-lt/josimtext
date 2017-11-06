@@ -8,12 +8,13 @@ import org.scalatest._
 import scala.io.Source
 
 class FilterSentencesTest extends FlatSpec with Matchers with SharedSparkContext {
-  val inputPath = getClass.getResource("/noisy-sentences.txt.gz").getPath
-  val outputPath =  inputPath + "-output"
+  val inputPath: String = getClass.getResource("/noisy-sentences.txt.gz").getPath
+  val outputPath: String =  inputPath + "-output"
 
-  def run(inputPath: String) = {
+  def run(inputPath: String): String = {
     val outputPath = inputPath + "-output"
-    FilterSentences.run(sc, inputPath, outputPath)
+    val config = FilterSentences.Config(inputPath, outputPath)
+    FilterSentences.run(sc, config)
     outputPath
   }
 

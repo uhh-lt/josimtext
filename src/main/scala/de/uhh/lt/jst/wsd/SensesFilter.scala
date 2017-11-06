@@ -1,54 +1,54 @@
 package de.uhh.lt.jst.wsd
 
+import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.utils.{Const, Util}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
-object SensesFilter {
-  def main(args: Array[String]) {
-    if (args.size < 3) {
-      println("Usage: SensesFilter <input-senses-fpath> <vocabulary-fpath> <output-senses-fpath> <lowercase>")
-      println("<input-senses-fpath>\tpath to a csv file with sense clusters in the 'JS' format 'target<TAB>sense<TAB>cluster', cluster being 'word:sim'<SPACE><SPACE>'")
-      println("<vocabulary>\tpath to a list of target words that will be kept in the output sense clusters")
-      println("<output-senses-fpath>\tpath to the output senses in the same format as input, but containing only vocabulary target words")
-      println("<lowercase>\tIgnore case in vocabulary and sense inventory: true or false.")
-      println("<only-lower-or-first-upper>\tIf yes only 'apple' or 'Apple' are kept, but not 'APPLE' or 'AppLe': true or false.")
+object SensesFilter extends SparkJob {
 
-      return
-    }
+  case class Config(
+    inputDir: String = "",
+    vocFile: String = "",
+    outputDir: String = "",
+    lowerCase: Boolean = false,
+    lowerOrFirstUpper: Boolean = false
+  )
 
-    val inSensesPath = args(0)
-    val inVocPath = args(1)
-    val outSensesPath = args(2)
-    val lowercase = args(3).toBoolean
-    val lowerOrFirstUpper = args(4).toBoolean
+  override type ConfigType = Config
+  override val config = Config()
+  override val description = ""
+  override val parser = new Parser {
 
+    arg[String]("INPUT_DIR").action( (x, c) =>
+      c.copy(inputDir = x) ).required().
+      text("A CSV file with sense clusters in the 'JS' format 'target<TAB>sense<TAB>cluster', cluster being 'word:sim'<SPACE><SPACE>'")
 
-    val conf = new SparkConf().setAppName("JST: SensesFilter")
-    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val sc = new SparkContext(conf)
+    arg[String]("VOC_FILE").action( (x, c) =>
+      c.copy(vocFile = x) ).required().text("A list of target words that will be kept in the output sense clusters")
 
-    runCli(sc, inSensesPath, inVocPath, outSensesPath, lowercase, lowerOrFirstUpper)
+    arg[String]("OUTPUT_DIR").action( (x, c) =>
+      c.copy(outputDir = x) ).required().text("Output senses in the same format as input"
+    )
+
+    opt[Unit]('i', "ignoreCase").action( (x, c) =>
+      c.copy(lowerCase = true) ).
+      text("Ignore case in vocabulary and sense inventory.")
+
+    opt[Unit]('o', "onlyIgnoreFirstLetterCase").action( (x, c) =>
+      c.copy(lowerOrFirstUpper = true) ).
+      text("Only 'apple' or 'Apple' are kept, but not 'APPLE' or 'AppLe'.")
   }
 
-  def runCli(sc: SparkContext, inSensesPath: String, inVocPath: String, outSensesPath: String,
-             lowercase: Boolean, lowerOrFirstUpper: Boolean) = {
-    val outVocPath = inVocPath + "-voc.csv"
-    println("Input senses: " + inSensesPath)
-    println("Input vocabulary:" + inVocPath)
-    println("Output senses: " + outSensesPath)
-    println("Output vocabulary: " + outVocPath)
-    println("Lowercase: " + lowercase)
+  def run(sc: SparkContext, config: Config): Unit = {
+    val outVocPath = config.vocFile + "-voc.csv"
 
-    Util.delete(outSensesPath)
-    Util.delete(outVocPath)
-
-    val voc = Util.loadVocabulary(sc, inVocPath)
-    val (senses, clusterVoc) = run(inSensesPath, voc, sc, lowercase)
+    val voc = Util.loadVocabulary(sc, config.vocFile)
+    val (senses, clusterVoc) = run(config.inputDir, voc, sc, config.lowerCase)
 
     senses
       .map({ case (target, sense_id, cluster) => target + "\t" + sense_id + "\t" + cluster })
-      .saveAsTextFile(outSensesPath)
+      .saveAsTextFile(config.outputDir)
 
     clusterVoc
       .saveAsTextFile(outVocPath)

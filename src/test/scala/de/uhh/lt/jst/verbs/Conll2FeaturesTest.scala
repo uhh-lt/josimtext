@@ -7,10 +7,10 @@ import de.uhh.lt.testing.tags.NeedsMissingFiles
 
 class Conll2FeaturesTest extends FlatSpec with Matchers  with SharedSparkContext {
 
-  def run(inputPath: String, verbsOnly:Boolean=false) = {
+  def run(inputPath: String, verbsOnly:Boolean=false): Unit = {
     val outputPath = inputPath + "-output"
-
-    Conll2Features.run(sc, inputPath, outputPath, verbsOnly)
+    val config = Conll2Features.Config(inputPath, outputPath, verbsOnly)
+    Conll2Features.run(sc, config)
   }
 
   "simplify" should "simplify pos tag" in {
