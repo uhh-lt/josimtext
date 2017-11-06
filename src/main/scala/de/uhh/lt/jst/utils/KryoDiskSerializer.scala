@@ -3,10 +3,12 @@ package de.uhh.lt.jst.utils
 import java.io.ByteArrayOutputStream
 
 import com.esotericsoftware.kryo.io.Input
+import de.uhh.lt.jst.SparkJob
 import org.apache.hadoop.io.{BytesWritable, NullWritable}
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.serializer.KryoSerializer
+import org.apache.spark.sql.SparkSession
 
 import scala.reflect.ClassTag
 
@@ -15,25 +17,24 @@ import scala.reflect.ClassTag
   * Adapted from https://github.com/phatak-dev/blog/blob/master/code/kryoexample/src/main/scala/com/madhu/spark/kryo/KryoExample.scala
   **/
 
-object KryoDiskSerializer {
+object KryoDiskSerializer extends SparkJob {
+  case class Config(outputDir: String = "")
+  override type ConfigType = Config
+  override val config = Config()
+  override val description = "Kryo example"
+  override protected val parser = new Parser {
+    arg[String]("OUTPUT_DIR").action( (x, c) =>
+      c.copy(outputDir = x) ).required().hidden()
+  }
 
-  def main(args: Array[String]) {
-    if (args.length < 1) {
-      println("Usage: <output-path>")
-      return
-    }
-    val outputPath = args(0)
-
-    val conf = new SparkConf().setMaster("local").setAppName("kryoexample")
-    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val sc = new SparkContext(conf)
-
+  def run(spark: SparkSession, config: Config): Unit = {
+    val sc = spark.sparkContext
     //create some dummy data
     val personList = 1 to 10000 map (value => new Person(value + ""))
     val personRDD = sc.makeRDD(personList)
 
-    saveAsObjectFile(personRDD, outputPath)
-    val rdd = objectFile[Person](sc, outputPath)
+    saveAsObjectFile(personRDD, config.outputDir)
+    val rdd = objectFile[Person](sc, config.outputDir)
     println(rdd.map(person => person.name).collect().toList)
   }
 
