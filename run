@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+
 # Check is SPARK_HOME defined
 if [[ -z "${SPARK_HOME}" ]]; then
   echo "Specify the SPARK_HOME environment variable: path to the Spark installation."
@@ -10,6 +11,9 @@ fi
 queue="default"
 master="local[*]"
 num_executors=4
+spark_gb=8
+
+source conf/env.sh
 
 # Run the command
 jar=`ls target/scala-*/josimtext-*.jar`
@@ -17,5 +21,7 @@ ${SPARK_HOME}/bin/spark-submit \
     --queue=$queue \
     --master=$master \
     --num-executors=$num_executors \
+    --driver-memory=${spark_gb}g \
+    --executor-memory=${spark_gb}g \
     $jar \
     ${@}
