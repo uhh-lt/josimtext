@@ -6,7 +6,9 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.elasticsearch.spark._
 
 object StoreToElasticSearch extends SparkJob {
-  case class Config(inputDir: String = "", outputIndex: String = "")
+  case class Config(inputDir: String = "",
+                    outputIndex: String = "",
+                    esNodeList: String = "localhost:9200")
   override type ConfigType = Config
   override val config = Config()
   override val description: String = "Index CoNLL file with ElasticSearch"
@@ -18,7 +20,11 @@ object StoreToElasticSearch extends SparkJob {
 
     arg[String]("OUTPUT_INDEX").action( (x, c) =>
       c.copy(outputIndex = x) ).required().
-      text("Name of the output ElasticSearch index that will be created.")
+      text("Name of the output ElasticSearch index that will be created in the 'index/type' format.")
+
+    arg[String]("ES_NODES").action( (x, c) =>
+      c.copy(outputIndex = x) ).required().
+      text("List of ElasticSearch nodes where the output will be written (may be not exhaustive).")
   }
 
   val textRegex = """# text = (.*)""".r
@@ -37,15 +43,9 @@ object StoreToElasticSearch extends SparkJob {
     else line
   }
 
-  var i = 1
-  def getDocumentMap(line: String): Map[String, String] = {
-    i = i+1
-    val entry = Map("index" ->i.toString, "text" ->line)
-    entry
-  }
-
   override def run(spark: SparkSession, config: Config): Unit = {
     spark.conf.set("es.index.auto.create", "true")
+    spark.conf.set("es.nodes", config.esNodeList)
 
     spark.sparkContext
       .textFile(config.inputDir)
@@ -53,8 +53,7 @@ object StoreToElasticSearch extends SparkJob {
       .filter{ line => !line.startsWith("# parser") && !line.startsWith("# sent_id")}
       .map{ line => getText(line)}
       .map{ line => addDocumentBreaks(line)}
-      .map{ line => getDocumentMap(line)}
+      .map{ line => Map("sentence" ->line)}
       .saveToEs(indexName)
-
   }
 }
