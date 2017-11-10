@@ -7,7 +7,7 @@ abstract class Job {
 
   val config: ConfigType
 
-  val appName: String = "jst"
+  val appName: String = "josimtext"
 
   // Remove trailing $ from companion objects, .i.e. from MyObject$
   val command: String = this.getClass.getSimpleName.replace('$',' ').trim
@@ -15,7 +15,6 @@ abstract class Job {
 
   protected val parser: Parser
   def run(config: ConfigType): Unit
-
 
   def main(args: Array[String]): Unit = {
 

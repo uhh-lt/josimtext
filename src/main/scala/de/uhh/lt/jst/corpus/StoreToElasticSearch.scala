@@ -29,7 +29,6 @@ object StoreToElasticSearch extends SparkJob {
 
   val textRegex = """# text = (.*)""".r
   val newdocRegex = """# newdoc""".r
-  val indexName = "spark/index"
 
   def getText(line:String): String = {
     val textMatch = textRegex.findFirstMatchIn(line)
@@ -54,6 +53,6 @@ object StoreToElasticSearch extends SparkJob {
       .map{ line => getText(line)}
       .map{ line => addDocumentBreaks(line)}
       .map{ line => Map("sentence" ->line)}
-      .saveToEs(indexName)
+      .saveToEs(config.outputIndex)
   }
 }
