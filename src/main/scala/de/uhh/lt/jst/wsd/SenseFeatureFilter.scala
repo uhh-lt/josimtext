@@ -3,7 +3,7 @@ package de.uhh.lt.jst.wsd
 import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.dt.{FreqFilter, WordFeatureFilter}
 import de.uhh.lt.jst.utils.Util
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.SparkSession
 
 
 object SenseFeatureFilter  extends SparkJob {
@@ -40,8 +40,9 @@ object SenseFeatureFilter  extends SparkJob {
 
   val POSTFIX = "-voc"
 
-  def run(sc: SparkContext, config: Config): Unit = {
+  def run(spark: SparkSession, config: Config): Unit = {
 
+    val sc = spark.sparkContext
     val sensesOutPath = config.senseFile + POSTFIX
     val wordsOutPath = config.wordsFile + POSTFIX
     val wordFeaturesOutPath = config.wordFeaturesFile + POSTFIX

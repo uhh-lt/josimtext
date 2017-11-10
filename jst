@@ -23,13 +23,9 @@ else
   fi
 fi
 
-SPARK_SUBMIT_OPTIONS="$SPARK_SUBMIT_OPTIONS
-    --master local[*]"
-
 jar="target/scala-2.11/josimtext-assembly-0.4.jar"
 args="${@}"
 
 ${cmd} \
-    $SPARK_SUBMIT_OPTIONS \
     $jar \
     $args

@@ -3,7 +3,7 @@ package de.uhh.lt.jst.wsd
 import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.utils.{Const, Util}
 import org.apache.spark.rdd._
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.SparkSession
 import scopt.Read
 import scopt.Read.reads
 
@@ -167,8 +167,9 @@ object SenseFeatureAggregator  extends SparkJob {
     }
   }
 
-  def run(sc: SparkContext, config: Config): Unit = {
+  def run(spark: SparkSession, config: Config): Unit = {
 
+    val sc = spark.sparkContext
     val targetWords = config.vocFile
       .map(Util.loadVocabulary(sc, _))
       .getOrElse(Set())

@@ -31,7 +31,7 @@ class Text2TrigramTermContextSpec extends FlatSpec with Matchers with DatasetSui
   "Spark" should "calculate correct trigrams from text" in {
     import spark.implicits._
 
-    val result = Text2TrigramTermContext.convertWithSpark(textFilePath)(spark)
+    val result = Text2TrigramTermContext.convertWithSpark(spark, textFilePath)
 
     val expected = sc.parallelize(expectedTermContextPairsPerLine.flatten).toDS
     assertDatasetEquals(expected, result)

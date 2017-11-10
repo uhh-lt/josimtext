@@ -4,7 +4,7 @@ import de.uhh.lt.jst.SparkJob
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.SparkSession
 
 object WarcToDocuments extends SparkJob {
 
@@ -43,10 +43,10 @@ object WarcToDocuments extends SparkJob {
 
   }
 
-  override def run(sc: SparkContext, config: Config): Unit = {
+  override def run(spark: SparkSession, config: Config): Unit = {
     val conf = new Configuration
     conf.set("textinputformat.record.delimiter", warcDocumentDelimiter)
-
+    val sc = spark.sparkContext
     val unaggregatedFeatures: Unit = sc
       .newAPIHadoopFile(config.inputDir, classOf[TextInputFormat], classOf[LongWritable], classOf[Text], conf)
       .map { documentText =>

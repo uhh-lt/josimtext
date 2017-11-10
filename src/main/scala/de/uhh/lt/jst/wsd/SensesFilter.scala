@@ -2,8 +2,9 @@ package de.uhh.lt.jst.wsd
 
 import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.utils.{Const, Util}
+import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.SparkSession
 
 object SensesFilter extends SparkJob {
 
@@ -40,7 +41,8 @@ object SensesFilter extends SparkJob {
       text("Only 'apple' or 'Apple' are kept, but not 'APPLE' or 'AppLe'.")
   }
 
-  def run(sc: SparkContext, config: Config): Unit = {
+  def run(spark: SparkSession, config: Config): Unit = {
+    val sc = spark.sparkContext
     val outVocPath = config.vocFile + "-voc.csv"
 
     val voc = Util.loadVocabulary(sc, config.vocFile)

@@ -2,6 +2,7 @@ package de.uhh.lt.jst.dt
 
 import de.uhh.lt.jst.SparkJob
 import org.apache.spark.SparkContext
+import org.apache.spark.sql.SparkSession
 
 object DTFilter extends SparkJob {
 
@@ -39,8 +40,8 @@ object DTFilter extends SparkJob {
       c.copy(outputDTDirectory = x) ).required().hidden()
   }
 
-  def run(sc: SparkContext, config: Config) = {
-
+  override def run(spark: SparkSession, config: Config) = {
+    val sc = spark.sparkContext
     val voc = sc.textFile(config.vocabulary)
       .map(line => line.split("\t"))
       .map { case Array(word) => word.trim().toLowerCase() }

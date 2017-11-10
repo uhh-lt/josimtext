@@ -1,13 +1,13 @@
 package de.uhh.lt.jst.wsd
 
-import com.holdenkarau.spark.testing.SharedSparkContext
+import com.holdenkarau.spark.testing.DatasetSuiteBase
 import org.scalatest._
 import de.uhh.lt.jst.utils.Const
 import de.uhh.lt.testing.tags.NeedsMissingFiles
 import SenseFeatureAggregator.FeatureType.trigrams
 import SenseFeatureAggregator.Config
 
-class SenseFeatureAggregatorTest extends FlatSpec with Matchers with SharedSparkContext {
+class SenseFeatureAggregatorTest extends FlatSpec with Matchers with DatasetSuiteBase {
   "The SenseFeatureAggregatorTest object" should "skip wrong trigrams" in {
     SenseFeatureAggregator.keepFeature("programming_@_22", trigrams) should equal(false)
     SenseFeatureAggregator.keepFeature("programming_@_.[22][23]", trigrams) should equal(false)
@@ -23,7 +23,7 @@ class SenseFeatureAggregatorTest extends FlatSpec with Matchers with SharedSpark
       outputPath = senses + "-output",
       featureType = trigrams
     )
-    SenseFeatureAggregator.run(sc, config)
+    SenseFeatureAggregator.run(spark, config)
   }
 
   ignore should "run Aggregate PRJ" taggedAs NeedsMissingFiles in {

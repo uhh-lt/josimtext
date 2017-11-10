@@ -1,7 +1,8 @@
 package de.uhh.lt.jst.dt
 
 import de.uhh.lt.jst.{SparkJob, utils}
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.SparkSession
 
 object DTCaseFilter extends SparkJob {
 
@@ -23,8 +24,9 @@ object DTCaseFilter extends SparkJob {
   }
 
 
-  def run(sc: SparkContext, config: Config): Unit = {
+  def run(spark: SparkSession, config: Config): Unit = {
 
+    val sc = spark.sparkContext
     val dt = sc.textFile(config.dt)
       .map(line => line.split("\t"))
       .map {

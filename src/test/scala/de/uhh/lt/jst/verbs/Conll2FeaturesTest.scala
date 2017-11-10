@@ -1,16 +1,16 @@
 package de.uhh.lt.jst.verbs
 
-import com.holdenkarau.spark.testing.SharedSparkContext
+import com.holdenkarau.spark.testing.DatasetSuiteBase
 import org.scalatest._
 import de.uhh.lt.jst.utils.Const
 import de.uhh.lt.testing.tags.NeedsMissingFiles
 
-class Conll2FeaturesTest extends FlatSpec with Matchers  with SharedSparkContext {
+class Conll2FeaturesTest extends FlatSpec with Matchers  with DatasetSuiteBase {
 
   def run(inputPath: String, verbsOnly:Boolean=false): Unit = {
     val outputPath = inputPath + "-output"
     val config = Conll2Features.Config(inputPath, outputPath, verbsOnly)
-    Conll2Features.run(sc, config)
+    Conll2Features.run(spark, config)
   }
 
   "simplify" should "simplify pos tag" in {

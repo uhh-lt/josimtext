@@ -1,18 +1,19 @@
 package de.uhh.lt.jst
 
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.SparkSession
 
 abstract class SparkJob extends Job {
 
   override def run(config: ConfigType): Unit = {
 
-    val conf = new SparkConf().setAppName(this.getClass.getSimpleName)
-    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val sc = new SparkContext(conf)
+    val spark: SparkSession = SparkSession.builder()
+      .appName(this.getClass.getSimpleName)
+      .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+      .getOrCreate()
 
-    run(sc, config)
+    run(spark, config)
   }
 
-  def run(sc: SparkContext, config: ConfigType): Unit
+  def run(spark: SparkSession, config: ConfigType): Unit
 
 }

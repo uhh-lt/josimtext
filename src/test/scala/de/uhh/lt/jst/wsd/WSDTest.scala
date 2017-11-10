@@ -1,12 +1,12 @@
 package de.uhh.lt.jst.wsd
 
 
-import com.holdenkarau.spark.testing.SharedSparkContext
+import com.holdenkarau.spark.testing.DatasetSuiteBase
 import de.uhh.lt.testing.tags.NeedsMissingFiles
 import org.scalatest._
 import de.uhh.lt.jst.utils.Const
 
-class WSDTest extends FlatSpec with Matchers with SharedSparkContext {
+class WSDTest extends FlatSpec with Matchers with DatasetSuiteBase {
 
   val wordFeaturesStr = "Python  be  a  widely  use"
   val holingTargetFeaturesStr = "nn(@,interpreter)  nn(@,execution)  #_@_interpreter  allow_@_code"
@@ -130,7 +130,7 @@ class WSDTest extends FlatSpec with Matchers with SharedSparkContext {
       contexts, output, clusters, coocs, deps,
       trigrams, usePriorProb = true, mode, 20000, 1)
 
-    WSD.run(sc, config)
+    WSD.run(spark, config)
   }
 
   ignore should "run DepstargetCoocsClustersTrigramstarget" taggedAs NeedsMissingFiles in {
