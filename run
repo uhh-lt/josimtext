@@ -6,6 +6,16 @@ if [[ -z "${SPARK_HOME}" ]]; then
   exit 1
 fi
 
+# to be imported from a config file
+queue="default"
+master="local[*]"
+num_executors=4
+
 # Run the command
 jar=`ls target/scala-*/josimtext-*.jar`
-${SPARK_HOME}/bin/spark-submit $jar ${@}
+${SPARK_HOME}/bin/spark-submit \
+    --queue=$queue \
+    --master=$master \
+    --num-executors=$num_executors \
+    $jar \
+    ${@}
