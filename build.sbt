@@ -24,3 +24,9 @@ fork in Test := true
 javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
 
 mainClass in Compile := Some("de.uhh.lt.jst.Run")
+
+// to avoid problems of sbt-assembly
+assemblyMergeStrategy in assembly := {
+ case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+ case x => MergeStrategy.first
+}

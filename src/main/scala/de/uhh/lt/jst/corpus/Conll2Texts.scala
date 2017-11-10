@@ -8,9 +8,9 @@ import org.apache.spark.sql.SparkSession
 object Conll2Texts extends SparkJob {
 
   case class Config(
-    inputDir: String = "",
-    outputDir: String = ""
-  )
+                     inputDir: String = "",
+                     outputDir: String = ""
+                   )
 
   override type ConfigType = Config
   override val config = Config()

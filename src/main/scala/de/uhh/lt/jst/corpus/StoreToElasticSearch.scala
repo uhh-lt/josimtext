@@ -1,28 +1,29 @@
 package de.uhh.lt.jst.corpus
 
+import de.uhh.lt.jst.SparkJob
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SparkConf, SparkContext}
 import org.elasticsearch.spark._
 
-object StoreToElasticSearch {
+object StoreToElasticSearch extends SparkJob {
+  case class Config(inputDir: String = "", outputIndex: String = "")
+  override type ConfigType = Config
+  override val config = Config()
+  override val description: String = "Index CoNLL file with ElasticSearch"
+
+  override val parser = new Parser {
+    arg[String]("INPUT_DIR").action( (x, c) =>
+      c.copy(inputDir = x) ).required().
+      text("Directory with a parsed corpus in the CoNLL format.")
+
+    arg[String]("OUTPUT_INDEX").action( (x, c) =>
+      c.copy(outputIndex = x) ).required().
+      text("Name of the output ElasticSearch index that will be created.")
+  }
 
   val textRegex = """# text = (.*)""".r
   val newdocRegex = """# newdoc""".r
   val indexName = "spark/index"
-
-  def main(args: Array[String]) {
-    if (args.size < 1) {
-      println("Parameters: <input-dir> <output-dir>")
-      println(s"<input-dir>\tDirectory with a parsed corpus in the CoNLL format.")
-      return
-    }
-    val inputPath = args(0)
-    val conf = new SparkConf().setAppName(this.getClass.getSimpleName)
-    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    conf.set("es.index.auto.create", "true")
-    val sc = new SparkContext(conf)
-    run(sc, inputPath)
-  }
-
 
   def getText(line:String): String = {
     val textMatch = textRegex.findFirstMatchIn(line)
@@ -43,11 +44,11 @@ object StoreToElasticSearch {
     entry
   }
 
-  def run(sc: SparkContext, inputConllDir: String) = {
-    println("Input dir.: " + inputConllDir)
+  override def run(spark: SparkSession, config: Config): Unit = {
+    spark.conf.set("es.index.auto.create", "true")
 
-   sc
-      .textFile(inputConllDir)
+    spark.sparkContext
+      .textFile(config.inputDir)
       .filter { line => line.startsWith("# ")}
       .filter{ line => !line.startsWith("# parser") && !line.startsWith("# sent_id")}
       .map{ line => getText(line)}

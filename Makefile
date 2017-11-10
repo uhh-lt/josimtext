@@ -1,11 +1,8 @@
-install:
-	./sbt/sbt clean assembly
-
-assembly-without-tests:
+build:
 	./sbt/sbt 'set test in assembly := {}' assembly
 
-test:
+build-with-tests:
+	./sbt/sbt clean assembly
+
+tests:
 	./sbt/sbt "testOnly -- -l NeedsMissingFiles"
-	# For an explanation of this command,
-	# see the section 'Include and Exclude Tests with Tags'
-	# in http://www.scalatest.org/user_guide/using_scalatest_with_sbt
