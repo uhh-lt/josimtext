@@ -1,24 +1,31 @@
 package de.uhh.lt.jst.corpus
 
-import de.uhh.lt.jst.utils.Util
+import de.uhh.lt.jst.SparkJob
 import org.apache.hadoop.io.compress.GzipCodec
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.SparkContext
 
-object Conll2Texts {
-  def main(args: Array[String]) {
-    if (args.size < 2) {
-      println("Parameters: <input-dir> <output-dir>")
-      println(s"<input-dir>\tDirectory with a parsed corpus in the CoNLL format.")
-      println(s"<output-dir>\tDirectory with a corpus text format derived from CoNLL " +
-        s"(but without any linguistic annotation)")
-      return
-    }
-    val inputPath = args(0)
-    val outputPath = args(1)
-    val conf = new SparkConf().setAppName(this.getClass.getSimpleName)
-    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val sc = new SparkContext(conf)
-    run(sc, inputPath, outputPath)
+object Conll2Texts extends SparkJob {
+
+  case class Config(
+    inputDir: String = "",
+    outputDir: String = ""
+  )
+
+  override type ConfigType = Config
+  override val config = Config()
+
+  override val description: String = ""
+
+  override val parser = new Parser {
+
+    arg[String]("INPUT_DIR").action( (x, c) =>
+      c.copy(inputDir = x) ).required().
+      text("Directory with a parsed corpus in the CoNLL format.")
+
+    arg[String]("OUTPUT_DIR").action( (x, c) =>
+      c.copy(outputDir = x) ).required().
+      text("Directory with a corpus text format derived from CoNLL " +
+        "(but without any linguistic annotation)")
   }
 
   val textRegex = """# text = (.*)""".r
@@ -36,17 +43,12 @@ object Conll2Texts {
     else line
   }
 
-  def run(sc: SparkContext, inputConllDir: String, outputConllDir: String) = {
-    println("Input dir.: " + inputConllDir)
-    println("Output dir.: " + outputConllDir)
-    Util.delete(outputConllDir) // a convinience for the local tests
-
-    sc
-      .textFile(inputConllDir)
+  override def run(sc: SparkContext, config: Config): Unit = {
+    sc.textFile(config.inputDir)
       .filter { line => line.startsWith("# ")}
       .filter{ line => !line.startsWith("# parser") && !line.startsWith("# sent_id")}
       .map{ line => getText(line)}
       .map{ line => addDocumentBreaks(line)}
-      .saveAsTextFile(outputConllDir, classOf[GzipCodec])
+      .saveAsTextFile(config.outputDir, classOf[GzipCodec])
   }
 }

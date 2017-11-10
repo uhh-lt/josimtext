@@ -1,13 +1,44 @@
 package de.uhh.lt.jst.corpus
 
 
+import de.uhh.lt.jst.Job
 import de.uhh.lt.jst.utils.{Const, Util}
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.io.Source
 import scala.util.Try
 
-object CoarsifyPosTags {
+object CoarsifyPosTags extends Job {
+
+  case class Config(
+    inputDir: String = "",
+    outputDir: String = ""
+  )
+
+  override type ConfigType = Config
+  override val config = Config()
+
+  override val description: String = ""
+  override val parser = new Parser {
+
+    arg[String]("INPUT_DIR").action( (x, c) =>
+      c.copy(inputDir = x) ).required().
+      text("Directory with word-feature counts (i.e. W-* files, F-* files, WF-* files).'")
+
+    arg[String]("OUTPUT_DIR").action( (x, c) =>
+      c.copy(outputDir = x) ).required().
+      text("Directory with output word-feature counts where W-* and WF-* files " +
+        "contain coarsified POS tags (44 Penn POS tags --> 21 tags).")
+  }
+
+  override def run(config: Config): Unit = {
+
+    val conf = new SparkConf().setAppName("CoarsifyPosTags")
+    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+    val sc = new SparkContext(conf)
+
+    run(sc, config.inputDir, config.outputDir)
+  }
 
   val posLookup = Try(
     Source
@@ -28,27 +59,6 @@ object CoarsifyPosTags {
     }
   }
 
-  def main(args: Array[String]) {
-    if (args.size < 2) {
-      println("Usage: CoarsifyPosTags <input-dir> <output-dir>")
-      println("<input-dir>\tDirectory with word-feature counts (i.e. W-* files, F-* files, WF-* files).'")
-      println("<output-dir>\tDirectory with output word-feature counts where W-* and WF-* files" +
-        " contain coarsified POS tags (44 Penn POS tags --> 21 tags).")
-      return
-    }
-
-    val inputPath = args(0)
-    val outputPath = args(1)
-    println("Input path: " + inputPath)
-    println("Output frequency dictionary: " + outputPath)
-    Util.delete(outputPath) // convinience for local tests
-
-    val conf = new SparkConf().setAppName("CoarsifyPosTags")
-    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val sc = new SparkContext(conf)
-
-    run(sc, inputPath, outputPath)
-  }
 
   /**
     * Takeas as input a pos-tagged word like "Python#NNP" and outputs
@@ -108,4 +118,5 @@ object CoarsifyPosTags {
     sc.textFile(inputDir + "/F-*")
       .saveAsTextFile(outputFeaturesCountsPath) // just copy to new location
   }
+
 }

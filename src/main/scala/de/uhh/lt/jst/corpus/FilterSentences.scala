@@ -1,47 +1,44 @@
 package de.uhh.lt.jst.corpus
 
 
-import de.uhh.lt.jst.utils.Util
-import org.apache.spark.{SparkConf, SparkContext}
+import de.uhh.lt.jst.SparkJob
+import org.apache.spark.SparkContext
 
-object FilterSentences {
+object FilterSentences extends SparkJob {
 
-  def main(args: Array[String]) {
-    if (args.size < 2) {
-      println("Remove noisy sentences not useful for dependency parsing.")
-      println("Usage: FilterSentences <input-dir> <output-dir>")
-      println("<input-dir>\tDirectory with corpus, strictly one sentence per line.")
-      println("<output-dir>\tDirectory with output filtered sentences one per line.")
-      return
-    }
+  case class Config(
+    inputDir: String = "",
+    outputDir: String = ""
+  )
 
-    val inputPath = args(0)
-    val outputPath = args(1)
-    Util.delete(outputPath) // convinience for local tests
+  override type ConfigType = Config
+  override val config = Config()
 
-    val conf = new SparkConf().setAppName("FilterSentences")
-    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val sc = new SparkContext(conf)
+  override val description: String = "Remove noisy sentences not useful for dependency parsing."
 
-    run(sc, inputPath, outputPath)
+  override val parser = new Parser {
+
+    arg[String]("INPUT_DIR").action( (x, c) =>
+      c.copy(inputDir = x) ).required().
+      text("Directory with corpus, strictly one sentence per line.")
+
+    arg[String]("OUTPUT_DIR").action( (x, c) =>
+      c.copy(outputDir = x) ).required().
+      text("Directory with output filtered sentences one per line.")
   }
 
-  def run(sc: SparkContext, inputDir: String, outputDir: String) = {
-    println("Input dir: " + inputDir)
-    println("Output dir: " + outputDir)
+  override def run(sc: SparkContext, config: Config): Unit = {
 
     val urlRegex = "(http://|www\\.|[a-z0-9]\\.com)".r
     val htmlRegex = "<[a-z ='\"/:0-9]+[^>]*>".r
     val latinTextRegex = "^[#±§-‒–—―©®™½¾@€£$¥&\u20BD\u00A0\u00AD%\\[\\])(（）;:,\\..?!\"'×Þß÷þøA-zÀ-ÿćęłńóśźżĄĆĘŁŃÓŚŹŻ0-9\\s-\\t/+α-ωΑ-Ω-]+$".r
     val someLettersRegex = "[A-z]+".r
 
-
-    Util.delete(outputDir)
-    sc.textFile(inputDir)
+    sc.textFile(config.inputDir)
       .filter { line => htmlRegex.findFirstIn(line).isEmpty }
       .filter { line => urlRegex.findFirstIn(line).isEmpty }
       .filter { line => someLettersRegex.findFirstIn(line).isDefined }
       .filter { line => latinTextRegex.findFirstIn(line).isDefined }
-      .saveAsTextFile(outputDir)
+      .saveAsTextFile(config.outputDir)
   }
 }

@@ -18,7 +18,7 @@ jars=`echo $bin/*.jar | tr " " ","`
 path=`echo $bin/*.jar | tr " " ":"`
 
 HADOOP_CLASSPATH=$path hadoop \
-    de.tudarmstadt.lt.wsi.CalcLineLength \
+    de.tudarmstadt.lt.jst.CalcLineLength \
     -libjars $jars \
     -Dmapreduce.reduce.failures.maxpercent=10 \
     -Dmapreduce.map.failures.maxpercent=10 \

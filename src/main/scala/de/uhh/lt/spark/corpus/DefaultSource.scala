@@ -50,7 +50,7 @@ class DefaultSource extends TextBasedFileFormat with DataSourceRegister {
       }
 
       override def getFileExtension(context: TaskAttemptContext): String = {
-        ".txt" + TextOutputWriter.getCompressionExtension(context)
+        ".txt" + CodecStreams.getCompressionExtension(context)
       }
     }
   }

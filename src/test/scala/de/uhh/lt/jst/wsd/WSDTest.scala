@@ -2,7 +2,7 @@ package de.uhh.lt.jst.wsd
 
 
 import com.holdenkarau.spark.testing.SharedSparkContext
-import de.uhh.lt.testtags.NeedsMissingFiles
+import de.uhh.lt.testing.tags.NeedsMissingFiles
 import org.scalatest._
 import de.uhh.lt.jst.utils.Const
 
@@ -126,10 +126,11 @@ class WSDTest extends FlatSpec with Matchers with SharedSparkContext {
     val deps = Const.PRJ_TEST.WSD_RES.deps
     val contexts = Const.PRJ_TEST.WSD_RES.contexts
 
-    println(s"Senses: $senses")
-    println(s"Output: $output")
+    val config = WSD.Config(
+      contexts, output, clusters, coocs, deps,
+      trigrams, usePriorProb = true, mode, 20000, 1)
 
-    WSD.run(sc, contexts, output, clusters, coocs, deps, trigrams, true, mode, 20000, 1)
+    WSD.run(sc, config)
   }
 
   ignore should "run DepstargetCoocsClustersTrigramstarget" taggedAs NeedsMissingFiles in {

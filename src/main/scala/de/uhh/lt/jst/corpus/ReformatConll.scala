@@ -1,35 +1,37 @@
 package de.uhh.lt.jst.corpus
 
-import de.uhh.lt.jst.utils.Util
-import org.apache.spark.{SparkConf, SparkContext}
+import de.uhh.lt.jst.SparkJob
+import org.apache.spark.SparkContext
 
-object ReformatConll {
+object ReformatConll extends SparkJob {
+
+  case class Config(
+    inputDir: String = "",
+    outputDir: String = ""
+  )
+
+  override type ConfigType = Config
+  override val config = Config()
+
   val oldConllRecordDelimiter = "^-1\t".r
   val newConllRecordDelimiter = ">>>>>\t"
 
-  def main(args: Array[String]) {
-    if (args.size < 2) {
-      println("Parameters: <input-dir> <output-dir>")
-      println(s"<input-dir>\tDirectory with a parsed corpus in the CoNLL format: delimiter='$oldConllRecordDelimiter'.")
-      println(s"<output-dir>\tDirectory with a parsed corpus in the CoNLL format: delimiter='$newConllRecordDelimiter'.")
-      return
-    }
-    val inputPath = args(0)
-    val outputPath = args(1)
-    val conf = new SparkConf().setAppName(this.getClass.getSimpleName)
-    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val sc = new SparkContext(conf)
-    run(sc, inputPath, outputPath)
+  override val description: String = ""
+  override val parser = new Parser {
+
+    arg[String]("INPUT_DIR").action( (x, c) =>
+      c.copy(inputDir = x) ).required().
+      text(s"Directory with a parsed corpus in the CoNLL format: delimiter='$oldConllRecordDelimiter'.")
+
+    arg[String]("OUTPUT_DIR").action( (x, c) =>
+      c.copy(outputDir = x) ).required().
+      text("Directory with a parsed corpus in the CoNLL format: delimiter='$newConllRecordDelimiter'.")
   }
 
-  def run(sc: SparkContext, inputConllDir: String, outputConllDir: String) = {
-    println("Input dir.: " + inputConllDir)
-    println("Output dir.: " + outputConllDir)
-    Util.delete(outputConllDir) // a convinience for the local tests
-
+  override def run(sc: SparkContext, config: Config): Unit = {
     sc
-      .textFile(inputConllDir)
+      .textFile(config.inputDir)
       .map { line => oldConllRecordDelimiter.replaceAllIn(line, newConllRecordDelimiter) }
-      .saveAsTextFile(outputConllDir)
+      .saveAsTextFile(config.outputDir)
   }
 }

@@ -1,38 +1,53 @@
 package de.uhh.lt.jst.dt
 
-import de.uhh.lt.conll.CoNLLParser
+import de.uhh.lt.jst.Job
+import de.uhh.lt.jst.dt.entities.TermContext
 import org.apache.spark.sql.{Dataset, SparkSession}
 
-object Text2TrigramTermContext {
+object Text2TrigramTermContext  extends Job {
 
-  def main(args: Array[String]): Unit = {
+  case class Config(input: String = "", output: String = "")
 
-    if (args.length < 2) {
-      println("Usage: input-file output-dir")
-      return
-    }
+  type ConfigType = Config
+  override val config = Config()
+
+  override val command: String = "Corpus2TrigramTermContext"
+  override val description = "Extract trigrams from a text corpus and outputs a Term Context file"
+
+  override val parser = new Parser {
+    arg[String]("CORPUS_FILE").action( (x, c) =>
+      c.copy(input = x) ).required().hidden()
+
+    arg[String]("OUTPUT_DIR").action( (x, c) =>
+      c.copy(output = x) ).required().hidden()
+  }
+
+  def run(config: Config): Unit = {
 
     implicit val spark: SparkSession = SparkSession.builder()
       .appName(this.getClass.getSimpleName)
       .getOrCreate()
     import spark.implicits._
 
-    val input = args(0)
-    val outputDir = args(1)
-
-    val df = convertWithSpark(input)
+    val df = convertWithSpark(config.input)
 
     df.map(tc => s"${tc.term}\t${tc.context}")
       .write
-      .text(outputDir)
+      .text(config.output)
 
   }
 
-  // Note: `type TermContext = (String, String)` didn't work because of SPARK-12777
-  case class TermContext(term: String, context: String)
-
   def text2TrigramTermContext(text: String): Seq[TermContext] = {
-    val tokens = text.toLowerCase.split("\\s+").toSeq
+
+    val removeTrailingPunctuations = (str: String) =>
+        Set(",", ";", ".").fold(str){ (res, char) => res.stripSuffix(char)}
+
+    val tokens = text
+      .toLowerCase
+      .split("\\s+")
+      .map(s => if (s.length > 1) removeTrailingPunctuations(s) else s)
+      .toSeq
+
     tokens.sliding(3).flatMap {
       case Seq(w1, w2, w3) => Some(TermContext(w2, w1 + "_@_" + w3))
       case _ => None // If we have less than three tokens, sliding(3) will provide a

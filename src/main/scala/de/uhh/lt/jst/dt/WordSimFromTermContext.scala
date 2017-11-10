@@ -1,50 +1,75 @@
 package de.uhh.lt.jst.dt
 
-import org.apache.spark.rdd.RDD
+import de.uhh.lt.jst.SparkJob
+import de.uhh.lt.jst.dt.WordSimLib.{TermCountRDD, TermTermCountRDD, WordSimParameters}
 import org.apache.spark.{SparkConf, SparkContext}
 
-object WordSimFromTermContext {
-  val wordsPerFeatureNumDefault = 1000
-  val significanceMinDefault = 0.0
-  val wordFeatureMinCountDefault = 2
-  val wordMinCountDefault = 2
-  val featureMinCountDefault = 2
-  val significanceTypeDefault = "LMI"
-  val featuresPerWordNumDefault = 1000
-  val similarWordsMaxNumDefault = 200
+object WordSimFromTermContext extends SparkJob {
 
+  case class Config(
+    input: String = "",
+    output: String = "",
+    parameters: WordSimParameters = WordSimParameters()
+  )
 
-  def main(args: Array[String]) {
-    if (args.size < 2) {
-      println("Usage: term-context-pairs output-dir [parameters]")
-      println("parameters: wordsPerFeatureNum featuresPerWordNum wordMinCount featureMinCount wordFeatureMinCount significanceMin significanceType similarWordsMaxNum")
-      return
-    }
+  type ConfigType = Config
+  override val config = Config()
 
-    val termContextPath = args(0)
-    val outputDir = args(1)
-    val wordsPerFeatureNum = if (args.size > 2) args(2).toInt else wordsPerFeatureNumDefault
-    val featuresPerWordNum = if (args.size > 3) args(3).toInt else featuresPerWordNumDefault
-    val wordMinCount = if (args.size > 4) args(4).toInt else wordMinCountDefault
-    val featureMinCount = if (args.size > 5) args(5).toInt else featureMinCountDefault
-    val wordFeatureMinCount = if (args.size > 6) args(6).toInt else wordFeatureMinCountDefault
-    val significanceMin = if (args.size > 7) args(7).toDouble else significanceMinDefault
-    val significanceType = if (args.size > 8) args(8) else significanceTypeDefault
-    val similarWordsMaxNum = if (args.size > 9) args(9).toInt else similarWordsMaxNumDefault
+  override val command: String = "WordSimFromTermContext"
+  override val description = "Compute a Distributional Thesaurus from a Term Context file."
 
-    val conf = new SparkConf().setAppName("JST: WordSimFromTermContext")
-    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val sc = new SparkContext(conf)
+  override val parser = new Parser {
 
-    run(sc, termContextPath, outputDir, wordsPerFeatureNum, featuresPerWordNum, wordMinCount, featureMinCount, wordFeatureMinCount, significanceMin, significanceType, similarWordsMaxNum)
+    arg[String]("TERM_CONTEXT_FILE").action( (x, c) =>
+      c.copy(input = x) ).required().hidden()
+
+    arg[String]("OUTPUT_DIR").action( (x, c) =>
+      c.copy(output = x) ).required().hidden()
+
+    opt[Int]("wpf").action( (x, c) =>
+      c.copy(parameters = c.parameters.copy(wordsPersFeature = x))).
+      valueName("integer").
+      text(s"Number of words per features (default ${config.parameters.wordsPersFeature})")
+
+    opt[Int]("fpw").action( (x, c) =>
+      c.copy(parameters = c.parameters.copy(featuresPerWord = x))).
+      valueName("integer").
+      text(s"Number of features per word (default ${config.parameters.featuresPerWord})")
+
+    opt[Int]("minw").action( (x, c) =>
+      c.copy(parameters = c.parameters.copy(minWordCount = x))).
+      valueName("integer").
+      text(s"Minimum word count (default ${config.parameters.minWordCount})")
+
+    opt[Int]("minf").action( (x, c) =>
+      c.copy(parameters = c.parameters.copy(minFeatureCount = x))).
+      valueName("integer").
+      text(s"Minimum feature count (default ${config.parameters.minFeatureCount})")
+
+    opt[Int]("minwf").action( (x, c) =>
+      c.copy(parameters = c.parameters.copy(minWordFeatureCount = x))).
+      valueName("integer").
+      text(s"Minimum word feature count (default ${config.parameters.minWordFeatureCount})")
+
+    opt[Double]("minsign").action( (x, c) =>
+      c.copy(parameters = c.parameters.copy(minSignificance = x))).
+      valueName("double").
+      text(s"Minimum significance measure (default ${config.parameters.minSignificance})")
+
+    opt[String]("sign").action( (x, c) =>
+      c.copy(parameters = c.parameters.copy(significanceType = x))).
+      valueName("string").
+      text(s"Set the significance measures (LMI, COV, FREQ) (default ${config.parameters.significanceType})")
+
+    // Sometimes this seems to be called NearestNeighboursNum, TODO is using the nnn abbr. good?
+    opt[Int]("nnn").action( (x, c) =>
+      c.copy(parameters = c.parameters.copy(maxSimilarWords = x))).
+      valueName("integer").
+      text(s"Number of nearest neighbours, .i.e maximum similar words (default ${config.parameters.maxSimilarWords})")
   }
 
-  type TermTermCountRDD = RDD[(String, (String, Int))]
-  type TermCountRDD =  RDD[(String, Int)]
-  type TermTermScoresRDD = RDD[(String, Array[(String, Double)])]
-
-  def calculateCountRDDsFromTextContext(sc: SparkContext, path: String): (
-    TermTermCountRDD, TermCountRDD, TermCountRDD) = {
+  def calculateCountRDDsFromTextContext(sc: SparkContext, path: String):
+    (TermTermCountRDD, TermCountRDD, TermCountRDD) = {
 
     val termContextRDD = sc.textFile(path)
       .map(line => line.split("\t"))
@@ -67,21 +92,18 @@ object WordSimFromTermContext {
     (termFeatureCountRDD, termCountRDD, featureCountRDD)
   }
 
-  def run(sc: SparkContext,
-          termContextPath: String,
-          outputDir: String,
-          wordsPerFeatureNum: Int = wordsPerFeatureNumDefault,
-          featuresPerWordNum: Int = featuresPerWordNumDefault,
-          wordMinCount: Int = wordMinCountDefault,
-          featureMinCount: Int = featureMinCountDefault,
-          wordFeatureMinCount: Int = wordFeatureMinCountDefault,
-          significanceMin: Double = significanceMinDefault,
-          significanceType: String = significanceTypeDefault,
-          similarWordsMaxNum: Int = similarWordsMaxNumDefault) = {
+  def run(sc: SparkContext, config: Config): Unit = {
 
-    val (wordFeatureCounts, wordCounts, featureCounts) = calculateCountRDDsFromTextContext(sc, termContextPath)
+    val (wordFeatureCounts, wordCounts, featureCounts) = calculateCountRDDsFromTextContext(sc, config.input)
 
-    val (simsPath, simsWithFeaturesPath, featuresPath) = WordSimLib.computeWordSimsWithFeatures(wordFeatureCounts, wordCounts, featureCounts, outputDir, wordsPerFeatureNum, featuresPerWordNum, wordMinCount, featureMinCount, wordFeatureMinCount, significanceMin, similarWordsMaxNum, significanceType)
+    val (simsPath, simsWithFeaturesPath, featuresPath) =
+      WordSimLib.computeWordSimsWithFeatures(
+        wordFeatureCounts,
+        wordCounts,
+        featureCounts,
+        config.output,
+        config.parameters
+      )
 
     println(s"Word similarities: $simsPath")
     println(s"Word similarities with features: $simsWithFeaturesPath")

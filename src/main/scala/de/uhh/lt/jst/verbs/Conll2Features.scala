@@ -1,5 +1,6 @@
 package de.uhh.lt.jst.verbs
 
+import de.uhh.lt.jst.Job
 import de.uhh.lt.jst.corpus.ReformatConll
 import de.uhh.lt.jst.utils.{Const, Util}
 import org.apache.hadoop.conf.Configuration
@@ -12,7 +13,36 @@ import scala.collection.mutable.ListBuffer
 import scala.util.Try
 
 
-object Conll2Features {
+object Conll2Features extends Job {
+
+  case class Config(
+    inputDir: String = "",
+    outputDir: String = "",
+    verbsOnly: Boolean = false
+  )
+  override type ConfigType = Config
+  override val config = Config()
+  override val description: String = ""
+  override val parser = new Parser {
+
+    arg[String]("CONLL_INPUT").action( (x, c) =>
+      c.copy(inputDir = x) ).required().hidden()
+
+    arg[String]("OUTPUT_DIR").action( (x, c) =>
+      c.copy(outputDir = x) ).required().hidden()
+
+    opt[Unit]("verbs-only").abbr("vo").action( (x, c) =>
+      c.copy(verbsOnly = true) ).text("only consider features for verbs")
+  }
+
+  override def run(config: Config): Unit = {
+
+    val conf = new SparkConf().setAppName(this.getClass.getSimpleName)
+    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+    val sc = new SparkContext(conf)
+
+    run(sc, config)
+  }
 
   /* CoNLL format: for each dependency output a field with ten columns ending with the bio named entity: http://universaldependencies.org/docs/format.html
      IN_ID TOKEN LEMMA POS_COARSE POS_FULL MORPH ID_OUT TYPE _ NE_BIO
@@ -61,26 +91,6 @@ object Conll2Features {
     def add(that: ScoreExp): ScoreExp = this.+(that)
   }
 
-  def main(args: Array[String]) {
-    if (args.size < 3) {
-      println("Parameters: <input-dir> <output-dir> <de.uhh.lt.jst.verbs-only>")
-      println("<input-dir>\tDirectory with a parsed de.uhh.lt.jst.corpus in the CoNLL format.'")
-      println("<output-dir>\tDirectory with an output word feature files")
-      println("<de.uhh.lt.jst.verbs-only>\tIf true features for de.uhh.lt.jst.verbs are saved only.")
-      return
-    }
-
-    val inputPath = args(0)
-    val outputPath = args(1)
-    val verbsOnly = args(2).toBoolean
-
-    val conf = new SparkConf().setAppName(this.getClass.getSimpleName)
-    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val sc = new SparkContext(conf)
-
-    run(sc, inputPath, outputPath, verbsOnly)
-  }
-
   def simplifyDtype(fullDtype: String) = {
     if (fullDtype.contains("subj")) "subj"
     else if (fullDtype.contains("obj")) "obj"
@@ -92,12 +102,9 @@ object Conll2Features {
     //CoarsifyPosTags.full2coarse(fullPos)
   }
 
-  def run(sc: SparkContext, inputConllDir: String, outputFeaturesDir: String, verbsOnly: Boolean) = {
+  def run(sc: SparkContext, config: Config) = {
 
     // Initialization
-    println("Input dir.: " + inputConllDir)
-    println("Output dir.: " + outputFeaturesDir)
-    Util.delete(outputFeaturesDir) // a convinience for the local tests
     val conf = new Configuration
     conf.set("textinputformat.record.delimiter", conllRecordDelimiter)
     val posDepCount = sc.longAccumulator("numberOfDependenciesWithTargetPOS")
@@ -106,7 +113,7 @@ object Conll2Features {
 
     // Calculate features of the individual tokens: a list of grammatical dependendies per lemma
     val unaggregatedFeatures = sc
-      .newAPIHadoopFile(inputConllDir, classOf[TextInputFormat], classOf[LongWritable], classOf[Text], conf)
+      .newAPIHadoopFile(config.inputDir, classOf[TextInputFormat], classOf[LongWritable], classOf[Text], conf)
       .map { record => record._2.toString }
       .flatMap { record =>
         // parse the sentence record
@@ -162,7 +169,7 @@ object Conll2Features {
         }
 
         // keep only tokens of interest if filter is enabled
-        val lemmas2featuresPos = if (verbsOnly) {
+        val lemmas2featuresPos = if (config.verbsOnly) {
           lemmas2features.filter {
             case (word, features) => verbPos.contains(word.pos) && features.length > 0
           }
@@ -177,14 +184,14 @@ object Conll2Features {
       .cache()
 
     if (saveIntermediate) {
-      val unaggregatedFeaturesPath = outputFeaturesDir + "/unaggregated"
+      val unaggregatedFeaturesPath = config.outputDir + "/unaggregated"
       unaggregatedFeatures
         .map { case (lemma, features) => s"$lemma\t${features.mkString("\t")}" }
         .saveAsTextFile(unaggregatedFeaturesPath)
     }
 
     // Feature counts
-    val featureCountsPath = outputFeaturesDir + "/f"
+    val featureCountsPath = config.outputDir + "/f"
     val featureCounts: RDD[(Feature, Long)] = unaggregatedFeatures
       .flatMap { case (lemma, features) => for (f <- features) yield (f, 1.toLong) }
       .reduceByKey {
@@ -199,7 +206,7 @@ object Conll2Features {
       .saveAsTextFile(featureCountsPath)
 
     // Word counts
-    val wordCountsPath = outputFeaturesDir + "/w§1qq  "
+    val wordCountsPath = config.outputDir + "/w§1qq  "
     val wordCounts: RDD[(Word, Long)] = unaggregatedFeatures
       .map { case (lemma, features) => (lemma, 1.toLong) }
       .reduceByKey {
@@ -233,7 +240,7 @@ object Conll2Features {
       .filter { case (wso, freq) => freq >= minFreq }
       .map { case (wso, freq) => (wso._1, wso._2, wso._3, freq.toDouble) }
       .cache()
-    val wordFeatureCountsPath = outputFeaturesDir + "/wf"
+    val wordFeatureCountsPath = config.outputDir + "/wf"
     saveWF(wordFeatureCountsPath, wordFeatureCounts)
 
     // Pruned WF (SVO counts)
@@ -250,17 +257,17 @@ object Conll2Features {
         (w, s, o, norm(svoSum, wFreq, sFreq, oFreq, wsoFreq))
       }
       .cache()
-    val wordFeaturesNormPath = outputFeaturesDir + "/wf-norm"
+    val wordFeaturesNormPath = config.outputDir + "/wf-norm"
     saveWF(wordFeaturesNormPath, wordFeaturesNorm)
 
     // Grouped WF by word
-    val wordFeatureCountsPerWordPath = outputFeaturesDir + "/wf-w"
+    val wordFeatureCountsPerWordPath = config.outputDir + "/wf-w"
     val wordFeatuesPerWord = aggregateWordFeatures(
       wordFeatureCounts,
       wordFeatureCountsPerWordPath,
       false)
 
-    val wordFeatureCountsNormPerWordPath = outputFeaturesDir + "/wf-norm-w"
+    val wordFeatureCountsNormPerWordPath = config.outputDir + "/wf-norm-w"
     val wordFeatuesNormPerWord = aggregateWordFeatures(
       wordFeaturesNorm,
       wordFeatureCountsNormPerWordPath,
@@ -280,7 +287,7 @@ object Conll2Features {
       .map { case ((w_i, w_j), scoreexp) =>
         "%s#%s\t%s#%s\t%.8f\t%s".format(w_i.lemma, w_i.pos, w_j.lemma, w_j.pos, scoreexp.score, scoreexp.explanation)
       }
-      .saveAsTextFile(outputFeaturesDir + "/sims-explained")
+      .saveAsTextFile(config.outputDir + "/sims-explained")
 
     // Similarity of words
     val sims = wordFeatuesNormPerWord
@@ -296,7 +303,7 @@ object Conll2Features {
       .filter { case ((w_i, w_j), score) => score >= minSim }
       .cache()
 
-    val simsPath = outputFeaturesDir + "/sims"
+    val simsPath = config.outputDir + "/sims"
     sims
       .sortBy(r => (s"${r._1._1.lemma}#${r._1._1.pos}", r._2), ascending = false)
       .map { case ((w_i, w_j), score) => s"${w_i.lemma}#${w_i.pos}\t${w_j.lemma}#${w_j.pos}\t$score" }

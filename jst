@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+if test ! -f conf/env.sh; then
+    echo "Warning: file 'conf/env.sh' not yet created, " \
+         "you can use 'conf/env.sh.template' as a starting point"
+    echo
+else
+    source conf/env.sh
+fi
+
+if which spark-submit > /dev/null; then
+  cmd=spark-submit
+else
+  cmd=${SPARK_HOME:-/opt/spark-2.2.0-bin-hadoop2.7}/bin/spark-submit
+
+  # Test command exists
+  which ${cmd} > /dev/null
+  if test $? -ne 0; then
+    echo
+    echo "Error: '\$SPARK_HOME' must be set to a valid spark installation, " \
+         "or 'spark-submit' be on your path."
+    exit 1
+  fi
+fi
+
+SPARK_SUBMIT_OPTIONS="$SPARK_SUBMIT_OPTIONS
+    --master local[*]"
+
+jar="target/scala-2.11/josimtext-assembly-0.4.jar"
+args="${@}"
+
+${cmd} \
+    $SPARK_SUBMIT_OPTIONS \
+    $jar \
+    $args

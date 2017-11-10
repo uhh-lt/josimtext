@@ -1,3 +1,4 @@
+# Please copy this script to env.sh
 
 # The binaries should be stored in the JoSimText/bin/{spark,hadoop}
 # The run is expected to be from JoSimText directory, e.g. ./scripts/conll.sh

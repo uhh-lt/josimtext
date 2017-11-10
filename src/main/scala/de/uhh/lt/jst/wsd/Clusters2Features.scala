@@ -1,42 +1,35 @@
 package de.uhh.lt.jst.wsd
 
-import de.uhh.lt.jst.utils.Util
+import de.uhh.lt.jst.SparkJob
 import org.apache.spark.{SparkConf, SparkContext}
 
 
-object Clusters2Features {
-  def main(args: Array[String]) {
+object Clusters2Features  extends SparkJob {
+  case class Config(
+    inputDir: String = "",
+    outputDir: String = ""
+  )
+  override type ConfigType = Config
+  override val config = Config()
+  override val description = "Converts sense inventorie file formats"
 
-    if (args.length < 2) {
-      println("Makes a WSD features file 'word<TAB>sense-id<TAB>cluster<TAB>features' from the old format sense" +
-        "inventory file 'word<TAB>sense-id<TAB>keyword<TAB>cluster', where 'features' are the same as the cluster.")
-      println("Usage: <input-sense-inventory> <output-features>")
+  override val parser = new Parser {
+    note("Makes a WSD features file 'word<TAB>sense-id<TAB>cluster<TAB>features' from the old format sense" +
+      "inventory file 'word<TAB>sense-id<TAB>keyword<TAB>cluster', where 'features' are the same as the cluster.")
+    arg[String]("INPUT_DIR").action((x, c) =>
+      c.copy(inputDir = x)).required().hidden()
 
-      return
-    }
-    val sensesPath = args(0)
-    val outputPath = args(1)
-
-    println("Senses: " + sensesPath)
-    println("Output: " + outputPath)
-    Util.delete(outputPath)
-
-    val conf = new SparkConf().setAppName("JST: Clusters2Features")
-    val sc = new SparkContext(conf)
-
-    run(sensesPath, outputPath, sc)
+    arg[String]("OUTPUT_DIR").action((x, c) =>
+      c.copy(outputDir = x)).required().hidden()
   }
 
-  def run(sensesPath: String, outputPath: String, sc: SparkContext): Unit = {
-
-    Util.delete(outputPath)
-
-    val clusters = sc
-      .textFile(sensesPath)
+  def run(sc: SparkContext, config: Config): Unit = {
+    sc
+      .textFile(config.inputDir)
       .map(line => line.split("\t"))
       .map { case Array(target, sense_id, keyword, cluster) => (target, sense_id, cluster) case _ => ("?", "-1", "") }
       .filter { case (target, sense_id, cluster) => target != "?" }
       .map { case (target, sense_id, cluster) => f"$target\t$sense_id\t$cluster\t$cluster" }
-      .saveAsTextFile(outputPath)
+      .saveAsTextFile(config.outputDir)
   }
 }
