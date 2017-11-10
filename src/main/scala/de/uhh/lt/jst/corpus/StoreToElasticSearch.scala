@@ -23,7 +23,7 @@ object StoreToElasticSearch extends SparkJob {
       text("Name of the output ElasticSearch index that will be created in the 'index/type' format.")
 
     arg[String]("ES_NODES").action( (x, c) =>
-      c.copy(outputIndex = x) ).required().
+      c.copy(esNodeList = x) ).required().
       text("List of ElasticSearch nodes where the output will be written (may be not exhaustive).")
   }
 
