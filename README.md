@@ -22,23 +22,21 @@ This system performs [word sense induction](https://en.wikipedia.org/wiki/Word-s
 
 The system consist of several modules:
 
-1. [Feature extraction](https://github.com/tudarmstadt-lt/noun-sense-induction)
-2. Word similarity, word sense disambiguation (this reposiroty)
-3. [Word sense induction](https://github.com/tudarmstadt-lt/chinese-whispers)
+1. [Feature extraction](https://github.com/uhh-lt/lefex)
+2. Term similarity (this reposiroty)
+3. [Word sense induction](https://github.com/uhh-lt/chinese-whispers)
 
-This repository contains the module **noun-sense-induction-scala** that performs:
-- construction of a distributional thesaurus from word-feature frequencies
-- context clue aggregation
-- evaluation 
+This repository performs construction of a distributional thesaurus from word-feature frequencies.
 
 
 Requirements
 ------------
 
-- Git
-- Maven
-- Java >= 1.7
-- Spark (if you want to run spark code from command line)
+- git
+- java 1.8+
+- spark 2.0+
+
+<!--
 
 Download Code & Prepare Data
 ----------------------------
@@ -48,14 +46,16 @@ Download Code & Prepare Data
 - https://github.com/tudarmstadt-lt/chinese-whispers
 - https://github.com/johannessimon/wiki-wsd-task
 - Place your raw text (one sentence per line) on HDFS. We will reference this file/folder in the following as TEXT_PATH. The HDFS output folder will be referenced as WSI_OUT
+-->
 
-Compile
+Build
 -------
 
 ```
-cd /path/to/noun-sense-induction-scala
-sbt package
+make build
 ```
+
+<!--
 
 To run spark code:
 ```
@@ -94,10 +94,10 @@ TEXT_PATH WSI_OUT/sentences-deps-coocs
 ```
 
 
-- mapreduce.local.map.tasks.maximum --> maximum number of parallely executed local mappers
-- holing.dependencies --> whether to write out dependency features (counts)
-- holing.coocs --> whether to write out coocs (counts)
-- mapred.max.split.size=1000000 --> one split is 1MB
+- mapreduce.local.map.tasks.maximum -- maximum number of parallely executed local mappers
+- holing.dependencies -- whether to write out dependency features (counts)
+- holing.coocs -- whether to write out coocs (counts)
+- mapred.max.split.size=1000000 -- one split is 1MB
 
 Alternatively use the script: https://github.com/tudarmstadt-lt/joint/blob/master/run-nsi-hadoop.sh
 
@@ -119,15 +119,15 @@ WSI_OUT/wordsim
 100 0.0 2 10 2 LMI 3 100 100
 ```
 
-- 100 --> compute 100 similar words per word
-- 0.0 --> minimum feature significance is 0.0
-- 2 --> use only features that were seen at least two times with every word
-- 10 --> take only words seen at least 10 times
-- 2 --> take only features seen at least 2 times (with any word)
-- LMI --> use lexicographer's mutual information as significance score
-- 3 --> round all similarities to 3 decimal places
-- 100 --> use only 100 most significant features per word
-- 100 --> compute only 100 most similar words per word
+- 100 -- compute 100 similar words per word
+- 0.0 -- minimum feature significance is 0.0
+- 2 -- use only features that were seen at least two times with every word
+- 10 -- take only words seen at least 10 times
+- 2 -- take only features seen at least 2 times (with any word)
+- LMI -- use lexicographer's mutual information as significance score
+- 3 -- round all similarities to 3 decimal places
+- 100 -- use only 100 most significant features per word
+- 100 -- compute only 100 most similar words per word
 
 Alternatively use: https://github.com/tudarmstadt-lt/joint/blob/master/run-nsi-spark.sh
 
@@ -309,4 +309,7 @@ The 12 column format (+ features extracted from the context):
 ```
 context_id	target	target_pos	target_position	gold_sense_ids	predict_sense_ids	golden_related	predict_related	context word_features holing_features target_holing_features
 ```
+
+-->
+
 

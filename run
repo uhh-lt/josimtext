@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 # Check is SPARK_HOME defined
 if [[ -z "${SPARK_HOME}" ]]; then
   echo "Specify the SPARK_HOME environment variable: path to the Spark installation."
