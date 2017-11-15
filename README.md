@@ -1,8 +1,9 @@
 JoSimText
 ========
 
-This system performs [word sense induction](https://en.wikipedia.org/wiki/Word-sense_induction) and disambiguation. This is an implementation of the [JoBimText](http://www.jobimtext.org) approach 
- in Scala, Spark and tuned for induction of word Senses (hence the "S" in the name). The [original JoBimText implementation](http://maggie.lt.informatik.tu-darmstadt.de/jobimtext/downloads/) is written 
+This system performs [word sense induction](https://en.wikipedia.org/wiki/Word-sense_induction) form text. This is an implementation of the [JoBimText](http://www.jobimtext.org) approach 
+ in Scala, Spark, tuned for induction of word Senses (hence the "S" instead of "B" in the name, but also because of the
+ name of the initial developer of the project Johannes Simon). The [original JoBimText implementation](http://maggie.lt.informatik.tu-darmstadt.de/jobimtext/downloads/) is written 
  in Java/Pig and is more generic as it supposes that "Jo"s (i.e. objects) and "Bims (i.e. features) can be any linguistic objects. This particular implementation is designed for modeling of 
   words and multiword expressions. 
 
@@ -22,11 +23,10 @@ This system performs [word sense induction](https://en.wikipedia.org/wiki/Word-s
 
 The system consist of several modules:
 
-1. [Feature extraction](https://github.com/uhh-lt/lefex)
-2. Term similarity (this reposiroty)
+1. [Term feature extraction](https://github.com/uhh-lt/lefex)
+2. Term similarity (this reposiroty). This repository performs construction of a distributional thesaurus from word-feature frequencies.
 3. [Word sense induction](https://github.com/uhh-lt/chinese-whispers)
 
-This repository performs construction of a distributional thesaurus from word-feature frequencies.
 
 
 Requirements
