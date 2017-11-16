@@ -7,18 +7,20 @@ import de.uhh.lt.jst.dt._
 
 object MeasureDTSim extends SparkJob {
 
-  case class Config(firstDTPath: String, secondDTPath: String)
+  case class Config(firstDTPath: String = "", secondDTPath: String = "")
 
   override type ConfigType = Config
+  override val config = Config()
 
   override val description: String = "Measures similarity of two distributional thesauri (DT)"
 
-    override val parser = new Parser {
-      arg[String]("FIRST_DT").action( (x, c) =>
-        c.copy(firstDTPath = x) ).required().hidden()
-      arg[String]("SECOND_DT").action( (x, c) =>
-        c.copy(secondDTPath = x) ).required().hidden()
-    }
+  override val parser = new Parser {
+    arg[String]("FIRST_DT").action( (x, c) =>
+      c.copy(firstDTPath = x) ).required().hidden()
+
+    arg[String]("SECOND_DT").action( (x, c) =>
+      c.copy(secondDTPath = x) ).required().hidden()
+  }
 
   override def run(spark: SparkSession, config: Config): Unit = {
 
@@ -32,10 +34,6 @@ object MeasureDTSim extends SparkJob {
     println(s"second: ${config.secondDTPath}")
     println("---------")
     println(s"$measurements")
-  }
-
-  def compareDTs(spark: SparkSession, path1: String, path2: String): Measurements = {
-
   }
 
   def compareDTs(dt1: Dataset[DTEntry], dt2: Dataset[DTEntry]): Measurements = {
