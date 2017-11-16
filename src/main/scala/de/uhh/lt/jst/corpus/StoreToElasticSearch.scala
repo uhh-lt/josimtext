@@ -1,14 +1,13 @@
 package de.uhh.lt.jst.corpus
 
-import de.uhh.lt.jst.SparkJob
+import de.uhh.lt.jst.Job
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.{SparkConf, SparkContext}
 import org.elasticsearch.spark._
 
-object StoreToElasticSearch extends SparkJob {
+object StoreToElasticSearch extends Job {
   case class Config(inputDir: String = "",
-                    outputIndex: String = "",
-                    esNodeList: String = "localhost:9200")
+                    outputIndex: String = "depcc/sentences",
+                    esNodeList: String = "ltheadnode")
   override type ConfigType = Config
   override val config = Config()
   override val description: String = "Index CoNLL file with ElasticSearch"
@@ -42,10 +41,7 @@ object StoreToElasticSearch extends SparkJob {
     else line
   }
 
-  override def run(spark: SparkSession, config: Config): Unit = {
-    spark.conf.set("es.index.auto.create", "true")
-    spark.conf.set("es.nodes", config.esNodeList)
-
+  def run(spark: SparkSession, config: ConfigType): Unit = {
     spark.sparkContext
       .textFile(config.inputDir)
       .filter { line => line.startsWith("# ")}
@@ -54,5 +50,18 @@ object StoreToElasticSearch extends SparkJob {
       .map{ line => addDocumentBreaks(line)}
       .map{ line => Map("sentence" ->line)}
       .saveToEs(config.outputIndex)
+  }
+
+  override def run(config: ConfigType): Unit = {
+    val spark: SparkSession = SparkSession
+      .builder()
+      .appName(this.getClass.getSimpleName)
+      .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+      .config("es.index.auto.create", "true")
+      .config("es.nodes", config.esNodeList)
+      //.config (read login and password of ES cluster here
+      .getOrCreate()
+
+    run(spark, config)
   }
 }
