@@ -61,7 +61,8 @@ object Run extends BaseRun {
       "Miscellaneous Commands",
       List(
         verbs.Conll2Features,
-        warc.WarcToDocuments
+        warc.WarcToDocuments,
+        benchmarks.MeasureDTSim
       )
     )
   )
