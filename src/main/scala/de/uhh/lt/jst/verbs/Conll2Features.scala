@@ -24,7 +24,6 @@ object Conll2Features extends SparkJob {
   override val config = Config()
   override val description: String = ""
   override val parser = new Parser {
-
     arg[String]("CONLL_INPUT").action( (x, c) =>
       c.copy(inputDir = x) ).required().hidden()
 

@@ -1,8 +1,16 @@
 package de.uhh.lt.jst.corpus
 
+import de.uhh.lt.conll.Sentence
 import de.uhh.lt.jst.Job
+import de.uhh.lt.jst.verbs.Conll2Features.{Dependency, conllRecordDelimiter}
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.io.{LongWritable, Text}
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.spark.sql.SparkSession
 import org.elasticsearch.spark._
+import de.uhh.lt.conll._
+import scala.util.Try
+import de.uhh.lt.jst.utils.Util
 
 object StoreToElasticSearch extends Job {
   case class Config(inputDir: String = "",
@@ -26,30 +34,54 @@ object StoreToElasticSearch extends Job {
       text("List of ElasticSearch nodes where the output will be written (may be not exhaustive).")
   }
 
-  val textRegex = """# text = (.*)""".r
-  val newdocRegex = """# newdoc""".r
-
-  def getText(line:String): String = {
-    val textMatch = textRegex.findFirstMatchIn(line)
-    if (textMatch.isDefined) textMatch.get.group(1).trim
-    else line
-  }
-
-  def addDocumentBreaks(line:String): String = {
-    val textMatch = newdocRegex.findFirstMatchIn(line)
-    if (textMatch.isDefined) "\n\n" + line
-    else line
-  }
 
   def run(spark: SparkSession, config: ConfigType): Unit = {
+
+    val conf = new Configuration
+    conf.set("textinputformat.record.delimiter", "\n\n")
+
+    val out = "/Users/panchenko/Desktop/es-indexing/output"
+    Util.delete(out)
     spark.sparkContext
-      .textFile(config.inputDir)
-      .filter { line => line.startsWith("# ")}
-      .filter{ line => !line.startsWith("# parser") && !line.startsWith("# sent_id")}
-      .map{ line => getText(line)}
-      .map{ line => addDocumentBreaks(line)}
-      .map{ line => Map("sentence" ->line)}
-      .saveToEs(config.outputIndex)
+      .newAPIHadoopFile(config.inputDir, classOf[TextInputFormat], classOf[LongWritable], classOf[Text], conf)
+      .map { record => record._2.toString }
+      .map { CoNLLParser.parseSingleSentence }
+      //.map{ sentence =>
+      //  // Make a Map out of the parsed structure
+      //  sentence.}
+      .saveAsTextFile(out)
+
+      //.filter { line => line.startsWith("# ")}
+      //.filter{ line => !line.startsWith("# parser") && !line.startsWith("# sent_id")}
+      //.map{ line => getText(line)}
+      //.map{ line => addDocumentBreaks(line)}
+      //.map{ line => Map("sentence" ->line)}
+      //.saveToEs(config.outputIndex)
+
+//    .flatMap { record =>
+//      // parse the sentence record
+//      var id2dependency = collection.mutable.Map[Int, Dependency]()
+//      for (line <- record.split("\n")) {
+//        val fields = line.split("\t")
+//        if (fields.length == 10) {
+//          val inID = Try(fields(0).toInt)
+//          if (inID.isSuccess) {
+//            id2dependency(inID.get) = new Dependency(fields)
+//          } else {
+//            println(s"Warning: bad line ${line}")
+//          }
+//        } else {
+//          if (fields.length > 2) {
+//            println(s"Warning: bad line (${fields.length} fields): ${line}")
+//          } else {
+//            // the line with the original sentence: do nothing
+//          }
+//        }
+//      }
+
+
+
+
   }
 
   override def run(config: ConfigType): Unit = {

@@ -8,7 +8,6 @@ import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.{Dataset, SparkSession}
 
 
-
 object CoNLL2DepTermContext extends SparkJob {
   case class Config(input: String = "", output: String = "")
 
@@ -35,17 +34,12 @@ object CoNLL2DepTermContext extends SparkJob {
       .text(config.output)
   }
 
-  def convertWithSpark(
-    spark: SparkSession,
-    path: String,
-    autoDetectEnhancedDeps: Boolean = true
-  ): Dataset[TermContext] = {
-
+  def convertWithSpark(spark: SparkSession, path: String, autoDetectEnhancedDeps: Boolean = true): Dataset[TermContext] = {
     import spark.implicits._
 
     // FIXME Avoid duplicate parsing
     val readConllCommentsUDF = udf((text: String) => CoNLLParser.parseSingleSentence(text).comments)
-    val readConllRowsUDF = udf((text: String) => CoNLLParser.parseSingleSentence(text).rows)
+    val readConllRowsUDF = udf((text: String) => CoNLLParser.parseSingleSentence(text).deps)
 
     // TODO: why error with https://issues.scala-lang.org/browse/SI-6996 maybe Nil usage in extractor?
     val ds = spark.read.corpus(path)
@@ -78,11 +72,11 @@ object CoNLL2DepTermContext extends SparkJob {
     samples.forall(isSentenceWithoutEnhancedDeps)
   }
 
-  def isSentenceWithoutEnhancedDeps(sentence: Sentence): Boolean = sentence.rows.forall(_.depsIsEmpty)
+  def isSentenceWithoutEnhancedDeps(sentence: Sentence): Boolean = sentence.deps.forall(_.depsIsEmpty)
 
   def extractNormalDepsForSentence(sentence: Sentence): Seq[TermContext] = {
     val isIgnoredDepType = (row: Row) => Set("ROOT") contains row.deprel
-    val rows = sentence.rows
+    val rows = sentence.deps
 
     rows
       .filterNot(isIgnoredDepType)
@@ -95,10 +89,10 @@ object CoNLL2DepTermContext extends SparkJob {
   }
 
   def extractNormalDepForId(sentence: Sentence, id: Int, inverse: Boolean = false): TermContext = {
-    val depRow = sentence.rows(id)
+    val depRow = sentence.deps(id)
 
     val headId = depRow.head.toInt
-    val headLemma = sentence.rows(headId.toInt).lemma
+    val headLemma = sentence.deps(headId.toInt).lemma
     val depLemma = depRow.lemma
     val depRel = depRow.deprel
 
@@ -111,7 +105,7 @@ object CoNLL2DepTermContext extends SparkJob {
   def extractEnhancedDepForRows(sentence: Sentence): Seq[TermContext] = {
     val isIgnoredDepType = (row: Row) => Set("ROOT") contains row.deprel
 
-    val rows = sentence.rows
+    val rows = sentence.deps
 
     val optDeps = rows
       .filterNot(isIgnoredDepType)
@@ -129,9 +123,8 @@ object CoNLL2DepTermContext extends SparkJob {
     optDeps.flatten
   }
 
-
   def extractEnhancedDepForId(sentence: Sentence, id: Int, inverse: Boolean = false): TermContext = {
-    val depRow = sentence.rows(id)
+    val depRow = sentence.deps(id)
 
     assert(!depRow.depsIsEmpty, s"CoNLL row #$id does not contain enhanced deps.")
 
@@ -140,7 +133,7 @@ object CoNLL2DepTermContext extends SparkJob {
     depRow.deps match {
       case depRegex(headId, depRel) =>
 
-        val headLemma = sentence.rows(headId.toInt).lemma
+        val headLemma = sentence.deps(headId.toInt).lemma
         val depLemma = depRow.lemma
 
         if (!inverse)

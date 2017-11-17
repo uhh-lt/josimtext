@@ -5,14 +5,14 @@ import org.scalatest._
 import scala.io.Source
 
 class CoNLLParserSpec extends FlatSpec with Matchers {
-  it should "parse the rows for one sentence in CoNLL format" in {
 
+  it should "parse the rows for one sentence in CoNLL format" in {
     val path = getClass.getResource("/conll.csv").getPath
     val text = Source.fromFile(path).mkString
 
     val sentence = CoNLLParser.parseSingleSentence(text)
 
-    sentence.rows.head should be(
+    sentence.deps.head should be(
       Row(
         id = "0",
         form = "Website",
@@ -26,7 +26,7 @@ class CoNLLParserSpec extends FlatSpec with Matchers {
         misc = "O"
       )
     )
-    sentence.rows.length should be(8)
+    sentence.deps.length should be(8)
   }
 }
 

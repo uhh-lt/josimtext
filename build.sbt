@@ -1,3 +1,4 @@
+
 name := "josimtext"
 
 version := "0.4"
@@ -29,3 +30,13 @@ assemblyMergeStrategy in assembly := {
  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
  case x => MergeStrategy.first
 }
+
+//// for intellij idea integration
+//lazy val mainRunner = project.in(file("mainRunner")).dependsOn(RootProject(file("."))).settings(
+//  libraryDependencies ++= Seq(
+//    "org.apache.spark" %% "spark-core" % sparkVersion % "compile",
+//    "org.apache.spark" %% "spark-sql" % sparkVersion % "compile",
+//    "org.apache.spark" %% "spark-mllib" % sparkVersion % "compile",
+//    "org.apache.spark" %% "spark-hive" % sparkVersion % "compile"
+//  )
+//)

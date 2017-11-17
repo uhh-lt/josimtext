@@ -14,8 +14,8 @@ object ReformatConll extends SparkJob {
   override type ConfigType = Config
   override val config = Config()
 
-  val oldConllRecordDelimiter = "^-1\t".r
-  val newConllRecordDelimiter = ">>>>>\t"
+  val oldConllRecordDelimiter = "^>>>>>\t".r
+  val newConllRecordDelimiter = "\n\n\t"
 
   override val description: String = ""
   override val parser = new Parser {
