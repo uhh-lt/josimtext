@@ -8,19 +8,6 @@ This system performs [word sense induction](https://en.wikipedia.org/wiki/Word-s
   words and multiword expressions. 
 
 
-
-
-```
-   ___       _____ _         _____         _   
-  |_  |     /  ___(_)       |_   _|       | |  
-    | | ___ \ `--. _ _ __ ___ | | _____  _| |_ 
-    | |/ _ \ `--. \ | '_ ` _ \| |/ _ \ \/ / __|
-/\__/ / (_) /\__/ / | | | | | | |  __/>  <| |_ 
-\____/ \___/\____/|_|_| |_| |_\_/\___/_/\_\\__|
-                                                                                            
-```
-
-
 The system consist of several modules:
 
 1. [Term feature extraction](https://github.com/uhh-lt/lefex)
