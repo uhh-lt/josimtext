@@ -40,8 +40,6 @@ object StoreToElasticSearch extends Job {
     val conf = new Configuration
     conf.set("textinputformat.record.delimiter", "\n\n")
 
-    //val out = "/Users/panchenko/Desktop/es-indexing/output"
-    //Util.delete(out)
     spark.sparkContext
       .newAPIHadoopFile(config.inputDir, classOf[TextInputFormat], classOf[LongWritable], classOf[Text], conf)
       .map { record => record._2.toString }
@@ -51,7 +49,6 @@ object StoreToElasticSearch extends Job {
         "sentence_id" -> sentence.sentenceID,
         "text" -> sentence.text)
       }
-      //.saveAsTextFile(out)
       .saveToEs(config.outputIndex)
   }
 

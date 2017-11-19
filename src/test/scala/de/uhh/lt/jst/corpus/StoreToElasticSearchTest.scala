@@ -22,22 +22,22 @@ class StoreToElasticSearchTest extends FunSuite {
     StoreToElasticSearch.run(spark, conf)
   }
 
-  test("index a small conll file") {
+  ignore("index a small conll file") {
     val conllPath = getClass.getResource("/conll-1000-tokens.csv.gz").getPath
     run(conllPath, "test3/small", "localhost")
   }
 
-  test("index a large conll file") {
+  ignore("index a large conll file") {
     val conllPath = "/Users/panchenko/Desktop/es-indexing/part-m-19100.gz"
     run(conllPath, "test3/large", "localhost")
   }
 
-  test("index a very large conll file") {
+  ignore("index a very large conll file") {
     val conllPath = "/Users/panchenko/Desktop/es-indexing/part-m-18080.gz"
     run(conllPath, "test3/xlarge", "localhost")
   }
 
-  test("index a very large conll file 2 ") {
+  ignore("index a very large conll file 2 ") {
     val conllPath = "/Users/sasha/Desktop/part-m-10144.gz"
     run(conllPath, "test3/xlarge", "localhost")
   }
