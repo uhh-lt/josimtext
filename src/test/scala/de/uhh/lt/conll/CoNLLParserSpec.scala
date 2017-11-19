@@ -13,7 +13,7 @@ class CoNLLParserSpec extends FlatSpec with Matchers {
     val sentence = CoNLLParser.parseSingleSentence(text)
 
     sentence.deps.head should be(
-      Row(
+      Dependency(
         id = "0",
         form = "Website",
         lemma = "Website",

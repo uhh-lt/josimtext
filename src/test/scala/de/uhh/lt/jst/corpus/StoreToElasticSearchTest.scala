@@ -37,4 +37,9 @@ class StoreToElasticSearchTest extends FunSuite {
     run(conllPath, "test3/xlarge", "localhost")
   }
 
+  test("index a very large conll file 2 ") {
+    val conllPath = "/Users/sasha/Desktop/part-m-10144.gz"
+    run(conllPath, "test3/xlarge", "localhost")
+  }
+
 }

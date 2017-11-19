@@ -40,48 +40,19 @@ object StoreToElasticSearch extends Job {
     val conf = new Configuration
     conf.set("textinputformat.record.delimiter", "\n\n")
 
-    val out = "/Users/panchenko/Desktop/es-indexing/output"
-    Util.delete(out)
+    //val out = "/Users/panchenko/Desktop/es-indexing/output"
+    //Util.delete(out)
     spark.sparkContext
       .newAPIHadoopFile(config.inputDir, classOf[TextInputFormat], classOf[LongWritable], classOf[Text], conf)
       .map { record => record._2.toString }
       .map { CoNLLParser.parseSingleSentence }
-      //.map{ sentence =>
-      //  // Make a Map out of the parsed structure
-      //  sentence.}
-      .saveAsTextFile(out)
-
-      //.filter { line => line.startsWith("# ")}
-      //.filter{ line => !line.startsWith("# parser") && !line.startsWith("# sent_id")}
-      //.map{ line => getText(line)}
-      //.map{ line => addDocumentBreaks(line)}
-      //.map{ line => Map("sentence" ->line)}
-      //.saveToEs(config.outputIndex)
-
-//    .flatMap { record =>
-//      // parse the sentence record
-//      var id2dependency = collection.mutable.Map[Int, Dependency]()
-//      for (line <- record.split("\n")) {
-//        val fields = line.split("\t")
-//        if (fields.length == 10) {
-//          val inID = Try(fields(0).toInt)
-//          if (inID.isSuccess) {
-//            id2dependency(inID.get) = new Dependency(fields)
-//          } else {
-//            println(s"Warning: bad line ${line}")
-//          }
-//        } else {
-//          if (fields.length > 2) {
-//            println(s"Warning: bad line (${fields.length} fields): ${line}")
-//          } else {
-//            // the line with the original sentence: do nothing
-//          }
-//        }
-//      }
-
-
-
-
+      .map{ sentence => Map(
+        "document_id" -> sentence.documentID,
+        "sentence_id" -> sentence.sentenceID,
+        "text" -> sentence.text)
+      }
+      //.saveAsTextFile(out)
+      .saveToEs(config.outputIndex)
   }
 
   override def run(config: ConfigType): Unit = {

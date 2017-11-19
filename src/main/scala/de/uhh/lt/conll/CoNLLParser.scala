@@ -44,15 +44,15 @@ object CoNLLParser {
       .filter{ line => line.length == NUM_COLUMNS}
       .map{readDependency}
 
-    Sentence(comments=commentLines, deps=deps, documentID, sentenceID, sentenceText)
+    Sentence(deps=deps, documentID, sentenceID, sentenceText)
   }
 
-  private def readDependency(fields: Array[String]): Row = {
+  private def readDependency(fields: Array[String]): Dependency = {
     if (fields.length != NUM_COLUMNS) {
       throw CoNLLSchemaError(s"Row has not 10 columns but ${fields.length}, content: ${fields.mkString("-t-")}")
     }
 
-    Row(
+    Dependency(
       id = fields(0),
       form = fields(1),
       lemma = fields(2),

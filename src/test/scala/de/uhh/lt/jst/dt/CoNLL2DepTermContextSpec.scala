@@ -4,7 +4,7 @@ import java.io.FileNotFoundException
 
 import com.holdenkarau.spark.testing.DatasetSuiteBase
 import org.scalatest.{FlatSpec, Matchers}
-import de.uhh.lt.conll.{CoNLLParser, Row, Sentence}
+import de.uhh.lt.conll.{CoNLLParser, Dependency, Sentence}
 import de.uhh.lt.jst.dt.entities.TermContext
 
 import scala.io.Source
@@ -96,7 +96,7 @@ class CoNLL2DepTermContextSpec extends FlatSpec with Matchers with DatasetSuiteB
   }
 
   it should "extract correctly from deps with non alphanum tokens" in {
-    val rows: Seq[Row] = Seq(Row(
+    val rows: Seq[Dependency] = Seq(Dependency(
       id = "0",
       form = "usr/lib/fglrx",
       lemma = "usr/lib/fglrx",
@@ -109,7 +109,7 @@ class CoNLL2DepTermContextSpec extends FlatSpec with Matchers with DatasetSuiteB
       misc = "O"
     ))
 
-    val deps = CoNLL2DepTermContext.extractEnhancedDepForRows(Sentence(Seq.empty, rows))
+    val deps = CoNLL2DepTermContext.extractEnhancedDepForRows(Sentence(rows))
     val expected = Seq(
       TermContext("usr/lib/fglrx","prep_usr/#usr/lib/fglrx"),
       TermContext("usr/lib/fglrx","-prep_usr/#usr/lib/fglrx")

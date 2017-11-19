@@ -1,6 +1,6 @@
 package de.uhh.lt.jst.dt
 
-import de.uhh.lt.conll.{CoNLLParser, Row, Sentence}
+import de.uhh.lt.conll.{CoNLLParser, Dependency, Sentence}
 import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.dt.entities.TermContext
 import de.uhh.lt.spark.corpus._
@@ -37,15 +37,12 @@ object CoNLL2DepTermContext extends SparkJob {
   def convertWithSpark(spark: SparkSession, path: String, autoDetectEnhancedDeps: Boolean = true): Dataset[TermContext] = {
     import spark.implicits._
 
-    // FIXME Avoid duplicate parsing
-    val readConllCommentsUDF = udf((text: String) => CoNLLParser.parseSingleSentence(text).comments)
     val readConllRowsUDF = udf((text: String) => CoNLLParser.parseSingleSentence(text).deps)
 
     // TODO: why error with https://issues.scala-lang.org/browse/SI-6996 maybe Nil usage in extractor?
     val ds = spark.read.corpus(path)
-      .withColumn("comments", readConllCommentsUDF('value))
-      .withColumn("rows", readConllRowsUDF('value))
-      .select("comments", "rows")
+      .withColumn("deps", readConllRowsUDF('value))
+      .select("deps")
       .as[Sentence]
 
     /**
@@ -75,7 +72,7 @@ object CoNLL2DepTermContext extends SparkJob {
   def isSentenceWithoutEnhancedDeps(sentence: Sentence): Boolean = sentence.deps.forall(_.depsIsEmpty)
 
   def extractNormalDepsForSentence(sentence: Sentence): Seq[TermContext] = {
-    val isIgnoredDepType = (row: Row) => Set("ROOT") contains row.deprel
+    val isIgnoredDepType = (row: Dependency) => Set("ROOT") contains row.deprel
     val rows = sentence.deps
 
     rows
@@ -103,7 +100,7 @@ object CoNLL2DepTermContext extends SparkJob {
   }
 
   def extractEnhancedDepForRows(sentence: Sentence): Seq[TermContext] = {
-    val isIgnoredDepType = (row: Row) => Set("ROOT") contains row.deprel
+    val isIgnoredDepType = (row: Dependency) => Set("ROOT") contains row.deprel
 
     val rows = sentence.deps
 

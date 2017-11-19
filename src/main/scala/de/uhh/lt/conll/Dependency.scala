@@ -1,6 +1,6 @@
 package de.uhh.lt.conll
 
-case class Row(
+case class Dependency(
   id: String, // Word index, integer starting at 1 for each new sentence;
   // may be a range for multiword tokens; may be a decimal number for empty nodes.
   form: String, // Word form or punctuation symbol.

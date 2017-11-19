@@ -22,7 +22,6 @@ class CoarsifyPosTagsTest extends FlatSpec with Matchers with DatasetSuiteBase {
     CoarsifyPosTags.full2coarse("VB") should equal("VB")
     CoarsifyPosTags.full2coarse("VBZ") should equal("VB")
     CoarsifyPosTags.full2coarse("NNP") should equal("NP")
-
   }
 
   it should "produce expected results" in {
@@ -54,5 +53,3 @@ class CoarsifyPosTagsTest extends FlatSpec with Matchers with DatasetSuiteBase {
     CoarsifyPosTags.coarsifyPosTag("C#2.0#NNP programming#JJ language#NNS") should equal("C#2.0#NP programming#JJ language#NN")
   }
 }
-
-
