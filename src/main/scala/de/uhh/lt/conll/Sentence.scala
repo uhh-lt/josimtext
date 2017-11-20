@@ -5,3 +5,5 @@ case class Sentence(deps: Seq[Dependency],
                     documentID:String = "",
                     sentenceID:Int = -1,
                     text:String = "")
+
+case class SentenceOld(deps: Seq[Dependency])

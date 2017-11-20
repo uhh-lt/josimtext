@@ -37,12 +37,17 @@ object CoNLL2DepTermContext extends SparkJob {
   def convertWithSpark(spark: SparkSession, path: String, autoDetectEnhancedDeps: Boolean = true): Dataset[TermContext] = {
     import spark.implicits._
 
-    val readConllRowsUDF = udf((text: String) => CoNLLParser.parseSingleSentence(text).deps)
+    val readConllDeps = udf((text: String) => CoNLLParser.parseSingleSentence(text).deps)
+    val readConllDocid = udf((text: String) => CoNLLParser.parseSingleSentence(text).documentID)
+    val readConllSentid = udf((text: String) => CoNLLParser.parseSingleSentence(text).sentenceID)
+    val readConllText = udf((text: String) => CoNLLParser.parseSingleSentence(text).text)
 
-    // TODO: why error with https://issues.scala-lang.org/browse/SI-6996 maybe Nil usage in extractor?
     val ds = spark.read.corpus(path)
-      .withColumn("deps", readConllRowsUDF('value))
-      .select("deps")
+      .withColumn("deps", readConllDeps('value))
+      .withColumn("documentID", readConllDocid('value))
+      .withColumn("sentenceID", readConllSentid('value))
+      .withColumn("text", readConllText('value))
+      .select("deps", "documentID", "sentenceID", "text")
       .as[Sentence]
 
     /**
