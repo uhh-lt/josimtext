@@ -14,19 +14,19 @@ class CoNLLParserSpec extends FlatSpec with Matchers {
 
     sentence.deps.head should be(
       Dependency(
-        id = "0",
+        id = 0,
         form = "Website",
         lemma = "Website",
         upostag = "NNP",
         xpostag = "NNP",
         feats = "",
-        head = "2",
+        head = 2,
         deprel = "nn",
         deps = "2:nn",
-        misc = "O"
+        ner = "O"
       )
     )
-    sentence.deps.length should be(8)
+    sentence.deps.size should be(8)
   }
 }
 

@@ -47,9 +47,11 @@ object StoreToElasticSearch extends Job {
       .map{ sentence => Map(
         "document_id" -> sentence.documentID,
         "sentence_id" -> sentence.sentenceID,
-        "text" -> sentence.text)
+        "text" -> sentence.text,
+        "deps" -> sentence.deps
+            .map{d => s"${d._2.lemma}--${d._2.deprel}--${sentence.deps(d._2.head).lemma}"})
       }
-      .saveToEs(config.outputIndex)
+    .saveToEs(config.outputIndex)
   }
 
   override def run(config: ConfigType): Unit = {

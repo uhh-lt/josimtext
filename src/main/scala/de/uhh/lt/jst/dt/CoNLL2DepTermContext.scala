@@ -74,20 +74,22 @@ object CoNLL2DepTermContext extends SparkJob {
     samples.forall(isSentenceWithoutEnhancedDeps)
   }
 
-  def isSentenceWithoutEnhancedDeps(sentence: Sentence): Boolean = sentence.deps.forall(_.depsIsEmpty)
+  def isSentenceWithoutEnhancedDeps(sentence: Sentence): Boolean = sentence.deps.forall(_._2.depsIsEmpty)
 
   def extractNormalDepsForSentence(sentence: Sentence): Seq[TermContext] = {
     val isIgnoredDepType = (row: Dependency) => Set("ROOT") contains row.deprel
     val rows = sentence.deps
 
     rows
-      .filterNot(isIgnoredDepType)
+      .map(_._2)
+      .filterNot{isIgnoredDepType}
       .flatMap { row =>
-        val id = row.id.toInt
+        val id = row.id
         val dep = extractNormalDepForId(sentence, id)
         val invDep = extractNormalDepForId(sentence, id, inverse = true)
         Seq(dep, invDep)
       }
+      .toSeq
   }
 
   def extractNormalDepForId(sentence: Sentence, id: Int, inverse: Boolean = false): TermContext = {
@@ -110,9 +112,10 @@ object CoNLL2DepTermContext extends SparkJob {
     val rows = sentence.deps
 
     val optDeps = rows
-      .filterNot(isIgnoredDepType)
+        .map(_._2)
+      .filterNot{isIgnoredDepType}
       .flatMap { row =>
-        val id = row.id.toInt
+        val id = row.id
         if (row.deps == "_") {
           None
         } else {
@@ -124,6 +127,7 @@ object CoNLL2DepTermContext extends SparkJob {
 
     optDeps.flatten
   }
+    .toSeq
 
   def extractEnhancedDepForId(sentence: Sentence, id: Int, inverse: Boolean = false): TermContext = {
     val depRow = sentence.deps(id)
