@@ -1,40 +1,39 @@
 package de.uhh.lt.jst.dt.benchmarks
 
+import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.dt.entities.DTEntry
 import org.apache.spark.sql.{Dataset, SparkSession}
 import de.uhh.lt.jst.dt._
 
-object MeasureDTSim {
+object MeasureDTSim extends SparkJob {
 
-  def main(args: Array[String]): Unit = {
-    if (args.length < 2) {
-      println("Usage: MeasureDTSim <first_dt_path> <second_dt_path>")
-      System.exit(1)
-    }
+  case class Config(firstDTPath: String = "", secondDTPath: String = "")
 
-    val spark: SparkSession = SparkSession
-      .builder()
-      .appName(this.getClass.getSimpleName)
-      .getOrCreate()
+  override type ConfigType = Config
+  override val config = Config()
 
-    val firstPath = args(0)
-    val secondPath = args(1)
+  override val description: String = "Measures similarity of two distributional thesauri (DT)"
 
-    val measurements = compareDTs(spark, firstPath, secondPath)
+  override val parser = new Parser {
+    arg[String]("FIRST_DT").action( (x, c) =>
+      c.copy(firstDTPath = x) ).required().hidden()
 
-    println(s"Similarity between distributional thesauri:")
-    println(s"first: $firstPath")
-    println(s"second: $secondPath")
-    println("---------")
-    println(s"$measurements")
-
+    arg[String]("SECOND_DT").action( (x, c) =>
+      c.copy(secondDTPath = x) ).required().hidden()
   }
 
-  def compareDTs(spark: SparkSession, path1: String, path2: String): Measurements = {
-    val firstDT = readDT(spark, path1)
-    val secondDT = readDT(spark, path2)
+  override def run(spark: SparkSession, config: Config): Unit = {
 
+    val firstDT = readDT(spark, config.firstDTPath)
+    val secondDT = readDT(spark, config.secondDTPath)
     compareDTs(firstDT, secondDT)
+    val measurements = compareDTs(firstDT, secondDT)
+
+    println(s"Similarity between distributional thesauri:")
+    println(s"first: ${config.firstDTPath}")
+    println(s"second: ${config.secondDTPath}")
+    println("---------")
+    println(s"$measurements")
   }
 
   def compareDTs(dt1: Dataset[DTEntry], dt2: Dataset[DTEntry]): Measurements = {

@@ -5,6 +5,9 @@ import de.uhh.lt.jst.corpus.ReformatConll.Config
 import org.scalatest._
 
 class ReformatConllTest extends FlatSpec with Matchers  with DatasetSuiteBase {
+
+
+
   def run(inputPath:String) = {
     val outputPath = inputPath + "-output"
     val config = Config(inputDir = inputPath, outputDir = outputPath)
