@@ -32,9 +32,9 @@ class StoreToElasticSearchTest extends FunSuite {
     run(conllPath, "test6/large", "localhost")
   }
 
-  ignore("index a very large conll file") {
+  test("index a very large conll file") {
     val conllPath = "/Users/panchenko/Desktop/es-indexing/part-m-18080.gz"
-    run(conllPath, "test3/xlarge", "localhost")
+    run(conllPath, "test12/sentences", "localhost")
   }
 
   ignore("index a very large conll file 2 ") {

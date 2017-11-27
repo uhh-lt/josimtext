@@ -8,10 +8,10 @@ scalaVersion := "2.11.8"
 val sparkVersion = "2.2.0"
 
 // Main dependencies
-libraryDependencies += "org.apache.spark" %% "spark-core" % sparkVersion //% "provided"
-libraryDependencies += "org.apache.spark" %% "spark-sql" % sparkVersion //% "provided"
-libraryDependencies += "org.apache.spark" %% "spark-mllib" % sparkVersion //% "provided"
-libraryDependencies += "org.apache.spark" %% "spark-hive" % sparkVersion //% "provided"
+libraryDependencies += "org.apache.spark" %% "spark-core" % sparkVersion % "provided"
+libraryDependencies += "org.apache.spark" %% "spark-sql" % sparkVersion % "provided"
+libraryDependencies += "org.apache.spark" %% "spark-mllib" % sparkVersion % "provided"
+libraryDependencies += "org.apache.spark" %% "spark-hive" % sparkVersion % "provided"
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.7.0"
 libraryDependencies += "org.elasticsearch" % "elasticsearch-spark-20_2.11" % "5.6.3"
 

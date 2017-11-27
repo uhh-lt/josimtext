@@ -16,4 +16,8 @@ case class Dependency(
                        ner: String // NER BIO annotation
 ) {
   def depsIsEmpty: Boolean = Seq("_", "") contains deps
+
+  override def toString: String = {
+    s"$id\t$form\t$lemma\t$upostag\t$xpostag\t$feats\t$head\t$deprel\t$deps\t$ner"
+  }
 }
