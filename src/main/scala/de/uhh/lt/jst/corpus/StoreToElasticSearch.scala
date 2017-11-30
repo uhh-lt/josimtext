@@ -82,7 +82,7 @@ object StoreToElasticSearch extends Job {
 
 /* Mapping:
 
-PUT test_default
+PUT test_eng4
 {
   "mappings": {
     "sentences": {
@@ -98,11 +98,14 @@ PUT test_default
         },
         "text": {
           "type": "text",
-          "analyzer": "english",
           "fields": {
             "keyword": {
               "ignore_above": 256,
               "type": "keyword"
+            },
+            "lemma": {
+              "type": "text",
+              "analyzer": "english"
             }
           }
         },
@@ -126,16 +129,43 @@ PUT test_default
     }
   },
   "settings": {
-    "analysis": {
-      "analyzer": {
-        "my_english_analyzer":{
-          "type": "english"
-        }
-      }
-    },
     "index": {
       "number_of_shards": "64",
       "number_of_replicas": "1"
+    },
+    "analysis": {
+      "filter": {
+        "english_stop": {
+          "type": "stop",
+          "stopwords": ""
+        },
+        "english_keywords": {
+          "type": "keyword_marker",
+          "keywords": [
+            ""
+          ]
+        },
+        "english_stemmer": {
+          "type": "stemmer",
+          "language": "english"
+        },
+        "english_possessive_stemmer": {
+          "type": "stemmer",
+          "language": "possessive_english"
+        }
+      },
+      "analyzer": {
+        "english": {
+          "tokenizer": "standard",
+          "filter": [
+            "english_possessive_stemmer",
+            "lowercase",
+            "english_stop",
+            "english_keywords",
+            "english_stemmer"
+          ]
+        }
+      }
     }
   }
 }
