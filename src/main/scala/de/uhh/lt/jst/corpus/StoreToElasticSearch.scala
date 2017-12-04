@@ -11,7 +11,8 @@ import org.elasticsearch.spark._
 import de.uhh.lt.conll._
 
 object StoreToElasticSearch extends Job {
-  case class Config(inputDir: String = "",
+  case class Config(insertID: String = "",
+                    inputDir: String = "",
                     outputIndex: String = "depcc/sentences",
                     esNodeList: String = "localhost",
                     maxBatchMb: Int = 1,
@@ -40,23 +41,28 @@ object StoreToElasticSearch extends Job {
     arg[Int]("MAX_BATCH_DOCS").action( (x, c) =>
       c.copy(maxBatchDocs = x) ).
       text("Max. size of a batch in number of documents.")
+
+    arg[String]("INSERT_ID").action( (x, c) =>
+      c.copy(insertID = x) ).required().
+      text("Identifier of the insert batch of documents.")
   }
 
   def run(spark: SparkSession, config: ConfigType): Unit = {
-    val conf = new Configuration
-    conf.set("textinputformat.record.delimiter", "\n\n")
+    val hadoopConfig = new Configuration
+    hadoopConfig.set("textinputformat.record.delimiter", "\n\n")
 
     spark.sparkContext
-      .newAPIHadoopFile(config.inputDir, classOf[TextInputFormat], classOf[LongWritable], classOf[Text], conf)
+      .newAPIHadoopFile(config.inputDir, classOf[TextInputFormat], classOf[LongWritable], classOf[Text], hadoopConfig)
       .map { record => record._2.toString }
       .map { CoNLLParser.parseSingleSentence }
       .map{ sentence => Map(
+        "insert_id" -> config.insertID,
         "document_id" -> sentence.documentID,
         "sentence_id" -> sentence.sentenceID,
         "text" -> sentence.text,
         "deps" -> sentence.deps
             .map{d => s"${d._2.deprel} >>> ${d._2.lemma} <<< ${sentence.deps(d._2.head).lemma}"}
-        , "deps_raw" -> sentence.deps.map(_._2).toList.sortBy(_.id).mkString("\n"))
+        , "conll" -> sentence.deps.map(_._2).toList.sortBy(_.id).mkString("\n"))
       }
     .saveToEs(config.outputIndex)
   }
@@ -68,8 +74,8 @@ object StoreToElasticSearch extends Job {
       .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .config("es.index.auto.create", "true")
       .config("es.nodes", config.esNodeList)
-      .config("es.http.retries", "50")
-      .config("es.batch.write.retry.count", "50")
+      .config("es.http.retries", "999")
+      .config("es.batch.write.retry.count", "999")
       .config("es.batch.write.retry.wait", "300")
       .config("es.batch.size.bytes", config.maxBatchMb.toString)
       .config("es.batch.size.entries", config.maxBatchDocs.toString)
@@ -121,7 +127,7 @@ PUT test_eng4
           },
           "type": "text"
         },
-        "deps_raw": {
+        "conll": {
           "type": "text",
           "index": false
         }
