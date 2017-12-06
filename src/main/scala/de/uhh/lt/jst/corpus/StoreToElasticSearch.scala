@@ -9,13 +9,11 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.spark.sql.SparkSession
 import org.elasticsearch.spark._
 import de.uhh.lt.conll._
-import scala.util.Try
-import de.uhh.lt.jst.utils.Util
 
 object StoreToElasticSearch extends Job {
   case class Config(inputDir: String = "",
                     outputIndex: String = "depcc/sentences",
-                    esNodeList: String = "ltheadnode")
+                    esNodeList: String = "localhost")
   override type ConfigType = Config
   override val config = Config()
   override val description: String = "Index CoNLL file with ElasticSearch"
@@ -34,7 +32,6 @@ object StoreToElasticSearch extends Job {
       text("List of ElasticSearch nodes where the output will be written (may be not exhaustive).")
   }
 
-
   def run(spark: SparkSession, config: ConfigType): Unit = {
 
     val conf = new Configuration
@@ -49,9 +46,17 @@ object StoreToElasticSearch extends Job {
         "sentence_id" -> sentence.sentenceID,
         "text" -> sentence.text,
         "deps" -> sentence.deps
-            .map{d => s"${d._2.lemma}--${d._2.deprel}--${sentence.deps(d._2.head).lemma}"})
+            .map{d => s"${d._2.deprel} >>> ${d._2.lemma} <<< ${sentence.deps(d._2.head).lemma}"}
+        , "deps_raw" -> sentence.deps.map(_._2).toList.sortBy(_.id).mkString("\n")
+      )
+
       }
-    .saveToEs(config.outputIndex)
+    .saveToEs(config.outputIndex, Map(
+      "test40.settings.index.number_of_shards" -> "16",
+      "es.test40.settings.index.number_of_shards" -> "16",
+      "number_of_shards" -> "16",
+      "test40.setttings.index.number_of_replicas" -> "16",
+      "number_of_replicas" -> "16"))
   }
 
   override def run(config: ConfigType): Unit = {
@@ -67,3 +72,62 @@ object StoreToElasticSearch extends Job {
     run(spark, config)
   }
 }
+
+/* Mapping:
+
+PUT depcc
+{
+  "mappings": {
+    "sentences": {
+      "properties": {
+        "document_id": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "text": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "ignore_above": 256,
+              "type": "keyword"
+            }
+          }
+        },
+        "sentence_id": {
+          "type": "long"
+        },
+        "deps": {
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          },
+          "type": "text"
+        },
+        "deps_raw": {
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          },
+          "type": "text"
+        }
+      }
+    }
+  },
+  "settings": {
+    "index": {
+      "number_of_shards": "16",
+      "number_of_replicas": "1"
+    }
+  }
+}
+
+ */
