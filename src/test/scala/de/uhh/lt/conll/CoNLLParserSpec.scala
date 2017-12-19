@@ -13,7 +13,7 @@ class CoNLLParserSpec extends FlatSpec with Matchers {
     val sentence = CoNLLParser.parseSingleSentence(text)
 
     sentence.deps.head should be(
-      Dependency(
+      (0, Dependency(
         id = 0,
         form = "Website",
         lemma = "Website",
@@ -24,7 +24,7 @@ class CoNLLParserSpec extends FlatSpec with Matchers {
         deprel = "nn",
         deps = "2:nn",
         ner = "O"
-      )
+      ))
     )
     sentence.deps.size should be(8)
   }

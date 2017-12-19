@@ -55,12 +55,11 @@ object StoreToElasticSearch extends Job {
       .map { record => record._2.toString }
       .map { CoNLLParser.parseSingleSentence }
       .map{ sentence => Map(
-        "insert_id" -> config.insertID,
-        "document_id" -> sentence.documentID,
-        "sentence_id" -> sentence.sentenceID,
+        "insert_id" -> config.insertID, // to be able to insert in chunks and then roll back failed chunks
+        "sentence_hash" -> sentence.hashCode,
         "text" -> sentence.text,
         "deps" -> sentence.deps
-            .map{d => s"${d._2.deprel} >>> ${d._2.lemma} <<< ${sentence.deps(d._2.head).lemma}"}
+            .map{d => (d._2.deprel, d._2.lemma, sentence.deps(d._2.head).lemma)}
         , "conll" -> sentence.deps.map(_._2).toList.sortBy(_.id).mkString("\n"))
       }
     .saveToEs(config.outputIndex)
