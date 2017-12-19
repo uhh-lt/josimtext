@@ -1,6 +1,5 @@
 package de.uhh.lt.jst.corpus
 
-import de.uhh.lt.conll.Sentence
 import de.uhh.lt.jst.Job
 import de.uhh.lt.jst.verbs.Conll2Features.{Dependency, conllRecordDelimiter}
 import org.apache.hadoop.conf.Configuration
