@@ -1,4 +1,5 @@
 package de.uhh.lt.jst.corpus
+import de.uhh.lt.jst.index.ElasticSearchIndexer
 import org.apache.spark.sql.SparkSession
 import org.scalatest.FunSuite
 
@@ -14,12 +15,12 @@ class StoreToElasticSearchTest extends FunSuite {
       .master("local[*]")
       .getOrCreate()
 
-    val conf = new StoreToElasticSearch.Config(
+    val conf = new ElasticSearchIndexer.Config(
       inputDir = inputConllPath,
       outputIndex = index,
       esNodeList = node)
 
-    StoreToElasticSearch.run(spark, conf)
+    ElasticSearchIndexer.indexUniqCoNLL(spark, conf)
   }
 
   ignore("index a small conll file") {

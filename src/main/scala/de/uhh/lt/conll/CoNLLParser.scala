@@ -23,7 +23,7 @@ object CoNLLParser {
         .substring(SENTID_PREFIX.length)
         .split(DOCID_SENT_ID_SEP)
       if (fields.length >= 2) {
-        documentID = fields(0) // FIX: all but last
+        documentID = fields.init.mkString("/")
         sentenceID = fields.last.toInt
       }
     }

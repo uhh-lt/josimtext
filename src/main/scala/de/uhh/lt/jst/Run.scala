@@ -1,6 +1,7 @@
 package de.uhh.lt.jst
 
 import de.uhh.lt.jst.dt._
+import de.uhh.lt.jst.index.ElasticSearchIndexer
 
 object Run extends BaseRun {
 
@@ -54,7 +55,7 @@ object Run extends BaseRun {
         corpus.Conll2Texts,
         corpus.FilterSentences,
         corpus.ReformatConll,
-        corpus.StoreToElasticSearch
+        ElasticSearchIndexer
       )
     ),
     new JobGroup(
