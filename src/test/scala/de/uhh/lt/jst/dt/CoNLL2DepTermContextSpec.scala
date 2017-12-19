@@ -57,7 +57,7 @@ class CoNLL2DepTermContextSpec extends FlatSpec with Matchers with DatasetSuiteB
     val sentence = CoNLLParser.parseSingleSentence(text)
     val deps = CoNLL2DepTermContext.extractEnhancedDepForRows(sentence)
 
-    assert(deps, expectedEnhancedDeps)
+    assert(deps.toSet, expectedEnhancedDeps.toSet)
   }
 
   it should "detect that CoNLL file does not contain enhanced dependencies" in {
@@ -70,24 +70,22 @@ class CoNLL2DepTermContextSpec extends FlatSpec with Matchers with DatasetSuiteB
   }
 
   "Spark" should "read a CoNLL file and convert it to dependency term context pairs" in {
-
     import spark.implicits._
     val path = getResourcePath("/conll.csv")
     val result = CoNLL2DepTermContext.convertWithSpark(spark, path)
 
     val expected = sc.parallelize(expectedEnhancedDeps).toDS
-    assertDatasetEquals(expected, result)
+    assert(expected.collect().toSet, result.collect().toSet)
   }
 
   "Spark" should "detect that a CoNLL file misses enhanced deps and extract normal deps" in {
-
     import spark.implicits._
 
     val path = getResourcePath("/conll-wo-enhanced-deps.csv")
     val result = CoNLL2DepTermContext.convertWithSpark(spark, path)
 
     val expected = sc.parallelize(expectedNormalDeps).toDS
-    assertDatasetEquals(expected, result)
+    assert(expected.collect().toSet, result.collect().toSet)
   }
 
   it should "extract correctly from deps with non alphanum tokens" in {
@@ -112,6 +110,6 @@ class CoNLL2DepTermContextSpec extends FlatSpec with Matchers with DatasetSuiteB
       TermContext("usr/lib/fglrx","prep_usr/#usr/lib/fglrx"),
       TermContext("usr/lib/fglrx","-prep_usr/#usr/lib/fglrx")
     )
-    assert(deps, expected)
+    assert(deps.toSet, expected.toSet)
   }
 }
