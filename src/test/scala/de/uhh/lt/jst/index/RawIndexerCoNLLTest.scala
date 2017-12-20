@@ -1,5 +1,6 @@
-package de.uhh.lt.jst.corpus
-import de.uhh.lt.jst.index.RawIndexerCoNLL
+package de.uhh.lt.jst.index
+
+import de.uhh.lt.jst.utils.Const
 import org.apache.spark.sql.SparkSession
 import org.scalatest.FunSuite
 
@@ -29,17 +30,12 @@ class RawIndexerCoNLLTest extends FunSuite {
   }
 
   ignore("index a large conll file") {
-    val conllPath = "/Users/panchenko/Desktop/es-indexing/part-m-19100.gz"
+    val conllPath = Const.CoNLL.largeConllPath
     run(conllPath, "test6/large", "localhost")
   }
 
   ignore("index a very large conll file") {
-    val conllPath = "/Users/panchenko/Desktop/es-indexing/part-m-18080.gz"
+    val conllPath = Const.CoNLL.xlargeConllPath
     run(conllPath, "test12/sentences", "localhost")
-  }
-
-  ignore("index a very large conll file 2 ") {
-    val conllPath = "/Users/sasha/Desktop/part-m-10144.gz"
-    run(conllPath, "test3/xlarge", "localhost")
   }
 }
