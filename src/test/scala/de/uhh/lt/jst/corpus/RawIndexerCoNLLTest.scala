@@ -1,9 +1,9 @@
 package de.uhh.lt.jst.corpus
-import de.uhh.lt.jst.index.ElasticSearchIndexer
+import de.uhh.lt.jst.index.RawIndexerCoNLL
 import org.apache.spark.sql.SparkSession
 import org.scalatest.FunSuite
 
-class StoreToElasticSearchTest extends FunSuite {
+class RawIndexerCoNLLTest extends FunSuite {
   // These tests required an instance of elasticsearch running at localhost
 
   def run(inputConllPath: String, index:String, node: String) = {
@@ -15,12 +15,12 @@ class StoreToElasticSearchTest extends FunSuite {
       .master("local[*]")
       .getOrCreate()
 
-    val conf = new ElasticSearchIndexer.Config(
+    val conf = new RawIndexerCoNLL.Config(
       inputDir = inputConllPath,
       outputIndex = index,
       esNodeList = node)
 
-    ElasticSearchIndexer.indexUniqCoNLL(spark, conf)
+    RawIndexerCoNLL.run(spark, conf)
   }
 
   ignore("index a small conll file") {
@@ -28,12 +28,12 @@ class StoreToElasticSearchTest extends FunSuite {
     run(conllPath, "test3/small", "localhost")
   }
 
-  test("index a large conll file") {
+  ignore("index a large conll file") {
     val conllPath = "/Users/panchenko/Desktop/es-indexing/part-m-19100.gz"
     run(conllPath, "test6/large", "localhost")
   }
 
-  test("index a very large conll file") {
+  ignore("index a very large conll file") {
     val conllPath = "/Users/panchenko/Desktop/es-indexing/part-m-18080.gz"
     run(conllPath, "test12/sentences", "localhost")
   }
@@ -42,5 +42,4 @@ class StoreToElasticSearchTest extends FunSuite {
     val conllPath = "/Users/sasha/Desktop/part-m-10144.gz"
     run(conllPath, "test3/xlarge", "localhost")
   }
-
 }

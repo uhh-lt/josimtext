@@ -56,7 +56,7 @@ abstract class ElasticSearchIndexer extends Job {
       text("ES basic http auth password.")
   }
 
-  abstract def run(spark: SparkSession, config: ConfigType): Unit
+  def run(spark: SparkSession, config: ConfigType): Unit
 
   override def run(config: ConfigType): Unit = {
     val spark: SparkSession = SparkSession

@@ -10,14 +10,8 @@ import org.elasticsearch.spark._
 
 
 class MakeUniqCoNLL extends Job {
-  case class Config(insertID: String = "",
-                    inputDir: String = "",
-                    outputIndex: String = "depcc/sentences",
-                    esNodeList: String = "localhost",
-                    maxBatchMb: Int = 1,
-                    maxBatchDocs: Int = 1000,
-                    user: String = "",
-                    password: String = "")
+  case class Config(inputDir: String = "",
+                    outputDir: String = "")
   override type ConfigType = Config
   override val config = Config()
   override val description: String = "Index CoNLL file with ElasticSearch"
@@ -27,8 +21,8 @@ class MakeUniqCoNLL extends Job {
       c.copy(inputDir = x) ).required().
       text("Directory with a parsed corpus in the CoNLL format.")
 
-    arg[String]("OUTPUT_INDEX").action( (x, c) =>
-      c.copy(outputIndex = x) ).required().
+    arg[String]("OUTPUT_DIR").action( (x, c) =>
+      c.copy(outputDir = x) ).required().
       text("Directory with a parsed corpus in the CoNLL format (only unique sentences).")
   }
 
