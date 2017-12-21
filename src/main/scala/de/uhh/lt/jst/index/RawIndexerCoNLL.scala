@@ -8,7 +8,7 @@ import org.apache.spark.sql.SparkSession
 import org.elasticsearch.spark._
 
 
-object RawIndexerCoNLL extends ElasticSearchIndexer {
+object RawIndexerCoNLL extends ElasticSearchIndexer with Serializable {
 
   override def run(spark: SparkSession, config: ConfigType): Unit = {
     val hadoopConfig = new Configuration

@@ -13,7 +13,7 @@ libraryDependencies += "org.apache.spark" %% "spark-sql" % sparkVersion % "provi
 libraryDependencies += "org.apache.spark" %% "spark-mllib" % sparkVersion % "provided"
 libraryDependencies += "org.apache.spark" %% "spark-hive" % sparkVersion % "provided"
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.7.0"
-libraryDependencies += "org.elasticsearch" % "elasticsearch-spark-20_2.11" % "5.6.3"
+libraryDependencies += "org.elasticsearch" %% "elasticsearch-spark-20" % "6.1.1"
 
 // Required only during the testing
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"

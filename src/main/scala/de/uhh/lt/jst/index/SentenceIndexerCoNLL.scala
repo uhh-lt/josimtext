@@ -7,7 +7,7 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.spark.sql.SparkSession
 import org.elasticsearch.spark._
 
-object SentenceIndexerCoNLL extends ElasticSearchIndexer {
+object SentenceIndexerCoNLL extends ElasticSearchIndexer with Serializable {
 
   override def run(spark: SparkSession, config: ConfigType): Unit = {
     val hadoopConfig = new Configuration

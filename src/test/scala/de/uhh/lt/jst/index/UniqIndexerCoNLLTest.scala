@@ -24,17 +24,17 @@ class UniqIndexerCoNLLTest extends FunSuite {
 
   ignore("index a small conll file") {
     val conllPath = getClass.getResource("/conll-1000-tokens.csv.gz").getPath
-    run(conllPath, "test_small/sentences", "localhost")
+    run(conllPath, "test_uniq1/small", "localhost")
   }
 
   ignore("index a large conll file") {
     val conllPath = Const.CoNLL.largeConllPath
-    run(conllPath, "test_large/sentences", "localhost")
+    run(conllPath, "test_uniq2/large", "localhost")
   }
 
   ignore("index a very large conll file") {
     val conllPath = Const.CoNLL.xlargeConllPath
-    run(conllPath, "test_xlarge/sentences", "localhost")
+    run(conllPath, "test_uniq3/xlarge", "localhost")
   }
 }
 

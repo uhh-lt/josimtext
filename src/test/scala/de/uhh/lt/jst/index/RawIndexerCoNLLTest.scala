@@ -26,16 +26,16 @@ class RawIndexerCoNLLTest extends FunSuite {
 
   ignore("index a small conll file") {
     val conllPath = getClass.getResource("/conll-1000-tokens.csv.gz").getPath
-    run(conllPath, "test3/small", "localhost")
+    run(conllPath, "test_raw/small", "localhost")
   }
 
   ignore("index a large conll file") {
     val conllPath = Const.CoNLL.largeConllPath
-    run(conllPath, "test6/large", "localhost")
+    run(conllPath, "test_raw/large", "localhost")
   }
 
   ignore("index a very large conll file") {
     val conllPath = Const.CoNLL.xlargeConllPath
-    run(conllPath, "test12/sentences", "localhost")
+    run(conllPath, "test_raw/xlarge", "localhost")
   }
 }

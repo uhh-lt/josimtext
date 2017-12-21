@@ -9,7 +9,8 @@ import org.apache.spark.sql.SparkSession
 import org.elasticsearch.spark._
 
 
-abstract class ElasticSearchIndexer extends Job {
+class ElasticSearchIndexer extends Job {
+
   case class Config(insertID: String = "",
                     inputDir: String = "",
                     outputIndex: String = "depcc/sentences",
@@ -56,7 +57,7 @@ abstract class ElasticSearchIndexer extends Job {
       text("ES basic http auth password.")
   }
 
-  def run(spark: SparkSession, config: ConfigType): Unit
+  def run(spark: SparkSession, config: ConfigType): Unit = {}
 
   override def run(config: ConfigType): Unit = {
     val spark: SparkSession = SparkSession
