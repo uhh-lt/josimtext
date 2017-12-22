@@ -1,6 +1,7 @@
 package de.uhh.lt.jst.utils
 
 object Const {
+
   val LIST_SEP = "  "
   val SCORE_SEP = ':'
   val POS_SEP = "#"
@@ -19,6 +20,12 @@ object Const {
   object Resources {
     val STOPWORDS = "/stoplist_en.csv"
     val STOP_DEPENDENCIES = Set("dep", "punct", "cc", "possessive")
+  }
+
+  object CoNLL {
+    // local huge files for large scale testing
+    val largeConllPath = "/Users/sasha/Desktop/p"
+    val xlargeConllPath = "/Users/sasha/Desktop/part-m-03787.gz"
   }
 
   object PRJ_TEST {

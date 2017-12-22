@@ -1,9 +1,7 @@
 package de.uhh.lt.conll
 
-// Using Seq instead of List because of SPARK-16792
-case class Sentence(deps: Seq[Dependency],
-                    documentID:String = "",
-                    sentenceID:Int = -1,
-                    text:String = "")
+case class Sentence(deps: Map[Int,Dependency], // a list of parsed dependencies
+                    documentID:String = "", // document id
+                    sentenceID:Int = -1, // id of the sentence
+                    text:String = "") // text of the sences)
 
-case class SentenceOld(deps: Seq[Dependency])

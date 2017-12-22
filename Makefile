@@ -1,8 +1,14 @@
-build:
+clean:
+	./sbt/sbt clean 
+
+clean-assembly:
 	./sbt/sbt 'set test in assembly := {}' clean assembly
 
-build-with-tests:
+assembly:
+	./sbt/sbt 'set test in assembly := {}' assembly
+
+clean-test-assembly:
 	./sbt/sbt clean assembly
 
-tests:
+test:
 	./sbt/sbt "testOnly -- -l NeedsMissingFiles"

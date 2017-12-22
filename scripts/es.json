@@ -1,0 +1,259 @@
+GET test6/large/_search
+{
+  "query" : {
+    "term" : { "text" : "" }
+  }
+}
+
+
+GET test6/large/_search
+{
+  "query": {
+    "query_string" : {
+      "fields" : ["text", "deps"],
+      "query" : "man AND woman",
+      "use_dis_max" : true
+    }
+  }
+}
+
+GET test6/large/_search
+{
+  "query": {
+    "query_string" : {
+      "fields" : ["deps"],
+      "query" : "man AND woman"
+    }
+  }
+}
+
+GET test6/large/_search
+{
+  "query": {
+    "query_string" : {
+      "fields" : ["deps"],
+      "query" : "+man  AND +woman"
+    }
+  }
+}
+
+GET test6/large/_search
+{
+  "query": {
+    "bool": {
+      "must": {
+        "match": {
+          "deps": "fox"
+        }
+      },
+      "must": {
+        "query_string" : {
+          "fields" : ["deps"],
+          "query" : "+man  AND +woman"
+        }
+      }
+    }
+  }
+}
+
+
+GET test6/large/_search
+{
+  "query": {
+    "bool": {
+      "must": {
+        "query_string" : {
+          "fields" : ["deps"],
+          "query" : "\"real--amod--\""
+        }
+      }
+    }
+  }
+}
+
+GET test6/large/_search
+{
+  "query": {
+    "query_string" : {
+      "fields" : ["deps"],
+      "query" : "*\"--amod--pants\""
+    }
+  }
+}
+
+GET test7/sentences/_search
+{
+  "query": {
+    "query_string" : {
+      "fields" : ["deps"],
+      "query" : "*\"(python,ruby)\""
+    }
+  }
+}
+
+GET test8/sentences/_search
+{
+  "query": {
+    "query_string" : {
+      "fields" : ["deps"],
+      "query" : "\"nn--Monty--python\" OR \"--python--language\""
+    }
+  }
+}
+
+
+GET test8/sentences/_search
+{
+  "query": {
+    "query_string" : {
+      "fields" : ["deps"],
+      "query" : "\"--python\""
+    }
+  }
+}
+
+GET test9/sentences/_search
+{
+  "query": {
+    "query_string" : {
+      "fields" : ["deps"],
+      "query" : "\">>> python <<< work\""
+    }
+  }
+}
+
+GET test11/sentences/_search
+{
+  "query": {
+    "query_string" : {
+      "fields" : ["deps"],
+      "query" : "\">>> python <<< work\""
+    }
+  }
+}
+
+
+GET test20/sentences/_search
+{
+  "query": {
+    "query_string" : {
+      "fields" : ["deps"],
+      "query" : "\">>> python <<< work\""
+    }
+  }
+}
+
+
+PUT test27
+{
+  "mappings" : {
+    "sentences" : {
+      "properties" : {
+        "sentence_id" : {
+          "type" : "long"
+        },
+        "text" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
+        },
+        "document_id" : {
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            }
+          },
+          "type" : "text"
+        },
+        "deps" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "ignore_above" : 256,
+              "type" : "keyword"
+            }
+          }
+        },
+        "deps_raw" : {
+          "type" : "text",
+          "store" : "false",
+          "index": "not_analyzed"
+        }
+      }
+    }
+  }
+}
+
+
+PUT test100
+{
+  "settings" : {
+    "index" : {
+      "number_of_replicas" : "15",
+      "number_of_shards" : "15"
+    }
+  }
+}
+}
+
+PUT test102
+{
+"mappings" : {
+"sentences" : {
+"properties" : {
+"sentence_id" : {
+"type" : "long"
+},
+"text" : {
+"type" : "text",
+"fields" : {
+"keyword" : {
+"ignore_above" : 256,
+"type" : "keyword"
+}
+}
+},
+"deps" : {
+"type" : "text",
+"fields" : {
+"keyword" : {
+"ignore_above" : 256,
+"type" : "keyword"
+}
+}
+},
+"document_id" : {
+"fields" : {
+"keyword" : {
+"type" : "keyword",
+"ignore_above" : 256
+}
+},
+"type" : "text"
+},
+"deps_raw" : {
+"type" : "text",
+"fields" : {
+"keyword" : {
+"type" : "keyword",
+"ignore_above" : 256
+}
+}
+}
+}
+}
+},
+"settings" : {
+"index" : {
+"number_of_replicas" : "1",
+"number_of_shards" : "15"
+}
+}
+}
+
+
