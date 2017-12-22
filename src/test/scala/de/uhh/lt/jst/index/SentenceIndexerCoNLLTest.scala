@@ -8,6 +8,7 @@ import org.scalatest.FunSuite
 class SentenceIndexerCoNLLTest extends FunSuite {
   // These tests required an instance of elasticsearch running at localhost
 
+
   def run(inputConllPath: String, index: String, node: String) = {
     val spark: SparkSession = SparkSession
       .builder()

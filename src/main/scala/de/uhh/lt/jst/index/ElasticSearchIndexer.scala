@@ -9,7 +9,7 @@ import org.apache.spark.sql.SparkSession
 import org.elasticsearch.spark._
 
 
-class ElasticSearchIndexer extends Job {
+abstract class ElasticSearchIndexer extends Job {
 
   case class Config(insertID: String = "",
                     inputDir: String = "",
@@ -21,7 +21,6 @@ class ElasticSearchIndexer extends Job {
                     password: String = "")
   override type ConfigType = Config
   override val config = Config()
-  override val description: String = "Index CoNLL file with ElasticSearch"
 
   override val parser = new Parser {
     arg[String]("INPUT_DIR").action( (x, c) =>
@@ -57,7 +56,7 @@ class ElasticSearchIndexer extends Job {
       text("ES basic http auth password.")
   }
 
-  def run(spark: SparkSession, config: ConfigType): Unit = {}
+  def run(spark: SparkSession, config: ConfigType): Unit
 
   override def run(config: ConfigType): Unit = {
     val spark: SparkSession = SparkSession

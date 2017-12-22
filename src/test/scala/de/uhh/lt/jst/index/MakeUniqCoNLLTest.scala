@@ -27,12 +27,12 @@ class MakeUniqCoNLLTest extends FunSuite {
     run(inputPath)
   }
 
-  test("index a large conll file") {
+  ignore("index a large conll file") {
     val inputPath = Const.CoNLL.largeConllPath
     run(inputPath)
   }
 
-  test("index a very large conll file") {
+  ignore("index a very large conll file") {
     val inputPath = Const.CoNLL.xlargeConllPath
     run(inputPath)
   }

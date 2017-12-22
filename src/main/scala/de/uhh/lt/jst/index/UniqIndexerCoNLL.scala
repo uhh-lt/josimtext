@@ -10,6 +10,8 @@ import org.elasticsearch.spark._
 
 object UniqIndexerCoNLL extends ElasticSearchIndexer with Serializable {
 
+  override val description: String = "Index unique sentences in the CoNLL file with ElasticSearch (no provenance information)."
+
   override def run(spark: SparkSession, config: ConfigType): Unit = {
     val hadoopConfig = new Configuration
     hadoopConfig.set("textinputformat.record.delimiter", "\n\n")
