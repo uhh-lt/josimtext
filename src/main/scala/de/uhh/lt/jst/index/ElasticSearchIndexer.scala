@@ -32,27 +32,27 @@ class ElasticSearchIndexer extends Job {
       c.copy(outputIndex = x) ).required().
       text("Name of the output ElasticSearch index that will be created in the 'index/type' format.")
 
-    arg[String]("ES_NODES").action( (x, c) =>
+    opt[String]("es-nodes").action( (x, c) =>
       c.copy(esNodeList = x) ).required().
       text("List of ElasticSearch nodes where the output will be written (may be not exhaustive).")
 
-    arg[Int]("MAX_BATCH_MB").action( (x, c) =>
+    opt[Int]("max-batch-mb").action( (x, c) =>
       c.copy(maxBatchMb = x * 1000000) ).
       text("Max. size of a batch in MB.")
 
-    arg[Int]("MAX_BATCH_DOCS").action( (x, c) =>
+    opt[Int]("max-batch-doc").action( (x, c) =>
       c.copy(maxBatchDocs = x) ).
       text("Max. size of a batch in number of documents.")
 
-    arg[String]("INSERT_ID").action( (x, c) =>
+    opt[String]("insert-id").action( (x, c) =>
       c.copy(insertID = x) ).required().
       text("Identifier of the insert batch of documents.")
 
-    arg[String]("USER").action( (x, c) =>
+    opt[String]("user").action( (x, c) =>
       c.copy(user = x) ).required().
       text("ES basic http auth user name.")
 
-    arg[String]("PASS").action( (x, c) =>
+    opt[String]("pass").action( (x, c) =>
       c.copy(password = x) ).required().
       text("ES basic http auth password.")
   }
