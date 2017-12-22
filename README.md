@@ -15,12 +15,12 @@ The system consist of several modules:
 3. [Word sense induction](https://github.com/uhh-lt/chinese-whispers)
 
 
-Requirements
+System requirements:
 ------------
 
-- git
-- Java 1.8+
-- Spark 2.2+
+1. git
+2. Java 1.8+
+3. Apache Spark 2.2+
 
 
 Installation of the tool:
@@ -55,3 +55,4 @@ Run a command:
 ./run WordSimFromTermContext --help
 ```
 
+3. By default, the tool is running locally. To change Spark and Hadoop parameters of the job (queue, number of executors, memory per job, and so on) you need to modify the ```conf/env.sh``` file. A sample file for running the jobs using the CDH YARN cluster are provided in ```conf/cdh.sh```. 
