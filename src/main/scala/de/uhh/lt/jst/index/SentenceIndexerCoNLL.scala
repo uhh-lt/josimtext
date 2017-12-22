@@ -34,5 +34,44 @@ object SentenceIndexerCoNLL extends ElasticSearchIndexer with Serializable {
 
 PUT depcc
 {
+    "mappings": {
+      "sentences": {
+        "properties": {
+          "document_id": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "insert_id": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "sentence_hash": {
+            "type": "long"
+          },
+          "sentence_id": {
+            "type": "long"
+          },
+          "text": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          }
+        }
+      }
+    }
 }
 */
