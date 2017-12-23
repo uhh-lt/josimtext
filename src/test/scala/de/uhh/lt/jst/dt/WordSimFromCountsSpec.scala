@@ -14,7 +14,6 @@ import org.scalatest._
   *    +- WordSimLib.computeFeatureScores
   *
   */
-// TODO: Use synthetic data to be make tests more compact.
 class WordSimFromCountsSpec extends FlatSpec with Matchers with DataFrameSuiteBase with RDDComparisons {
 
   val params = WordSimParameters(

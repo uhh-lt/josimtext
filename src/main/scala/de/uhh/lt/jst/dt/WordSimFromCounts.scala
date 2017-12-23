@@ -4,7 +4,6 @@ import de.uhh.lt.jst.SparkJob
 import de.uhh.lt.jst.dt.WordSimLib.WordSimParameters
 import org.apache.spark.sql.SparkSession
 
-
 object WordSimFromCounts extends SparkJob {
 
   case class Config(
@@ -19,7 +18,7 @@ object WordSimFromCounts extends SparkJob {
   override val config = Config()
 
   override val command: String = "WordSimFromCounts"
-  override val description = "[DEPRECATED] Compute a Distributional Thesaurus from count files"
+  override val description = "Compute a Distributional Thesaurus from word, feature and word-feature frequency CSV files."
 
   override val parser = new Parser {
 
