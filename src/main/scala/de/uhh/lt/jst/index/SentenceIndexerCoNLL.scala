@@ -1,14 +1,14 @@
 package de.uhh.lt.jst.index
 
 import de.uhh.lt.conll.CoNLLParser
-import de.uhh.lt.jst.SparkJob
+import de.uhh.lt.jst.ElasticSearchSparkJob
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.spark.sql.SparkSession
 import org.elasticsearch.spark._
 
-object SentenceIndexerCoNLL extends SparkJob {
+object SentenceIndexerCoNLL extends ElasticSearchSparkJob {
 
   case class Config(insertID: String = "",
                     inputDir: String = "",
@@ -17,7 +17,7 @@ object SentenceIndexerCoNLL extends SparkJob {
   override type ConfigType = Config
   override val config = Config()
 
-  override val parser = new Parser {
+  override val parser = new ElasticSearchParser {
     arg[String]("INPUT_DIR").action( (x, c) =>
       c.copy(inputDir = x) ).required().
       text("Directory with a parsed corpus in the CoNLL format.").
