@@ -19,15 +19,20 @@ object UniqIndexerCoNLL extends ElasticSearchSparkJob {
 
   override val parser = new ElasticSearchParser {
     arg[String]("INPUT_DIR").action( (x, c) =>
-      c.copy(inputDir = x) ).required().
+      c.copy(inputDir = x) ).
+      required().
+      hidden().
       text("Directory with a parsed corpus in the CoNLL format.")
 
     arg[String]("OUTPUT_INDEX").action( (x, c) =>
-      c.copy(outputIndex = x) ).required().
+      c.copy(outputIndex = x) ).
+      required().
+      hidden().
       text("Name of the output ElasticSearch index that will be created in the 'index/type' format.")
 
     opt[String]("insert-id").action( (x, c) =>
-      c.copy(insertID = x) ).required().
+      c.copy(insertID = x) ).
+      required().
       text("Identifier of the insert batch of documents.")
   }
 
