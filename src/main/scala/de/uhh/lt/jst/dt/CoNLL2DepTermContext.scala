@@ -10,12 +10,9 @@ import org.apache.spark.sql.{Dataset, SparkSession}
 
 object CoNLL2DepTermContext extends SparkJob {
   case class Config(input: String = "", output: String = "")
-
   override type ConfigType = Config
   override val config = Config()
-
-  override val command: String = "CoNLL2DepTermContext"
-  override val description = "Extract dependencies from a CoNLL file and converts into Term Context files"
+  override val description = "Extract term features from a CoNLL file and saves them into a Term Context file"
 
   override val parser = new Parser {
     arg[String]("CONLL_FILE").action( (x, c) =>

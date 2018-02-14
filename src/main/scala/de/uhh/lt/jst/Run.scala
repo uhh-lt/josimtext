@@ -53,8 +53,15 @@ object Run extends BaseRun {
         corpus.CoarsifyPosTags,
         corpus.Conll2Texts,
         corpus.FilterSentences,
-        corpus.ReformatConll,
-        corpus.StoreToElasticSearch
+        corpus.ReformatConll
+      )
+    ),
+    new JobGroup(
+      "Index Commands",
+      List(
+        index.RawIndexerCoNLL,
+        index.SentenceIndexerCoNLL,
+        index.UniqIndexerCoNLL
       )
     ),
     new JobGroup(
