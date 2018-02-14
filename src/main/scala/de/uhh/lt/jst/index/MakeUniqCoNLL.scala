@@ -1,7 +1,7 @@
 package de.uhh.lt.jst.index
 
 import de.uhh.lt.conll._
-import de.uhh.lt.jst.Job
+import de.uhh.lt.jst.{Job, SparkJob}
 import de.uhh.lt.jst.utils.Util
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.io.{LongWritable, Text}
@@ -15,7 +15,8 @@ import org.apache.spark.sql.SparkSession
 import org.elasticsearch.spark._
 
 
-object MakeUniqCoNLL extends Job {
+object MakeUniqCoNLL extends SparkJob {
+
   case class Config(inputDir: String = "",
                     outputDir: String = "")
   override type ConfigType = Config
@@ -53,16 +54,5 @@ object MakeUniqCoNLL extends Job {
       .map{ s => s"${s._1}\t${s._2._2}\t${s._2._1.text}" }
       //.map{ kg => s"${kg._1}\t${kg._2.head.text}\t${kg._2.size}" }
       .saveAsTextFile(config.outputDir)
-  }
-
-  override def run(config: ConfigType): Unit = {
-
-    val spark: SparkSession = SparkSession
-      .builder()
-      .appName(this.getClass.getSimpleName)
-      .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-      .getOrCreate()
-
-    run(spark, config)
   }
 }

@@ -1,7 +1,6 @@
 package de.uhh.lt.jst
 
 import de.uhh.lt.jst.dt._
-import de.uhh.lt.jst.index.ElasticSearchIndexer
 
 object Run extends BaseRun {
 

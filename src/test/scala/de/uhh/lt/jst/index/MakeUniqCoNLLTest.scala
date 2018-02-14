@@ -1,39 +1,43 @@
 package de.uhh.lt.jst.index
 
+import com.holdenkarau.spark.testing.DatasetSuiteBase
 import org.scalatest.FunSuite
 import de.uhh.lt.jst.utils.Const
-import org.apache.spark.sql.SparkSession
+import de.uhh.lt.testing.spark.SparkESConfigProvider
 
-class MakeUniqCoNLLTest extends FunSuite {
+import de.uhh.lt.jst.index.MakeUniqCoNLL.Config
 
-  def run(inputConllPath: String) = {
-    val spark: SparkSession = SparkSession
-      .builder()
-      .appName(this.getClass.getSimpleName)
-      .master("local[*]")
-      .getOrCreate()
+class MakeUniqCoNLLTest extends FunSuite with DatasetSuiteBase with SparkESConfigProvider {
 
-    val outputConllPath = inputConllPath + "-output"
-
-    val conf = new MakeUniqCoNLL.Config(
-      inputDir = inputConllPath,
-      outputDir = outputConllPath)
+  test("index a small conll file") {
+    val inputPath = getClass.getResource("/conll-1000-tokens.csv.gz").getPath
+    val conf = Config(
+      inputDir = inputPath,
+      outputDir = inputPath + "-output"
+    )
 
     MakeUniqCoNLL.run(spark, conf)
   }
 
-  test("index a small conll file") {
-    val inputPath = getClass.getResource("/conll-1000-tokens.csv.gz").getPath
-    run(inputPath)
-  }
-
   ignore("index a large conll file") {
     val inputPath = Const.CoNLL.largeConllPath
-    run(inputPath)
+
+    val conf = Config(
+      inputDir = inputPath,
+      outputDir = inputPath + "-output"
+    )
+
+    MakeUniqCoNLL.run(spark, conf)
   }
 
   ignore("index a very large conll file") {
     val inputPath = Const.CoNLL.xlargeConllPath
-    run(inputPath)
+
+    val conf = Config(
+      inputDir = inputPath,
+      outputDir = inputPath + "-output"
+    )
+
+    MakeUniqCoNLL.run(spark, conf)
   }
 }

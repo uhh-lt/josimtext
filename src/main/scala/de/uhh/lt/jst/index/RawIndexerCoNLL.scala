@@ -1,6 +1,7 @@
 package de.uhh.lt.jst.index
 
 import de.uhh.lt.conll.CoNLLParser
+import de.uhh.lt.jst.ElasticSearchSparkJob
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
@@ -8,7 +9,33 @@ import org.apache.spark.sql.SparkSession
 import org.elasticsearch.spark._
 
 
-object RawIndexerCoNLL extends ElasticSearchIndexer with Serializable {
+object RawIndexerCoNLL extends ElasticSearchSparkJob {
+
+  case class Config(insertID: String = "",
+                    inputDir: String = "",
+                    outputIndex: String = "depcc/sentences")
+
+  override type ConfigType = Config
+  override val config = Config()
+
+  override val parser = new ElasticSearchParser {
+    arg[String]("INPUT_DIR").action( (x, c) =>
+      c.copy(inputDir = x) ).
+      required().
+      hidden().
+      text("Directory with a parsed corpus in the CoNLL format.")
+
+    arg[String]("OUTPUT_INDEX").action( (x, c) =>
+      c.copy(outputIndex = x) ).
+      required().
+      hidden().
+      text("Name of the output ElasticSearch index that will be created in the 'index/type' format.")
+
+    opt[String]("insert-id").action( (x, c) =>
+      c.copy(insertID = x) ).
+      required().
+      text("Identifier of the insert batch of documents.")
+  }
 
   override val description: String = "Index raw CoNLL file with ElasticSearch"
 

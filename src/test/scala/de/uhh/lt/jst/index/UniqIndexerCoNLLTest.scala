@@ -1,19 +1,14 @@
 package de.uhh.lt.jst.index
 
+import com.holdenkarau.spark.testing.DatasetSuiteBase
 import de.uhh.lt.jst.utils.Const
+import de.uhh.lt.testing.spark.SparkESConfigProvider
 import org.apache.spark.sql.SparkSession
 import org.scalatest.FunSuite
 
-class UniqIndexerCoNLLTest extends FunSuite {
+class UniqIndexerCoNLLTest extends FunSuite with DatasetSuiteBase with SparkESConfigProvider {
 
   def run(inputConllPath: String, index: String, node: String) = {
-    val spark: SparkSession = SparkSession
-      .builder()
-      .appName(this.getClass.getSimpleName)
-      .config("es.index.auto.create", "true")
-      .config("es.nodes", node)
-      .master("local[*]")
-      .getOrCreate()
 
     val conf = new UniqIndexerCoNLL.Config(
       inputDir = inputConllPath,
